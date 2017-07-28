@@ -95,7 +95,7 @@ menu.on('menuItemSelected', event => {
 
 function buildMain(builder) {
     let place = builder.showElement('main', 'Главная страница')
-    place.innerHTML = 'Главная страница, блин!';
+    place.innerHTML = 'Главная страница!';
 }
 
 
