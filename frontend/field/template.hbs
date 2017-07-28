@@ -1,0 +1,18 @@
+<div class="form-group">
+    <label class="col-sm-2 control-label">{{label}}{{{requiredMark}}}</label>
+    <div class = "col-sm-7">
+    {{#if multiline}}
+        <textarea name = "{{name}}" rows="3" class="form-control" id = {{id}}></textarea>
+    {{else}}
+        {{#if checkbox}}
+            <input type = "checkbox" name = "{{name}}" id = {{id}} />
+        {{else}}
+            <input name = "{{name}}" class="form-control" id = {{id}} />
+        {{/if}}
+    {{/if}}
+
+    </div>
+    <div class = "field-btns-wrapper col-sm-3">
+
+    </div>
+</div>

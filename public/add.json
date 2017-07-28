@@ -1,0 +1,25 @@
+{
+  "status": "success",
+  "message": {
+    "content": [
+      {
+        "records": [
+          {
+            "ID": "65",
+            "name": "Petya",
+            "mark": 3,
+            "subject": [
+              "6"
+            ]
+          }
+        ],
+        "fk": {
+          "subject": {
+            "6": "ОБЖ"
+          }
+        }
+      }
+    ]
+  }
+}
+

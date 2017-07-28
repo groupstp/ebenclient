@@ -1,0 +1,165 @@
+{
+  "status": "success",
+  "message": {
+    "elements": [
+      {
+        "type": "popup",
+        "elements": [
+          {
+            "type": "header",
+            "properties": {
+              "caption": "fuck off"
+            }
+          },
+          {
+            "type": "body",
+            "elements": [
+              {
+                "type": "layout",
+                "id": "layoutTest2",
+                "elements": [
+                  {
+                    "type": "panel",
+                    "elements": [
+                      {
+                        "type": "form",
+                        "id": "form1",
+                        "properties": {
+                          "name": "test",
+                          "object": "doc"
+                        },
+                        "elements": [
+                          {
+                            "type": "field",
+                            "id": "field3",
+                            "properties": {
+                              "type": "text",
+                              "label": "ФИО",
+                              "required": true,
+                              "hidden": false
+                            }
+                          },
+                          {
+                            "type": "dropList",
+                            "id": "field2",
+                            "properties": {
+                              "type": "reference",
+                              "label": "Предмет",
+                              "required": true,
+                              "hidden": false
+                            },
+                            "elements": [
+                              {
+                                "type": "button",
+                                "id": "field1-edit",
+                                "properties": {
+                                  "caption": "edit",
+                                  "style": "btn btn-success"
+                                },
+                                "events": {
+                                  "click": "onField1EditClick"
+                                }
+                              }
+                            ],
+                            "events": {
+                              "changeValue": "onClassChangeValue"
+                            }
+                          },
+                          {
+                            "type": "field",
+                            "id": "field3",
+                            "properties": {
+                              "type": "int",
+                              "label": "Оценка",
+                              "required": true,
+                              "hidden": false
+                            }
+                          },
+                          {
+                            "type": "field",
+                            "id": "field1",
+                            "properties": {
+                              "type": "checkbox",
+                              "label": "Вы уверены?",
+                              "multiline": false,
+                              "required": true,
+                              "hidden": false,
+                              "enabled": true
+                            },
+                            "elements": [],
+                            "events": {
+                              "changeValue": "onField1ChangeValue"
+                            }
+                          }
+                        ],
+                        "events": {
+                          "rendered": "onFormRendered"
+                        }
+                      }
+                    ],
+                    "properties": {
+                      "position": "main",
+                      "width": "50%"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "footer",
+            "elements": [
+              {
+                "type": "button",
+                "id": "save",
+                "events": {
+                  "click": "onSaveClick"
+                },
+                "properties": {
+                  "caption": "Сохранить"
+                }
+              },
+              {
+                "type": "button",
+                "id": "save2",
+                "events": {
+                  "click": "onSaveClick"
+                },
+                "properties": {
+                  "caption": "Еще кнопка"
+                }
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "width": 600,
+          "height": 600
+        }
+      }
+    ],
+    "code": {
+      "onSaveClick": "function main(button) {var popup = twoBe.getById('popup'); var form = twoBe.getById('form1'); var data = form.getData();if (data != null) {var url = twoBe.getDefaultParams().url;var obj = form.getProperties().object;var name = form.getProperties().name;twoBe.createRequest().addUrl(url).addParam('obj', obj).addParam('name', name).addQueryString(data).addBefore(function() {popup.lock('Жди')}).addSuccess(function(data) {var param = button.getProperties().param;if (param && param === 'close')popup.close();else popup.unlock();var table = twoBe.getById('table1');table.addRecord(data);}).addError(function(msg) {twoBe.showMessage(0, msg)}).send();}}"
+    },
+    "content": [
+      {
+        "forId": "form1",
+        "records": [
+          {
+            "field2": [
+              "3"
+            ]
+          }
+        ],
+        "fk": {
+          "field2": {
+            "1": "Трансфигурация",
+            "2": "Зельеварение",
+            "3": "Защита от темных искусств"
+          }
+        }
+      }
+    ],
+    "needToCache": true
+  }
+}

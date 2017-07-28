@@ -1,0 +1,82 @@
+{
+  "status": "success",
+  "message": {
+    "elements": [
+      {
+        "type" : "layout",
+        "id" : "layout1",
+        "elements" : [
+          {
+            "type" : "panel",
+            "properties": {
+              "position": "main",
+              "width": "50%"
+            },
+            "elements" : [
+              {
+                "type": "form",
+                "id": "form1",
+                "properties": {
+                  "name": "test",
+                  "object": "doc"
+                },
+                "elements": [
+                  {
+                    "type": "field",
+                    "id": "field3",
+                    "properties": {
+                      "type": "text",
+                      "label": "ФИО",
+                      "required": true,
+                      "hidden": false
+                    }
+                  },
+                  {
+                    "type": "field",
+                    "id": "field4",
+                    "properties": {
+                      "type": "float",
+                      "label": "Оценка",
+                      "required": true,
+                      "hidden": false
+                    }
+                  },
+                  {
+                    "type": "field",
+                    "id": "field1",
+                    "properties": {
+                      "type": "checkbox",
+                      "label": "Вы уверены?",
+                      "multiline": false,
+                      "required": true,
+                      "hidden": false,
+                      "enabled": true
+                    },
+                    "elements": [],
+                    "events": {
+                      "changeValue": "onField1ChangeValue"
+                    }
+                  }
+                ],
+                "events": {
+                  "rendered": "onFormRendered"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "content" : [
+      {
+        "forId" : "form1",
+        "records" : [
+          {
+            "field3" : "Hodor",
+            "field4" : "123,77"
+          }
+        ]
+      }
+    ]
+  }
+}
