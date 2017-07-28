@@ -1,0 +1,174 @@
+{
+  "status": "success",
+  "message": {
+    "elements": [
+      {
+        "type": "popup",
+        "elements": [
+          {
+            "type": "header",
+            "properties": {
+              "caption": "gfkfgjkb;fd"
+            }
+          },
+          {
+            "type": "body",
+            "elements": [
+              {
+                "type": "layout",
+                "id": "layoutTest3",
+                "elements": [
+                  {
+                    "type": "panel",
+                    "elements": [
+                      {
+                        "type": "grid",
+                        "id": "testGrid3",
+                        "properties": {
+                          "header": "testTable",
+                          "pagination": false,
+                          "hierachy": false,
+                          "limit": 2
+                        },
+                        "elements": [
+                          {
+                            "type": "column",
+                            "properties": {
+                              "field": "ID",
+                              "caption": "ID",
+                              "hidden": true,
+                              "sortable": true
+                            }
+                          },
+                          {
+                            "type": "column",
+                            "properties": {
+                              "field": "name",
+                              "caption": "ФИО",
+                              "hidden": false,
+                              "sortable": true
+                            }
+                          },
+                          {
+                            "type": "column",
+                            "properties": {
+                              "field": "subject",
+                              "caption": "Предмет",
+                              "hidden": false,
+                              "sortable": true,
+                              "type": "reference"
+                            }
+                          },
+                          {
+                            "type": "column",
+                            "properties": {
+                              "field": "mark",
+                              "caption": "Оценка",
+                              "hidden": false,
+                              "sortable": true
+                            }
+                          },
+                          {
+                            "type": "toolbar",
+                            "elements": [
+                              {
+                                "type": "toolbarItem",
+                                "events": {
+                                  "onClick": "addRecord"
+                                },
+                                "properties": {
+                                  "caption": "Добавить",
+                                  "icon": "fa fa-plus",
+                                  "more": false,
+                                  "id": "add"
+                                }
+                              },
+                              {
+                                "type": "toolbarItem",
+                                "events": {
+                                  "onClick": "editRecord"
+                                },
+                                "properties": {
+                                  "caption": "Изменить",
+                                  "icon": "fa fa-pencil",
+                                  "more": true,
+                                  "id": "edit"
+                                }
+                              }
+                            ]
+                          }
+                        ],
+                        "events": {
+                        }
+                      }
+                    ],
+                    "properties": {
+                      "position": "main",
+                      "width": "50%"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "footer",
+            "elements": [
+              {
+                "type": "button",
+                "id": "save",
+                "events": {
+                  "click": "onSaveClick"
+                },
+                "properties": {
+                  "caption": "Сохранить"
+                }
+              },
+              {
+                "type": "button",
+                "id": "save2",
+                "events": {
+                  "click": "onSaveClick"
+                },
+                "properties": {
+                  "caption": "Еще кнопка"
+                }
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "width": 400,
+          "height": 400
+        }
+      }
+    ],
+    "code": {
+      "onSaveClick": "function f(){alert('3')}"
+    },
+    "content": [
+      {
+        "forId": "testGrid3",
+        "records": [
+          {
+            "ID": "1-1",
+            "name": "Иванов Иван",
+            "subject": [
+              "1"
+            ],
+            "mark": 5
+          }
+        ],
+        "fk": {
+          "subject": {
+            "1": "Физкультура",
+            "2": "Русский язык",
+            "3": "Алгебра",
+            "4": "Геометрия",
+            "5": "Физика"
+          }
+        }
+      }
+    ]
+  }
+}

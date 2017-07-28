@@ -1,0 +1,168 @@
+{
+  "status": "success",
+  "message": {
+    "elements": [
+      {
+        "type": "layout",
+        "id": "layouttcref",
+        "elements": [
+          {
+            "type": "panel",
+            "elements": [
+              {
+                "type": "grid",
+                "id": "gridtcref",
+                "properties": {
+                  "header": "testTable",
+                  "pagination": true,
+                  "hierachy": true,
+                  "limit": 2,
+                  "path": "popup.json",
+                  "name": "tc",
+                  "object": "ref"
+                },
+                "elements": [
+                  {
+                    "type": "column",
+                    "properties": {
+                      "field": "ID",
+                      "caption": "ID",
+                      "hidden": true,
+                      "sortable": true
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "properties": {
+                      "field": "name",
+                      "caption": "ФИО",
+                      "hidden": false,
+                      "sortable": true
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "properties": {
+                      "field": "subject",
+                      "caption": "Предмет",
+                      "hidden": false,
+                      "sortable": true,
+                      "type": "reference"
+                    }
+                  },
+                  {
+                    "type": "column",
+                    "properties": {
+                      "field": "mark",
+                      "caption": "Оценка",
+                      "hidden": false,
+                      "sortable": true
+                    }
+                  },
+                  {
+                    "type": "toolbar",
+                    "elements": [
+                      {
+                        "type": "toolbarItem",
+                        "events": {
+                          "onClick": "addRecord"
+                        },
+                        "properties": {
+                          "caption": "Добавить",
+                          "icon": "fa fa-plus",
+                          "more": false,
+                          "id": "add"
+                        }
+                      },
+                      {
+                        "type": "toolbarItem",
+                        "events": {
+                          "onClick": "editRecord"
+                        },
+                        "properties": {
+                          "caption": "Изменить",
+                          "icon": "fa fa-pencil",
+                          "more": true,
+                          "id": "edit"
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "events": {
+                }
+              }
+            ],
+            "properties": {
+              "position": "main",
+              "width": "50%"
+            }
+          }
+        ]
+      }
+    ],
+    "code": {
+      "makeSearch": "function f(event){console.log(event)}",
+      "addRecord": "function main(el) {var func = 'getAddForm';var obj = el.getProperties().object;var name = el.getProperties().name;var url = twoBe.getDefaultParams().url;twoBe.createRequest().addUrl(url).addParam('obj', obj).addParam('name', name).addBefore(function() {el.lock('Идет загрузка..');}).addSuccess(function(data) {twoBe.buildView(data, obj + name + func);el.unlock();}).addError(function(msg) {twoBe.showMessage(0, msg);el.unlock();}).addCacheKey(obj + name + func).send();}",
+      "editRecord": "function f(event){w2alert(event.recid); console.log(event,this)}",
+      "onSaveBtnClick": "function func(btn){ btn.parent.getData() }"
+    },
+    "content": [
+      {
+        "forId": "gridtcref",
+        "records": [
+          {
+            "ID": "1-1",
+            "name": "Тупицы",
+            "subject": [
+            ],
+            "mark": "",
+            "isGroup": true
+          },
+          {
+            "ID": "1-2",
+            "name": "Умницы",
+            "subject": [
+            ],
+            "mark": "",
+            "isGroup": false
+          }
+        ],
+        "fk": {
+          "subject": {
+            "1": "Физкультура",
+            "2": "Русский язык",
+            "3": "Алгебра",
+            "4": "Геометрия",
+            "5": "Физика"
+          }
+        }
+      },
+      {
+        "forId": "form2",
+        "records": [
+          {
+            "field1": true,
+            "field2": [
+              "1",
+              "3"
+            ]
+          }
+        ],
+        "fk": {
+          "field2": {
+            "1": "Гарри",
+            "2": "Рон",
+            "3": "Гермиона"
+          },
+          "field3": {
+            "1": "Трансфигурация",
+            "2": "Зельеварение",
+            "3": "Защита от темных искусств"
+          }
+        }
+      }
+    ]
+  }
+}
+
