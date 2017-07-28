@@ -1,0 +1,9 @@
+<application>
+  <component name="FileTypeManager" version="17">
+    <extensionMap>
+      <mapping pattern="main.js" type="ECMAScript 6" />
+      <mapping ext="tpl" type="Handlebars/Mustache" />
+      <mapping pattern="reftcget" type="JSON" />
+    </extensionMap>
+  </component>
+</application>
