@@ -138,7 +138,7 @@ class Tab extends componentLib.Component {
     render() {
         let tabDiv = document.createElement('div');
         tabDiv.className = 'tab-pane';
-        tabDiv.style.height = (this.box.clientHeight - 45) + 'px';
+        tabDiv.style.height = this.box.clientHeight + 'px';
         tabDiv.style.width = '100%';
         tabDiv.id = this.id;
         this.tabContainer = tabDiv;

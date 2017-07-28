@@ -54,7 +54,7 @@ menu.on('menuItemSelected', event => {
      }*/
     if (detail.obj === 'ref' || detail.obj === 'doc' || detail.obj === 'st') {
         let objectID = detail.obj + '&' + detail.name;
-        let boxForElement = builder.showElement(objectID, detail.caption);
+        let boxForElement = builder.showPage(objectID, detail.caption);
         let locker = new tools.Freezer({
             place: boxForElement,
             message: 'Загрузка'
@@ -94,7 +94,7 @@ menu.on('menuItemSelected', event => {
 })
 
 function buildMain(builder) {
-    let place = builder.showElement('main', 'Главная страница')
+    let place = builder.showPage('main', 'Главная страница');
     place.innerHTML = 'Главная страница!';
 }
 

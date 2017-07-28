@@ -13,6 +13,11 @@ module.exports = {
     watch: true,
     devtool: 'source-map',
     plugins: [
+       /* new webpack.optimize.UglifyJsPlugin({
+            compress: {
+                warnings: false
+            }
+        }),*/
         new webpack.ProvidePlugin({
             $: "jquery",
             'jQuery': "jquery"
@@ -23,7 +28,10 @@ module.exports = {
         loaders: [{
             test: /\.js$/,
             loader: 'babel-loader',
-            exclude: [/(libraries)/,/\/node_modules\//]
+            exclude: [/(libraries)/, /\/node_modules\//],
+            query: {
+                presets: ["es2015"]
+            }
         }, {
             test: /\.css$/,
             loader: extractTextPlugin.extract({use: 'css-loader', publicPath: '../'})

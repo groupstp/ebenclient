@@ -5,6 +5,8 @@ export class Component {
         // ссылка на родительский элемент
         this.parent = options.parent || null;
         // собятия элемента, объект с именем события и именем обработчика события
+        options.element = options.element || '';
+        options.element.properties = options.element.properties || ''
         this.events = options.element.events || null;
         // объект с именем обработчика события и кодом этого обработчика
         this.code = this.prepareCode(options.code) || {};
@@ -17,8 +19,8 @@ export class Component {
         //записываемся в дети родителю
         this.recInChildren();
         //тип и имя объекта для которго строится компонент
-        this.object = (options.element.properties !== undefined ? options.element.properties.object || "" : "");
-        this.name = (options.element.properties !== undefined ? options.element.properties.name || "" : "");
+        this.object = options.element.properties.object || "";
+        this.name = options.element.properties.name || "";
     }
 
     /**
@@ -58,6 +60,11 @@ export class Component {
         }
     }
 
+    destroy() {
+        this.box.innerHTML = '';
+        delete stpui[this.id];
+    }
+
     /**
      * Преобразует код из строки
      * @param oldCode
@@ -88,6 +95,10 @@ export class Component {
      */
 
     render() {
+
+    }
+
+    reload() {
 
     }
 

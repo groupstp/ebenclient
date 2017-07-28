@@ -12,6 +12,7 @@ export default class contentBuilder {
         this.children = [];//детки
         this.onHome = param.onHome || null;//что делать при нажатии кнопки домой
         this.render();
+        console.log(this);
     }
 
     /**
@@ -48,6 +49,13 @@ export default class contentBuilder {
                 {type: 'button', id: 'buttonNavigatorBack', tooltip: 'Back', icon: 'fa fa-arrow-left', disabled: true},
                 {type: 'button', id: 'buttonNavigatorStr', tooltip: 'Up', icon: 'fa fa-arrow-right', disabled: true},
                 {type: 'button', id: 'buttonNavigatorHome', tooltip: 'Home', icon: 'fa fa-home', disabled: true},
+                {
+                    type: 'button',
+                    id: 'buttonNavigatorReload',
+                    tooltip: 'Reload',
+                    icon: 'fa fa-refresh',
+                    disabled: false
+                },
                 {type: 'break'},
                 {type: 'html', id: 'navigatorLabel', html: '<b><h3>Главная страница</h3></b>'},
                 {type: 'spacer'}
@@ -88,6 +96,9 @@ export default class contentBuilder {
                         w2ui.navigatorToolbar.set('buttonNavigatorHome', {disabled: true});
                     }
                 }
+                if (event.item.id === 'buttonNavigatorReload') {
+                    this.pages[this.current].object.reload();
+                }
             }.bind(this)
         });
     }
@@ -106,7 +117,7 @@ export default class contentBuilder {
      * @param caption
      * @returns {Element}
      */
-    showElement(id, caption) {
+    showPage(id, caption) {
         w2ui.navigatorToolbar.set('navigatorLabel', {html: '<b><h3>' + caption + '</h3></b>'});
         w2ui.navigatorToolbar.refresh();
         this.pageContainer.style.height = document.documentElement.clientHeight - 115 + 'px';
@@ -115,6 +126,7 @@ export default class contentBuilder {
         this.current++;
         if (this.current > 0) {
             document.getElementById('boxForLayout' + this.pages[this.current - 1].id).style.display = 'none';
+            //this.pages[this.current - 1].page.hide();
             w2ui.navigatorToolbar.set('buttonNavigatorBack', {disabled: false});
             w2ui.navigatorToolbar.set('buttonNavigatorHome', {disabled: false});
             w2ui.navigatorToolbar.render();
@@ -126,6 +138,7 @@ export default class contentBuilder {
                     if (i <= this.current - 1) uniq = false;
                     this.pages.splice(i, 1);
                     document.getElementById('boxForLayout' + id).parentNode.removeChild(document.getElementById('boxForLayout' + id));
+                    //this.pages[i].page.destroy();
                     break;
                 }
             }
@@ -135,7 +148,41 @@ export default class contentBuilder {
         boxForElement.id = 'boxForLayout' + id;
         boxForElement.style.height = '100%';
         this.pageContainer.appendChild(boxForElement);
-        this.pages.splice(this.current, 0, {id: id, navigatorLabel: caption});
+        this.pages.splice(this.current, 0, {
+            id: id,
+            navigatorLabel: caption/*,
+             page: new Page(id, caption, this.pageContainer)*/
+        });
         return boxForElement;
+    }
+}
+
+class Page {
+    constructor(id, caption, box) {
+        this.id = id;
+        this.caption = caption;
+        this.box = box;
+        this.generatedBox = '';
+    }
+
+    destroy() {
+        this.generatedBox.parentNode.removeChild(this.generatedBox);
+    }
+
+    render() {
+        let boxForElement = document.createElement('div');
+        boxForElement.id = 'boxForLayout' + id;
+        boxForElement.style.height = '100%';
+        this.box.appendChild(boxForElement);
+        this.generatedBox = boxForElement;
+        return boxForElement;
+    }
+
+    show() {
+        document.getElementById('boxForLayout' + this.id).style.display = '';
+    }
+
+    hide() {
+        document.getElementById('boxForLayout' + this.id).style.display = 'none';
     }
 }
