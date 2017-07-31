@@ -4,6 +4,7 @@
 'use strict'
 
 import * as componentLib from '../component'
+import * as tools from '../tools/index.js';
 import twoBe from '../twoBe/index.js';
 window.twoBe = twoBe;
 
@@ -38,6 +39,11 @@ export class Layout extends componentLib.Component {
         let panelObj = this.makew2uilayout();
         $(place).w2layout(panelObj);
         this.buildPanels();
+    }
+
+    destroy() {
+        super.destroy();
+        w2ui[this.id].destroy();
     }
 
     /**

@@ -24,7 +24,6 @@ export class Popup {
                     }
                 );
                 this.modals[this.dimension].object = layuout;
-
             }
         );
     }

@@ -1,7 +1,6 @@
 {
   "name": "stp-web",
   "version": "0.0.1",
-  "description": "",
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,6 +14,7 @@
     "css-loader": "^0.28.4",
     "exports-loader": "^0.6.4",
     "extract-text-webpack-plugin": "^3.0.0",
+    "babel-preset-es2015": "^6.24.1",
     "file-loader": "^0.11.2",
     "handlebars": "^4.0.10",
     "handlebars-template-loader": "^0.8.0",
@@ -25,5 +25,11 @@
   },
   "dependencies": {
     "jquery": "<3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://AntonXon@bitbucket.org/stpdreamteam/client.git"
+  },
+  "homepage": "https://bitbucket.org/stpdreamteam/client#readme",
+  "description": ""
 }

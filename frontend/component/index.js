@@ -4,6 +4,9 @@ export class Component {
         this.box = options.box || null;
         // ссылка на родительский элемент
         this.parent = options.parent || null;
+        //в случае пустот
+        options.element = options.element || {};
+        options.element.properties = options.element.properties || {}
         // собятия элемента, объект с именем события и именем обработчика события
         this.events = options.element.events || null;
         // объект с именем обработчика события и кодом этого обработчика
@@ -17,8 +20,8 @@ export class Component {
         //записываемся в дети родителю
         this.recInChildren();
         //тип и имя объекта для которго строится компонент
-        this.object = (options.element.properties !== undefined ? options.element.properties.object || "" : "");
-        this.name = (options.element.properties !== undefined ? options.element.properties.name || "" : "");
+        this.object = options.element.properties.object || "";
+        this.name = options.element.properties.name || "";
     }
 
     /**
@@ -36,6 +39,24 @@ export class Component {
         if (this.parent !== null) {
             this.parent.addChildren(this);
         }
+    }
+
+    /**
+     * Выделение записей и внешних ключей из content
+     * @param contentArr - массив контента
+     * @returns {{}}
+     */
+    prepareData(contentArr) {
+        let content = {};
+        contentArr.forEach((item) => {
+            item.forId.forEach((id) => {
+                if (id === this.id) {
+                    content.records = item.records || [];
+                    content.fk = item.fk || {};
+                }
+            })
+        });
+        return content;
     }
 
     eventHandler(event) {
@@ -56,6 +77,11 @@ export class Component {
         for (let eventName in this.events) {
             this.box.addEventListener(eventName, this.eventHandler.bind(this));
         }
+    }
+
+    destroy() {
+        this.box.innerHTML = '';
+        delete stpui[this.id];
     }
 
     /**
@@ -89,6 +115,10 @@ export class Component {
 
     render() {
 
+    }
+
+    reload() {
+        console.log('reload ' + this.id);
     }
 
     /**
