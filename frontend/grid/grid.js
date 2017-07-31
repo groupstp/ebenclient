@@ -389,6 +389,9 @@ export class Grid extends componentLib.Component {
                         }
                     }
                 }.bind(this)
+            }.bind(this),
+            onReload: function (event) {
+
             }.bind(this)
             /*searches: [
              {field: 'ID', caption: 'ID (int)', type: 'int'}
@@ -398,6 +401,10 @@ export class Grid extends componentLib.Component {
             obj[event] = this.handlers[event];
         }
         return obj;
+    }
+
+    reload(event) {
+
     }
 
     /**
