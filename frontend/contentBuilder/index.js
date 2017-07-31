@@ -145,7 +145,9 @@ export default class contentBuilder extends componentLib.Component {
         return page;
     }
 }
-
+/**
+ *
+ */
 class Page {
     constructor(id, caption, box) {
         this.id = id;
