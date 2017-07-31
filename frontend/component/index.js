@@ -43,7 +43,7 @@ export class Component {
 
     /**
      * Выделение записей и внешних ключей из content
-     * @param contentArr
+     * @param contentArr - массив контента
      * @returns {{}}
      */
     prepareData(contentArr) {
