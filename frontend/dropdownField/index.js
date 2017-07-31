@@ -1,4 +1,5 @@
 import {Field} from "../field";
+import {AjaxSender} from '../tools/index.js';
 
 //подключаем библиотеку и экспортируем переменные из нее
 const magiclib = require('imports-loader?jQuery=jquery!../libraries/magicsuggest/magicsuggest.js');
@@ -32,8 +33,9 @@ export class DropdownField extends Field {
     _applyMagicSuggest() {
         this.magicObj = $(this.controlEl).magicSuggest({
             //"style" : "width : 50% !important; display : inline-block"
-            "allowFreeEntries" : false,
-            "maxSelection" : this.maxSelection,
+            "allowFreeEntries": false,
+            "editable": true,
+            "maxSelection": this.maxSelection,
         });
     }
 
@@ -46,13 +48,29 @@ export class DropdownField extends Field {
         if (!this.magicObj) return;
 
         $(this.magicObj).on('selectionchange', (e, ms, records) => {
-            console.log(this.magicObj.getData());
             this._saveChanges(records);
             this.trigger('changeValue');
         });
 
         $(this.magicObj).on('focus', () => {
             this.trigger('focus');
+        });
+
+        $(this.magicObj).on('keyup', (e, magic, v) => {
+
+            let newValue = this.magicObj.getRawValue();
+
+            //различные системные кнопки, клики которых не надо обрабатывать
+            let forbiddenKeyCodes = [13, 16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 44, 45, 46, 91, 93, 144, 145];
+
+            if (forbiddenKeyCodes.indexOf(v.keyCode) !== -1){
+                return;
+            } else if (newValue) {
+                this.getListDataFromServer(this.magicObj.getRawValue());
+            } else {
+                this.clearListData();
+            }
+
         });
 
     }
@@ -106,6 +124,56 @@ export class DropdownField extends Field {
      */
     setListData(data) {
         this.magicObj.setData(data);
+    }
+
+    clearListData(data){
+        this.setListData([]);
+    }
+
+    /**
+     *  Метод отправляет запрос на сервер за порцией данных, подходящей под введенный текст
+     */
+    getListDataFromServer(text) {
+        let request = new AjaxSender({
+            url: 'http://localhost:1234/api',
+            msg: JSON.stringify({
+                "method": "getSuggestion",
+                "obj": this.object,
+                "name": this.name,
+                "id": this.id,
+                "text": text
+            })
+        });
+
+        let requestPromise = request.sendQuery();
+
+        requestPromise.then(result => {
+            let suggestion = prepareDataForList.call(this, result);
+            this.setListData(suggestion);
+        })
+            .catch(err => {
+                console.log(err);
+            });
+
+        /**
+         * Подготавливаем данные в формат {"id": '',"name" : ''}
+         */
+        function prepareDataForList(data) {
+            let result = [];
+
+            // делаем в попытке, потому что мало ли что нам придет в data
+            try {
+                let values = data.content.fk[this.id];
+                if (values) result = values;
+            }
+            catch
+                (err) {
+                console.log(err);
+            }
+
+            return result;
+        }
+
     }
 
 }
