@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">	
+	<style type="text/css">
+		* {margin: 0px; padding: 0px;}
+		html, body {height: 100%}
+		#header {position: relative; background: #B9F6CA; min-height: 25%; min-width: 100%}		
+		#forMap {position: relative; background: #B9F6CA; min-height: 75%; min-width: 100%}		
+	</style>
+	<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>	
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />	
+	<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css" />
+	<link rel="stylesheet" href="css/gzm.css" />	
+	<script src="js/leaflet-src.js"></script>
+	<script src="js/gzm.js"></script>	
+	<script type="text/javascript">
+		function init(){
+			var 
+			staticObjects = {
+				'geoZones':[
+					{uuid: '1-1', props: {'Название': {value: 'Геозона 1'}}, nodes: [[52.156058, 104.962634], [52.083357, 104.825451], [52.013051, 105.029592], [52.107938, 105.170857]]},
+					{uuid: '1-3', props: {'Название': {value: 'Внутри аэропорта'}}, nodes: [[52.269695, 104.378053], [52.270037, 104.419531], [52.259293, 104.397483]], parentUUID: '1-2'},
+					{uuid: '1-2', props: {'Название': {value: 'Аэропорт'}}, nodes: [[52.276533, 104.355005], [52.260897, 104.353706], [52.257010, 104.434974], [52.270880, 104.440026]]}
+				],
+				'regions': [
+					{objectID: '2-1', props: {'Название' : {value: 'Регион 1'}}, nodes: [[52.677875, 103.328956], [52.477405, 103.077455], [52.488346, 103.595156]]}],
+				'capitalPlaneObjects': [
+					{objectID: '3-1', props: {'Название': {value: 'Глазковский мост'}}, nodes: [[52.287725, 104.262201], [52.287238, 104.266182], [52.287166, 104.266155],[52.287658, 104.262136]]}]    			
+			},
+			tracking = [{
+				uuid: 'A123BC',
+				track: {
+					plan: {
+						nodes: [
+							[52.283805, 104.258716], 
+							[52.286367, 104.257743], 
+							[52.286844, 104.257636], 
+							[52.287118, 104.257663], 
+							[52.287715, 104.257999], 
+							[52.287899, 104.258428],
+							[52.287978, 104.259630],
+							[52.287164, 104.266652],
+							[52.286756, 104.270207],
+							[52.286651, 104.272057],
+							[52.285804, 104.273409]
+						]
+					},
+					fact: {
+						nodes: [
+							[52.283805, 104.258716], 
+							[52.286367, 104.257743], 
+							[52.286844, 104.257636], 
+							[52.287118, 104.257663], 
+							[52.287715, 104.257999], 
+							[52.287899, 104.258428],
+							[52.287978, 104.259630],
+							[52.287164, 104.266652],
+							[52.286593, 104.266754],
+							[52.286380, 104.266867],
+							[52.286049, 104.267167],
+							[52.285816, 104.267344],
+							[52.285078, 104.268208],
+							[52.285156, 104.268455]
+						],
+						stops: [
+							{coords: [52.283805, 104.258716], descr: '<b>Хорошая остановка</b>', status: 'ok'},
+	    					{coords: [52.286380, 104.266867], descr: 'Не очень хорошая остановка', status: 'badTiming'},
+	    					{coords: [52.285156, 104.268455], descr: 'Плохая остановка', status: 'alarm'}
+						]
+					}
+				},
+				currentPosition: [52.286708, 104.271953],
+				className: 'Truck',
+				hint: '0987',
+				title: '12 34 54 32 1 F< УКЩ BO ЫЩ',
+				props: {'Название': '12345'}
+			}];
+			g = new GeoZoneManager(),
+			map = new LeafletStaticMap("forMap");
+			monitor = new Monitor(g);
+			editor = new Editor(g);
+			g.plugMap(map);
+			g.plugEditor(editor);
+			g.plugMonitor(monitor);
+			g.deployObjects(staticObjects);
+			tracking.forEach(function(obj){
+				g.monitor.addTrackingObject(obj);
+			});
+			g.fitMap(/*[52.287465, 104.264322], 5*/);
+			//g.monitor.trackingObjects['A123BC'].track.hidePlan();
+			/* ------------- Обработчики событий ------------- */
+			//g.addListener('mapCursorMove', function(context){console.log(context)});
+
+			//g.addListener('mapSelect', function(context){console.log(context)});
+
+			//g.addListener('mapUnselect', function(context){console.log(context)});
+
+			//g.addListener('logChange', function(context){console.log(context)});			
+			/* ------------- Обработчики кнопок ------------- */
+			// воткнуть маркер по координатам в поле ввода
+			$('#putmarker').on('click', function(){
+				g.placeMarker($('#coords').val());
+			});
+			// включить поточечное создание объекта
+			$('#btnCreateByPoints').on('click', function(){				
+				g.editor.startNewStaticObject($('#newObjType').val());
+			});
+			// быстрое создание объекта
+			$('#btnQuickCreate').on('click', function(){				
+				g.editor.quickCreateStaticObject($('#newObjType').val());
+			});
+			// выключить поточечное создание объекта, окончить редактирование
+			$('#btnfreeze').on('click', function(){				
+				g.freeze();
+			});
+			// включить растягивание объекта
+			$('#btnstretch').on('click', function(){				
+				g.editor.stretchObject();
+			});
+			// удаление объекта
+			$('#btnrmzone').on('click', function(){				
+				g.editor.deleteObject();				
+			});
+			// переход к объекту
+			$('#focus').on('click', function(){				
+				g.map.focus($('#zoneID').val());
+			});
+			// отмена действия		
+			$('#btnundo').on('click', function(){
+				g.editor.undo();
+			});
+			// возврат действия
+			$('#btnredo').on('click', function(){
+				g.editor.redo();
+			});
+			// сгруппировать объекты
+			$('#btngroup').on('click', function(){
+				g.editor.groupObjects();
+			});
+			// разгруппировать объекты
+			$('#btnungroup').on('click', function(){
+				g.editor.ungroupObjects();
+			});
+			// работа с пикетами
+			// перевевод выбранного объекта в режим нанесения разметки
+			$('#btnmark').on('click', function(){
+				g.editor.markObject();
+			});
+			// сброс разметки
+			$('#btnunmark').on('click', function(){
+				g.editor.unmarkObject();
+			}); 
+			$('#btnsplit').on('click', function(){
+				g.editor.splitObject();
+			});
+
+			$('#btnhide').on('click', function(){
+				g.map.hideStaticObject($('#zoneID').val());
+			});
+
+			$('#btnshow').on('click', function(){
+				g.map.showStaticObject($('#zoneID').val());
+			});
+			
+			$('#fortest').on('click', function(){
+				console.log(LeafletBounds);
+			}); 
+		}
+	</script>
+	<title>GeoZoneManager - demo</title>
+</head>
+<body onload="init()">
+<div id="header" style="padding: 5px 0px 10px 10px">
+	Карта<br>	
+	<input type="text" id="coords">
+	<button id="putmarker">Воткнуть маркер</button><br>
+	Работа с геообъектами<br>
+	ID <input type="text" style="width: 300px;" id="zoneID"> 
+	<button id="focus">Перейти к объекту</button> 
+	<button id="btnhide">Спрятать</button>
+	<button id="btnshow">Показать</button>
+	<button id="fortest">Test</button><br>
+	Создание &nbsp;
+	<select id="newObjType">
+		<option selected disabled>Выберите тип объекта</option>
+		<option value="GeoZone">Геозона</option>
+		<option value="CircleGeoZone">Круглая геозона</option>
+		<option value="CapitalPointObject">Капитальный объект (точка)</option>
+		<option value="CapitalPlaneObject">Капитальный объект (полигон)</option>
+		<option value="PointObject">Точечный объект</option>
+		<option value="Road">Дорога</option>
+		<option value="SimpleRoute">Простой маршрут</option>		
+	</select>&nbsp;
+	<button id="btnCreateByPoints">Нарисовать по точкам</button>
+	<button id="btnQuickCreate">Быстрое создание</button>
+	<button id="btnfreeze">Заморозить</button>	
+	<br>	
+	Общие действия<br>	
+	<button id="btnstretch">Растянуть</button>	
+	<button id="btngroup">Сгруппировать</button>
+	<button id="btnungroup">Разгруппировать</button>
+	<button id="btnsave">Сохранить</button>	
+	<button id="btnrmzone">Удалить</button>
+	<button id="btnerase">Совсем удалить</button>
+	<button id="btnundo">Отменить</button>
+	<button id="btnredo">Вернуть</button>
+
+	<br>
+	Линейные объекты<br>
+	Разметка - с <input type="text" id="markFrom" value = "0" maxlength="20" style = "width: 100px">
+	по <input type="text" id="markTo" value = "" maxlength="20" style = "width: 100px">
+	<button id="btnmark">Начать разметку</button>
+	<button id="btnunmark">Убрать разметку</button>	
+	<button id="btnsplit">Разбить на пикеты</button>	
+</div>
+<div id="forMap">
+&nbsp
+</div>
+</body>
+</html>
