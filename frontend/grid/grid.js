@@ -259,6 +259,9 @@ export class Grid extends componentLib.Component {
             }.bind(this)
         };
         for (let name in this.btns) {
+            if (name === 'refreshGrid') {
+                continue;
+            }
             if (!this.btns[name].more)
                 tlb.items.push({
                     type: 'button',
@@ -391,7 +394,9 @@ export class Grid extends componentLib.Component {
                 }.bind(this)
             }.bind(this),
             onReload: function (event) {
-
+                if (this.btns['refreshGrid'] !== undefined)
+                    this.btns['refreshGrid'].onClick.call(this, this);
+                w2ui['toolabar_' + this.id].render();
             }.bind(this)
             /*searches: [
              {field: 'ID', caption: 'ID (int)', type: 'int'}
@@ -403,9 +408,14 @@ export class Grid extends componentLib.Component {
         return obj;
     }
 
-    reload(event) {
-
-    }
+    reloadRecords(data) {
+        this.recordsRaw = data.content[0].records;
+        this.fk = data.content[0].fk;
+        let recs = this.makeRecords(data.content[0].records, data.content[0].fk);
+        w2ui[this.id].clear();
+        w2ui[this.id].records = recs;
+        this.refresh();
+    };
 
     /**
      * Подготоваливаем записи для в2грид

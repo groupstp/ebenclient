@@ -82,6 +82,9 @@ export class Component {
     destroy() {
         this.box.innerHTML = '';
         delete stpui[this.id];
+        if (w2ui[this.id] !== undefined) {
+            w2ui[this.id].destroy();
+        }
     }
 
     /**

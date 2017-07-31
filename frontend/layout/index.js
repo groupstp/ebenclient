@@ -41,11 +41,6 @@ export class Layout extends componentLib.Component {
         this.buildPanels();
     }
 
-    destroy() {
-        super.destroy();
-        w2ui[this.id].destroy();
-    }
-
     /**
      * Делает объект для в2уай
      * @returns {{name: *}}
@@ -124,6 +119,20 @@ export class Layout extends componentLib.Component {
                         content: self.content,
                         parent: self
                     });
+                });
+            }
+            if (this.panels[panel].elements[0].type === 'map') {
+                //запоминание контекста
+                let self = this;
+                console.log(self);
+                //подключаем нужную библиотеку
+                let needLib = require('bundle-loader!../map/index.js')(function (mod) {
+                    let g = new GeoZoneManager();
+                    let placeMap = document.createElement('div');
+                    placeMap.style.height = '100%';
+                    w2ui[self.id].el(panel).appendChild(placeMap);
+                    let map = new LeafletStaticMap(placeMap);
+                    g.plugMap(map);
                 });
             }
 
