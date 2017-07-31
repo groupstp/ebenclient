@@ -1,0 +1,88 @@
+.mapLabel{}
+
+.mapText{white-space: nowrap;}
+
+.gzmDynamic {
+	text-align:center;
+	/*font-size: 32px;*/
+}
+
+.gzmBaloon {	
+	text-align:center;
+	font-size: 40px;
+}
+
+.gzmStretcher {
+	text-align:center;
+	font-size: 100%;	
+}
+
+.gzmArrow {
+	text-align:center;
+	font-size: 40px;
+}
+
+.leaflet-popup-content-wrapper {
+	min-width: 30em;
+	max-width: 50em;
+}
+
+/* Обертка */
+.wrapper {
+	width: 40em;
+	/*max-width: 50em;*/
+}
+/* Левая сторона плашки (для подписей) */
+.gzmleftblock {
+  /*position: relative; */
+  display: inline-block;
+ /*width: 4.5em;*/
+  max-width: 20em;  
+  height: 70%;
+  /*background-color: red;*/
+ }
+
+.gzmleftblock span {display: block; margin-bottom: 5px;}
+/* Правая сторона (для инпутов) */
+.gzmrightblock {
+  /*float: right; */
+  /*position: relative; */
+  display: inline-block;
+  width: 17.5em; 
+  height: 70%;  
+  text-align: center;
+  /*background-color: green;  */
+}
+.gzmrightblock input {width: 90%; margin-bottom: 2px;}
+
+.gzmtopblock {
+	width: 100%;
+}
+
+.gzmbotblock {
+	text-align: center;
+}
+
+.gzmtopblock > input {margin: 0 4px;}
+
+/* Кнопка */
+.gzmbtn{
+	background: #384959;
+	border-radius: 5px;
+	min-width: 3em;
+	display: inline-block;
+	padding: 0.3em;
+	margin: 2px 1px;
+	text-align: center;
+	color: white;
+	font-weight: bold;
+	font-size: 10pt;
+	-webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.gzmbtn:hover {
+	box-shadow: 0 0 10px rgba(0,0,0,0.5);
+	cursor: default;
+}
