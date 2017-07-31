@@ -7,3 +7,5 @@ const leafletLib = require('imports-loader?jQuery=jquery!exports-loader?L!../lib
 window.L = leafletLib;
 const gzmLib = require('imports-loader?jQuery=jquery!../libraries/gzm/gzm.js');
 console.log(gzmLib);
+import * as componentLib from '../component';
+import * as tools from '../tools/index.js';
