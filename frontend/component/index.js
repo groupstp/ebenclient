@@ -4,9 +4,10 @@ export class Component {
         this.box = options.box || null;
         // ссылка на родительский элемент
         this.parent = options.parent || null;
+        //в случае пустот
+        options.element = options.element || {};
+        options.element.properties = options.element.properties || {}
         // собятия элемента, объект с именем события и именем обработчика события
-        options.element = options.element || '';
-        options.element.properties = options.element.properties || ''
         this.events = options.element.events || null;
         // объект с именем обработчика события и кодом этого обработчика
         this.code = this.prepareCode(options.code) || {};
@@ -99,7 +100,7 @@ export class Component {
     }
 
     reload() {
-
+        console.log('reload ' + this.id);
     }
 
     /**

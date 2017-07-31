@@ -45,6 +45,7 @@ var menu = new menuTopFixed({
 let containerDiv = document.getElementById('container');
 //строим менеджер страниц
 let builder = new contentBuilder({box: containerDiv, onHome: buildMain});
+console.log('builder', builder);
 buildMain(builder);
 //подписка на клик, роутер системы
 menu.on('menuItemSelected', event => {
@@ -54,9 +55,10 @@ menu.on('menuItemSelected', event => {
      }*/
     if (detail.obj === 'ref' || detail.obj === 'doc' || detail.obj === 'st') {
         let objectID = detail.obj + '&' + detail.name;
-        let boxForElement = builder.showPage(objectID, detail.caption);
+        let page = builder.showPage(objectID, detail.caption);
+        console.log('boxForElement', page);
         let locker = new tools.Freezer({
-            place: boxForElement,
+            place: page.generatedBox,
             message: 'Загрузка'
         });
         let mainQuery = new tools.AjaxSender({
@@ -72,14 +74,13 @@ menu.on('menuItemSelected', event => {
                     locker.unlock();
                     let layoutLib = require('./layout/index.js');
                     let layout = new layoutLib.Layout({
-                            box: boxForElement,
+                            box: page.generatedBox,
                             element: response.elements[0],
                             content: response.content,
-                            code: response.code
+                            code: response.code,
+                            parent: page
                         }
                     );
-                    //связываем лэйаут с менеджером страниц
-                    builder.pages[builder.current].object = layout;
                 },
                 error => {
                     locker.unlock();
@@ -94,7 +95,7 @@ menu.on('menuItemSelected', event => {
 })
 
 function buildMain(builder) {
-    let place = builder.showPage('main', 'Главная страница');
+    let place = builder.showPage('main', 'Главная страница').generatedBox;
     place.innerHTML = 'Главная страница!';
 }
 
