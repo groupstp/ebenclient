@@ -127,12 +127,14 @@ export class Layout extends componentLib.Component {
                 console.log(self);
                 //подключаем нужную библиотеку
                 let needLib = require('bundle-loader!../map/index.js')(function (mod) {
-                    let g = new GeoZoneManager();
-                    let placeMap = document.createElement('div');
-                    placeMap.style.height = '100%';
-                    w2ui[self.id].el(panel).appendChild(placeMap);
-                    let map = new LeafletStaticMap(placeMap);
-                    g.plugMap(map);
+                    let m = new mod.Map({
+                        box: w2ui[self.id].el(panel),
+                        element: self.panels[panel].elements[0],
+                        code: self.code,
+                        content: self.content,
+                        parent: self
+                    });
+                    console.log(m);
                 });
             }
 

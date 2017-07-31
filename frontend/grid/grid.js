@@ -44,13 +44,10 @@ export class Grid extends componentLib.Component {
                 this.toolbar = attributes.elements[i];
             }
         }
-        for (var i in this.content) {
-            if (this.content[i].forId === this.id) {
-                this.recordsRaw = this.makeAsos(this.content[i].records, 'ID');
-                this.fk = this.content[i].fk;
-            }
-        }
         this.columnsRaw = this.makeAsos(this.columnsRaw, 'field');
+        let prepContent = this.prepareData(this.content);
+        this.recordsRaw = this.makeAsos(prepContent.records, 'ID');
+        this.fk = prepContent.fk;
         this.setButtons();
         this.setHandlers();
     }
