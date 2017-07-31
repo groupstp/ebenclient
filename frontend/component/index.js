@@ -41,6 +41,24 @@ export class Component {
         }
     }
 
+    /**
+     * Выделение записей и внешних ключей из content
+     * @param contentArr
+     * @returns {{}}
+     */
+    prepareData(contentArr) {
+        let content = {};
+        contentArr.forEach((item) => {
+            item.forId.forEach((id) => {
+                if (id === this.id) {
+                    content.records = item.records || [];
+                    content.fk = item.fk || {};
+                }
+            })
+        });
+        return content;
+    }
+
     eventHandler(event) {
 
         let type = event.type;
