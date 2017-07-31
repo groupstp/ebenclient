@@ -133,7 +133,7 @@ export default class contentBuilder extends componentLib.Component {
                     if (i <= this.current - 1) uniq = false;
                     //удаляем страницу
                     this.pages[i].destroy();
-                    //удаляеи ее из массива
+                    //удаляем ее из массива
                     this.pages.splice(i, 1);
                     break;
                 }
