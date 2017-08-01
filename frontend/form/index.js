@@ -18,7 +18,7 @@ export class Form extends Component {
         this.buttons = [];
 
         // данные полей и внешние ключи
-        this.data = this._prepareData(options.content);
+        this.data = this.prepareData(options.content);
         this.object = "";
         this.name = "";
         this._initForm(options.element.elements);
@@ -271,21 +271,21 @@ export class Form extends Component {
      * @returns {{}}
      * @private
      */
-    _prepareData(contentArr) {
-
-        let content = {};
-
-        contentArr.forEach((item) => {
-            if (item.forId === this.id) {
-                content.records = item.records || [];
-                content.fk = item.fk || {};
-            }
-
-        });
-
-        return content;
-
-    }
+    // _prepareData(contentArr) {
+    //
+    //     let content = {};
+    //
+    //     contentArr.forEach((item) => {
+    //         if (item.forId === this.id) {
+    //             content.records = item.records || [];
+    //             content.fk = item.fk || {};
+    //         }
+    //
+    //     });
+    //
+    //     return content;
+    //
+    // }
 
     ////////// Public methods //////////
 
