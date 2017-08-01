@@ -39,7 +39,6 @@ export class Map extends componentLib.Component {
                         break;
                     }
                 }
-                console.log(uuid);
                 this.code[this.events.mapSelected].call(this, uuid);
             }.bind(this))
         }

@@ -54,7 +54,7 @@ export class Grid extends componentLib.Component {
 
     /**
      * Размещает таблицу на странице
-     * @param place - дом объект
+     * @param place - дом-объект
      * @private
      */
     render(place) {
@@ -223,7 +223,13 @@ export class Grid extends componentLib.Component {
             this.btns[this.toolbar.elements[i].id].id = this.toolbar.elements[i].id;
             //обработчики нажатий на кнопку
             this.btns[this.toolbar.elements[i].id].onClick = function (element) {
-                this.code[this.toolbar.elements[i].events.onClick].call(this, element);
+                try {
+                    this.code[this.toolbar.elements[i].events.onClick].call(this, element);
+                } catch (err) {
+                    console.log('SERVER CODE ERROR:' + err);
+                    w2alert('Серевер вернул некорректное действие!');
+                }
+
             }.bind(this)
         }
     }
@@ -246,11 +252,26 @@ export class Grid extends componentLib.Component {
             items: [],
             onClick: function (event) {
                 if (event.subItem === undefined) {
-                    if (this.btns[event.item.id] !== undefined)
-                        this.btns[event.item.id].onClick.call(this, this);
+                    if (this.btns[event.item.id] !== undefined) {
+                        try {
+                            this.btns[event.item.id].onClick.call(this, this);
+                        } catch (err) {
+                            console.log('SERVER CODE ERROR:' + err);
+                            w2alert('Серевер вернул некорректное действие!');
+                        }
+                    }
+
+
                 } else {
-                    if (this.btns[event.subItem.id] !== undefined)
-                        this.btns[event.subItem.id].onClick.call(this, this);
+                    if (this.btns[event.subItem.id] !== undefined) {
+                        try {
+                            this.btns[event.subItem.id].onClick.call(this, this);
+                        } catch (err) {
+                            console.log('SERVER CODE ERROR:' + err);
+                            w2alert('Серевер вернул некорректное действие!');
+                        }
+                    }
+
                 }
 
             }.bind(this)
@@ -310,7 +331,13 @@ export class Grid extends componentLib.Component {
             onClick: function (event) {
                 console.log(event);
                 if (this.btns[event.menuItem.id] !== undefined)
-                    this.btns[event.menuItem.id].onClick.call(this, this);
+                    try {
+                        this.btns[event.menuItem.id].onClick.call(this, this);
+                    } catch (err) {
+                        console.log('SERVER CODE ERROR:' + err);
+                        w2alert('Серевер вернул некорректное действие!');
+                    }
+
             }.bind(this)
         };
         for (let name in this.btns) {
@@ -402,8 +429,14 @@ export class Grid extends componentLib.Component {
             }.bind(this),
             onReload: function (event) {
                 if (this.btns['refreshGrid'] !== undefined)
-                    this.btns['refreshGrid'].onClick.call(this, this);
-                w2ui['toolabar_' + this.id].render();
+                    try {
+                        this.btns['refreshGrid'].onClick.call(this, this);
+                    } catch (err) {
+                        console.log('SERVER CODE ERROR:' + err);
+                        w2alert('Серевер вернул некорректное действие!');
+                    }
+
+                w2ui[this.id + '_toolbar'].render();
             }.bind(this)
             /*searches: [
              {field: 'ID', caption: 'ID (int)', type: 'int'}
@@ -495,15 +528,32 @@ export class Grid extends componentLib.Component {
      * @private
      */
     makeColumns() {
+        window.showFiles = function (recid, col, index, column_index) {
+            console.log(recid, col);
+            //console.log(w2ui[this.id].getCellHTML(index, column_index));
+            /*$('#' + '').w2overlay({
+             openAbove: false,
+             align: 'none',
+             html: '<div style="padding: 10px; line-height: 150%">' + 'sdfsdfsdf' + '</div>'
+             });*/
+        }.bind(this);
+        let renders = {
+            "files": function (record, index, column_index) {
+                return ('<button onclick=showFiles("' + record.recid
+                + '","' + this.columns[column_index].field + '",' + index
+                + ',' + column_index + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
+            }
+        }
         let columns = [];
         for (let i in this.columnsRaw) {
             if (this.columnsRaw[i].field === 'ID') continue;
             columns.push({
                 field: this.columnsRaw[i].field,
-                size: /*this.columnsRaw[col].size*/ '10%',
+                size: '10%',
                 caption: this.columnsRaw[i].caption,
                 sortable: this.columnsRaw[i].sortable,
-                hidden: this.columnsRaw[i].hidden
+                hidden: this.columnsRaw[i].hidden,
+                render: renders[this.columnsRaw[i].type] || null
             })
         }
         return columns;
@@ -519,7 +569,13 @@ export class Grid extends componentLib.Component {
         for (let eventName in this.events) {
             this.handlers[eventName] = function (event) {
                 //в качестве параметра передаем текущий объект-таблицу
-                this.code[this.events[eventName]].call(this, this);
+                try {
+                    this.code[this.events[eventName]].call(this, this);
+                } catch (err) {
+                    console.log('SERVER CODE ERROR:' + err);
+                    w2alert('Серевер вернул некорректное действие!');
+                }
+
             }.bind(this)
         }
 
