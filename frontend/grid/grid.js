@@ -364,6 +364,16 @@ export class Grid extends componentLib.Component {
                             }
                         }
                     }
+                    console.log(this);
+                    if (this.handlers.onSelect !== undefined) {
+                        try {
+                            this.handlers.onSelect();
+                        } catch (err) {
+                            console.log('SERVER CODE ERROR:' + err);
+                            w2alert('Серевер вернул некорректное действие!');
+                        }
+                    }
+
                 }.bind(this)
             }.bind(this),
             onUnselect: function (event) {
@@ -399,9 +409,9 @@ export class Grid extends componentLib.Component {
              {field: 'ID', caption: 'ID (int)', type: 'int'}
              ]*/
         }
-        for (let event in this.handlers) {
-            obj[event] = this.handlers[event];
-        }
+        /*for (let event in this.handlers) {
+         obj[event] = this.handlers[event];
+         }*/
         return obj;
     }
 
@@ -506,10 +516,10 @@ export class Grid extends componentLib.Component {
      */
     setHandlers() {
         //преобразуем приходящий код
-        //this.code = this.prepareCode(this.code);
         for (let eventName in this.events) {
             this.handlers[eventName] = function (event) {
-                this.code[this.events[eventName]].call(this, event);
+                //в качестве параметра передаем текущий объект-таблицу
+                this.code[this.events[eventName]].call(this, this);
             }.bind(this)
         }
 

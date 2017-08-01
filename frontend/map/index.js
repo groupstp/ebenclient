@@ -2,28 +2,59 @@
 import '../libraries/fontawesome/css/font-awesome.css';
 import '../libraries/gzm/gzm.css';
 import '../libraries/gzm/leaflet.css';
-console.log('9999999');
+//подключаем leaflet
 const leafletLib = require('imports-loader?jQuery=jquery!exports-loader?L!../libraries/gzm/leaflet-src.js');
 window.L = leafletLib;
+//подключаем gzm
 const gzmLib = require('imports-loader?jQuery=jquery!../libraries/gzm/gzm.js');
-console.log(gzmLib);
 import * as componentLib from '../component';
 import * as tools from '../tools/index.js';
-
+/**
+ * Заготовка для отображения карт
+ */
 export class Map extends componentLib.Component {
     constructor(param) {
         super(param);
         this.gzmCore = '';
         this.map = '';
         this.editor = '';
+        this.staticObjects = {};
+        this.saveInWindow();
         this.render();
         this.deployObjects();
+        this.addListeners()
+    }
+
+    addListeners() {
+        if (this.events.mapSelected !== undefined) {
+            this.gzmCore.addListener('mapSelect', function (event) {
+                /*
+                 TODO
+                 getUUIDbyObjectID(objectID)
+                 */
+                let uuid = '';
+                for (let i in this.staticObjects.geoZones) {
+                    if (this.staticObjects.geoZones[i].objectID === event.objectInfo.objectID) {
+                        uuid = this.staticObjects.geoZones[i].uuid;
+                        break;
+                    }
+                }
+                console.log(uuid);
+                this.code[this.events.mapSelected].call(this, uuid);
+            }.bind(this))
+        }
     }
 
     deployObjects() {
         this.makeObjectsForMap();
+        this.gzmCore.deployObjects(this.staticObjects);
+        this.gzmCore.fitMap();
+
     }
 
+    /**
+     * Соединяем все с ядром
+     */
     connectToCore() {
         this.gzmCore.plugMap(this.map);
         this.gzmCore.plugEditor(this.editor);
@@ -43,6 +74,9 @@ export class Map extends componentLib.Component {
         this.editor = new Editor(this.gzmCore);
     }
 
+    /**
+     * Создаем объект для размещения на карте
+     */
     makeObjectsForMap() {
         let result = {};
         result.geoZones = [];
@@ -54,15 +88,39 @@ export class Map extends componentLib.Component {
             let coordsStr = records[i].coords;
             coordsStr = coordsStr.slice(2);
             coordsStr = coordsStr.substr(0, coordsStr.length - 3);
-            console.log(coordsStr);
+            coordsStr = coordsStr.split('),(');
+            for (let j in coordsStr) {
+                coords.push([parseFloat(coordsStr[j].split(',')[0]), parseFloat(coordsStr[j].split(',')[1])]);
+            }
             result.geoZones.push({
                 uuid: records[i].ID,
                 props: {test: {value: 'testValue'}},
+                nodes: coords
             })
         }
-        return result;
+        this.staticObjects = result;
     }
 
+    /**
+     * Выделяет объект на карте
+     * @param uuid
+     */
+    setSelection(uuid) {
+        /*
+         TODO
+         getObjectIDbyUUID(uuid)
+         */
+        for (let i in this.staticObjects.geoZones) {
+            if (this.staticObjects.geoZones[i].uuid === uuid) {
+                this.gzmCore.map.focus(this.staticObjects.geoZones[i].objectID);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Размещает карту на странице в боксе
+     */
     render() {
         let placeMap = document.createElement('div');
         placeMap.style.height = '100%';
