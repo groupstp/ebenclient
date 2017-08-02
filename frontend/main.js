@@ -62,8 +62,14 @@ menu.on('menuItemSelected', event => {
             message: 'Загрузка'
         });
         let mainQuery = new tools.AjaxSender({
-            url: 'http://localhost:1234/get' /*'server.json'*/,
-            msg: "obj=" + detail.obj + '&name=' + detail.name /*''*/,
+            url: /*'http://localhost:1234/get'*/ /*'server.json'*/ 'http://localhost:12345',
+            msg: /*"obj=" + detail.obj + '&name=' + detail.name*/ /*''*/ JSON.stringify({
+                action: 'get',
+                path: detail.obj + ':' + detail.name,
+                data: {
+                    type: 'fullPage'
+                }
+            }),
             before: function () {
                 locker.lock();
             }.bind(this)

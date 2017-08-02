@@ -1,4 +1,32 @@
-/**
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: grid/grid.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: grid/grid.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
  * Модуль для построения таблиц
  * @module grid
  * @requires tools
@@ -96,7 +124,7 @@ export class Grid extends component.Component {
     selectRecord(id, scroll = true) {
         for (var i in w2ui[this.id].records)
             w2ui[this.id].unselect(w2ui[this.id].records[i].recid)
-        if (!this.hierachy && this.groupedBy.length === 0) {
+        if (!this.hierachy &amp;&amp; this.groupedBy.length === 0) {
             w2ui[this.id].select(id);
         }
         if (this.groupedBy.length > 0) {
@@ -116,7 +144,7 @@ export class Grid extends component.Component {
         let recordRaw = this.makeAsos(data.content[0].records, 'ID');
         let fk = data.content[0].fk;
         //добавление для справочника без иерархии
-        if (!this.hierachy && this.groupedBy.length === 0) {
+        if (!this.hierachy &amp;&amp; this.groupedBy.length === 0) {
             //записываем в поля объекта
             $.extend(this.recordsRaw, recordRaw);
             $.extend(true, this.fk, fk);
@@ -140,14 +168,14 @@ export class Grid extends component.Component {
             this.selectInTree(ID);
         }
         //добавление в подгружаемую иерархию
-        if (this.hierachy && this.pagination && this.groupedBy.length === 0) {
+        if (this.hierachy &amp;&amp; this.pagination &amp;&amp; this.groupedBy.length === 0) {
             let recordRawWithoutKey = recordRaw[Object.keys(recordRaw)[0]];
             let record = this.makeRecords(recordRaw, fk)[0];
             //можем ли отобразить новую запись
             if (this.selectInTree(recordRawWithoutKey.parentID, false, false)) {
                 if (w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui !== undefined
-                    && w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui.children !== undefined
-                    && w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui.children[0].recid !== 'treeFake') {
+                    &amp;&amp; w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui.children !== undefined
+                    &amp;&amp; w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui.children[0].recid !== 'treeFake') {
                     //записываем в поля объекта
                     $.extend(this.recordsRaw, recordRaw);
                     $.extend(true, this.fk, fk);
@@ -373,8 +401,8 @@ export class Grid extends component.Component {
             name: this.id,
             autoLoad: (this.pagination ? 'auto' : false),
             header: this.header,
-            url: (this.pagination && !this.hierachy ? " " : ""),
-            limit: (this.pagination && !this.hierachy ? this.limit : ""),
+            url: (this.pagination &amp;&amp; !this.hierachy ? " " : ""),
+            limit: (this.pagination &amp;&amp; !this.hierachy ? this.limit : ""),
             show: {
                 toolbar: true,
                 footer: true
@@ -430,7 +458,7 @@ export class Grid extends component.Component {
                                 let btnId = (this.btns[btn].more ? 'moreMenu:' : '') + btn;
                                 w2ui[this.id + '_toolbar'].disable(btnId);
                             }
-                            if (this.btns[btn].needSelected && selected.length <= 0) {
+                            if (this.btns[btn].needSelected &amp;&amp; selected.length &lt;= 0) {
                                 let btnId = (this.btns[btn].more ? 'moreMenu:' : '') + btn;
                                 w2ui[this.id + '_toolbar'].disable(btnId);
                             }
@@ -487,7 +515,7 @@ export class Grid extends component.Component {
             let rec = {};
             rec.recid = recordsRaw[recid].ID;
             for (let col in recordsRaw[recid]) {
-                if (this.columnsRaw[col] !== undefined && this.columnsRaw[col].type === 'reference') {
+                if (this.columnsRaw[col] !== undefined &amp;&amp; this.columnsRaw[col].type === 'reference') {
                     rec[col] = "";
                     for (let j in recordsRaw[recid][col]) {
                         rec[col] += fk[col][recordsRaw[recid][col][j]] + '; '
@@ -496,14 +524,14 @@ export class Grid extends component.Component {
                     rec[col] = recordsRaw[recid][col];
                 }
             }
-            if (this.hierachy && this.pagination && recordsRaw[recid].isGroup !== undefined && recordsRaw[recid].isGroup) {
+            if (this.hierachy &amp;&amp; this.pagination &amp;&amp; recordsRaw[recid].isGroup !== undefined &amp;&amp; recordsRaw[recid].isGroup) {
                 rec.w2ui = {
                     children: [{recid: 'treeFake'}]
                 };
             }
             records.push(rec);
         }
-        if (this.hierachy && !this.pagination) {
+        if (this.hierachy &amp;&amp; !this.pagination) {
             let recordsW = this.makeAsos(records, 'recid');
 
             function showTree(parent, tree) {
@@ -545,14 +573,14 @@ export class Grid extends component.Component {
             /*$('#' + '').w2overlay({
              openAbove: false,
              align: 'none',
-             html: '<div style="padding: 10px; line-height: 150%">' + 'sdfsdfsdf' + '</div>'
+             html: '&lt;div style="padding: 10px; line-height: 150%">' + 'sdfsdfsdf' + '&lt;/div>'
              });*/
         }.bind(this);
         let renders = {
             "files": function (record, index, column_index) {
-                return ('<button onclick=showFiles("' + record.recid
+                return ('&lt;button onclick=showFiles("' + record.recid
                 + '","' + this.columns[column_index].field + '",' + index
-                + ',' + column_index + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
+                + ',' + column_index + ')>&lt;i class="fa fa-link" aria-hidden="true">&lt;/i> Файлы&lt;/button>');
             }
         }
         let columns = [];
@@ -631,7 +659,7 @@ export class Grid extends component.Component {
         var resw2 = [];
         for (var i in res) {
             var rec = {
-                "recid": 'group&' + i + Math.random(),
+                "recid": 'group&amp;' + i + Math.random(),
                 "w2ui": {
                     "children": res[i],
                     "style": style[d]
@@ -689,7 +717,7 @@ export class Grid extends component.Component {
             }
         }
         for (let i in records) {
-            if (records[i].w2ui !== undefined && records[i].w2ui.children !== undefined) {
+            if (records[i].w2ui !== undefined &amp;&amp; records[i].w2ui.children !== undefined) {
                 let newPath = path.slice(0);
                 newPath.push(records[i].recid);
                 let res = this.findPathInTree(id, records[i].w2ui.children, newPath, deep + 1);
@@ -742,7 +770,7 @@ export class GridNew
                                     text: 'Выйти из поиска',
                                     icon: 'fa fa-times',
                                     onClick: function () {
-                                        if (this.pagination && !this.hierachy) {
+                                        if (this.pagination &amp;&amp; !this.hierachy) {
                                             w2ui[this.id].reload();
                                         } else {
                                             w2ui[this.id].clear();
@@ -762,7 +790,7 @@ export class GridNew
                 )
 
         }.bind(this);
-        if (this.pagination && !this.hierachy) {
+        if (this.pagination &amp;&amp; !this.hierachy) {
             //щит для пагинации
             this.handlers.onRequest = function (event) {
                 console.log(event);
@@ -787,7 +815,7 @@ export class GridNew
                 return;
             }
             //исключаем повторную подгрузку
-            if (w2ui[this.id].get(recid).w2ui !== undefined && w2ui[this.id].get(recid).w2ui.children !== undefined && w2ui[this.id].get(recid).w2ui.children[0].recid !== 'treeFake') {
+            if (w2ui[this.id].get(recid).w2ui !== undefined &amp;&amp; w2ui[this.id].get(recid).w2ui.children !== undefined &amp;&amp; w2ui[this.id].get(recid).w2ui.children[0].recid !== 'treeFake') {
                 w2ui[this.id].toggle(recid);
                 return;
             }
@@ -871,4 +899,26 @@ export class GridNew
             }.bind(this)
         }
     }
-}
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-component.html">component</a></li><li><a href="module-grid.html">grid</a></li><li><a href="module-tools.html">tools</a></li></ul><h3>Classes</h3><ul><li><a href="Map.html">Map</a></li><li><a href="module.exports.html">exports</a></li><li><a href="module-component.Component.html">Component</a></li><li><a href="module-grid.Grid.html">Grid</a></li><li><a href="Page.html">Page</a></li><li><a href="Popup.html">Popup</a></li></ul><h3>Global</h3><ul><li><a href="global.html#auth">auth</a></li><li><a href="global.html#buildNavigatorToolbar">buildNavigatorToolbar</a></li><li><a href="global.html#config">config</a></li><li><a href="global.html#on">on</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#render">render</a></li><li><a href="global.html#showPage">showPage</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Aug 02 2017 13:02:59 GMT+0800 (RTZ 7 (зима))
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

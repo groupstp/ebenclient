@@ -1,0 +1,2900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: 0.bandle.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: 0.bandle.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>webpackJsonp([0],{
+
+/***/ 52:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Form = undefined;
+
+var _typeof = typeof Symbol === "function" &amp;&amp; typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj &amp;&amp; typeof Symbol === "function" &amp;&amp; obj.constructor === Symbol &amp;&amp; obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i &lt; props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _component = __webpack_require__(31);
+
+var _simpleField = __webpack_require__(57);
+
+var _dropdownField = __webpack_require__(60);
+
+var _button = __webpack_require__(56);
+
+var _template = __webpack_require__(63);
+
+var _template2 = _interopRequireDefault(_template);
+
+function _interopRequireDefault(obj) { return obj &amp;&amp; obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call &amp;&amp; (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" &amp;&amp; superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass &amp;&amp; superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Form = exports.Form = function (_Component) {
+    _inherits(Form, _Component);
+
+    function Form(options) {
+        _classCallCheck(this, Form);
+
+        // флаг того что форма уже сформирована
+        var _this = _possibleConstructorReturn(this, (Form.__proto__ || Object.getPrototypeOf(Form)).call(this, options));
+
+        _this.rendered = false;
+
+        _this.template = options.element.properties.template || false;
+
+        // поля формы
+        _this.fields = [];
+        // кнопки формы, но не кнопки относящиеся конкретно к полям
+        _this.buttons = [];
+
+        // данные полей и внешние ключи
+        _this.data = _this._prepareData(options.content);
+        _this.object = "";
+        _this.name = "";
+        _this._initForm(options.element.elements);
+        _this.saveInWindow();
+        _this.getAttributes(options.element);
+        return _this;
+    }
+
+    _createClass(Form, [{
+        key: 'getAttributes',
+        value: function getAttributes(attributes) {
+            this.object = attributes.properties.object;
+            this.name = attributes.properties.name;
+        }
+
+        ////////// Private methods //////////
+
+        /**
+         * Инициализация формы, выделение колонок и кнопок из elements
+         * @private
+         */
+
+    }, {
+        key: '_initForm',
+        value: function _initForm() {
+            var elements = arguments.length > 0 &amp;&amp; arguments[0] !== undefined ? arguments[0] : [];
+
+            extractElements.call(this, elements);
+
+            function extractElements(elements) {
+                var _this2 = this;
+
+                elements.forEach(function (el) {
+                    searchForFormElements.call(_this2, el);
+                });
+            }
+
+            function searchForFormElements(el) {
+
+                var type = el.type;
+
+                switch (type) {
+                    case 'field':
+                        this.fields.push(new _simpleField.SimpleField({
+                            "element": el,
+                            "code": this.prepareCode(this.code),
+                            "parent": this
+                        }));
+                        break;
+                    case 'dropList':
+                        this.fields.push(new _dropdownField.DropdownField({
+                            "element": el,
+                            "code": this.prepareCode(this.code),
+                            "parent": this
+                        }));
+                        break;
+                    case 'button':
+                        this.buttons.push(new _button.Button({
+                            "element": el,
+                            "code": this.prepareCode(this.code),
+                            "parent": this
+                        }));
+                        break;
+                }
+            }
+        }
+    }, {
+        key: '_loadData',
+        value: function _loadData() {
+            var records = this.data.records;
+            var fk = this.data.fk;
+
+            // заполнить значения полей
+            if (records &amp;&amp; records.length) {
+                // должна придти только 1 строка
+                var record = records[0];
+                for (var fieldName in record) {
+                    var field = this.getField(fieldName);
+                    if (field) {
+                        // если значение есть, то нужно его использовать, возможно эта форма рендерится повторно
+                        if (this.rendered) {
+                            field.setValue(field.value);
+                        } else {
+                            // загружаем то, что пришло с сервера
+                            // если это ссылочный тип, то нужно взять значение для отображения из this.data.fk
+                            if (this._itsForeignKeyField(fieldName)) {
+                                // для ссылочного типа может быть массив значений
+                                // TODO
+                                var arrOfValues = createArrOfValues(this.data.fk[fieldName], record[fieldName]);
+                                field.setValue(arrOfValues);
+                            } else {
+                                field.setValue(record[fieldName]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // заполнить списки выбора
+            if (fk) {
+                for (var _fieldName in fk) {
+                    var _field = this.getField(_fieldName);
+                    if (_field) {
+                        var _arrOfValues = createArrOfValues(fk[_fieldName]);
+                        // задаем значения и для списка выбора
+                        _field.setListData(_arrOfValues);
+                    }
+                }
+            }
+            /**
+             * Функция возвращает массив объектов для загрузки в список выбора или в виде значения поля
+             * @param values {object} - значения внешних ключей, id и value
+             * @param ids {array} - id внешних ключей для которых нужно получить значения из fk
+             * @returns {Array}
+             */
+            function createArrOfValues(values, ids) {
+
+                var resultArr = [];
+
+                // задаем значения списка выбора
+                if (arguments.length === 1) {
+                    for (var key in values) {
+                        resultArr.push({
+                            "id": key,
+                            "name": values[key]
+                        });
+                    }
+                } else if (arguments.length === 2) {
+                    // задаем значение поля
+                    ids.forEach(function (id) {
+                        var fkValue = values[id];
+                        if (fkValue !== undefined) {
+                            resultArr.push({
+                                "id": id,
+                                "name": fkValue
+                            });
+                        }
+                    });
+                }
+
+                return resultArr;
+            }
+        }
+
+        /**
+         * Проверяем поле на ссылочный тип
+         * @private
+         */
+
+    }, {
+        key: '_itsForeignKeyField',
+        value: function _itsForeignKeyField(fieldName) {
+            return this.data.fk[fieldName];
+        }
+
+        /**
+         * Заполняет контейнер html содержимым (используется стандартный макет)
+         * @private
+         */
+
+    }, {
+        key: '_generateHtml',
+        value: function _generateHtml() {
+
+            if (!this.box) {
+                this.box = document.createElement('div');
+            }
+
+            if (this.template) {
+                // кастомный шаблон
+                this.box.innerHTML = document.querySelector("#" + this.template).innerHTML;
+            } else {
+                // стандартный шаблон
+                this.box.innerHTML = (0, _template2.default)();
+                renderFields.call(this);
+                renderButtons.call(this);
+            }
+
+            function renderFields() {
+                var fieldsWrapper = this.box.querySelector('.fields-wrapper');
+
+                this.fields.forEach(function (field) {
+                    fieldsWrapper.appendChild(field.render());
+                });
+            }
+
+            function renderButtons() {
+                var btnsWrapper = this.box.querySelector('.form-btns-wrapper');
+
+                this.buttons.forEach(function (btn) {
+                    btnsWrapper.appendChild(btn.render());
+                });
+            }
+        }
+    }, {
+        key: '_setupLogic',
+        value: function _setupLogic() {
+
+            this.fields.forEach(function (field) {
+                field.initLogic();
+            });
+
+            this.buttons.forEach(function (btn) {
+                btn.initLogic();
+            });
+        }
+
+        /**
+         * Валидация всех полей формы
+         * @returns {array of {'name':,'value':}} or false
+         */
+
+    }, {
+        key: 'validate',
+        value: function validate() {
+            var result = [];
+            var errors = false;
+
+            this.fields.forEach(function (field) {
+                var value = field.getValue();
+                // если получили массив, значит имеем дело с dropList и нас интересует его свойство id
+                if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object') {
+                    if (value.length) {
+                        value = value[0].id;
+                    } else {
+                        value = '';
+                    }
+                }
+
+                result.push({
+                    "name": field.name,
+                    "value": value
+                });
+
+                if (field.isRequired()) {
+                    if (value === '') {
+                        field.showError();
+                        errors = true;
+                    } else {
+                        field.showSuccess();
+                    }
+                }
+            });
+
+            return errors ? null : result;
+        }
+
+        /**
+         * Функция воозвращает данные в формате queryString
+         */
+
+    }, {
+        key: 'getData',
+        value: function getData() {
+            var formData = this.validate();
+            if (!formData) {
+                return null;
+            } else {
+                var modifiedArr = formData.map(function (item) {
+                    return item.name + '=' + item.value;
+                });
+
+                return modifiedArr.join('&amp;');
+            }
+        }
+
+        /**
+         * Выделение записей и внешних ключей из content
+         * @param contentArr
+         * @returns {{}}
+         * @private
+         */
+
+    }, {
+        key: '_prepareData',
+        value: function _prepareData(contentArr) {
+            var _this3 = this;
+
+            var content = {};
+
+            contentArr.forEach(function (item) {
+                if (item.forId === _this3.id) {
+                    content.records = item.records || [];
+                    content.fk = item.fk || {};
+                }
+            });
+
+            return content;
+        }
+
+        ////////// Public methods //////////
+
+        /**
+         * Получить field по имени
+         * @param name
+         */
+
+    }, {
+        key: 'getField',
+        value: function getField(name) {
+
+            var result = null;
+
+            this.fields.forEach(function (field) {
+                if (field.name === name) {
+                    result = field;
+                }
+            });
+
+            return result;
+        }
+
+        /**
+         * Генерирует DOM элемент с формой и возвращает его
+         * @returns {object} - DOM элемент с формой
+         */
+
+    }, {
+        key: 'render',
+        value: function render() {
+            // если форма уже формировалась, то заного генерировать html и задавать логику не нужно
+            if (!this.rendered) {
+                // генерируем html
+                this._generateHtml();
+                // устанавливаем логику полей и кнопок
+                this._setupLogic();
+            }
+
+            // загружаем данные которые пришли с сервера, либо обновляем из значений которые уже есть в fields
+            this._loadData();
+
+            this.addHandlers();
+            // вызываем событие "rendered"
+            this.trigger('rendered');
+            // ставим флаг, чтобы при повторном render'e брать данные уже с формы
+            this.rendered = true;
+
+            return this.box;
+        }
+    }]);
+
+    return Form;
+}(_component.Component);
+
+/***/ }),
+
+/***/ 55:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Field = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i &lt; props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _component = __webpack_require__(31);
+
+var _button = __webpack_require__(56);
+
+var _template = __webpack_require__(59);
+
+var _template2 = _interopRequireDefault(_template);
+
+function _interopRequireDefault(obj) { return obj &amp;&amp; obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call &amp;&amp; (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" &amp;&amp; superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass &amp;&amp; superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Field = exports.Field = function (_Component) {
+    _inherits(Field, _Component);
+
+    function Field(options) {
+        _classCallCheck(this, Field);
+
+        var _this = _possibleConstructorReturn(this, (Field.__proto__ || Object.getPrototypeOf(Field)).call(this, options));
+
+        _this.name = options.element.properties.name || _this.id;
+
+        // DOM-объект контролирующего элемента (input или textarea)
+        _this.controlEl = null;
+        // кнопки относящиеся именно к этому полю
+        _this.buttons = [];
+
+        _this.label = options.element.properties.label || '';
+        _this.type = options.element.properties.type;
+        // при true используем textarea
+        _this.multiline = options.element.properties.multiline || false;
+
+        _this.hidden = options.element.properties.hidden || false;
+        _this.enabled = options.element.properties.enabled || true;
+        _this.required = options.element.properties.required || false;
+
+        _this._initField(options.element.elements);
+        return _this;
+    }
+
+    ///// Private methods /////
+
+    /**
+     * Инициализация поля, поиск кнопок
+     * @private
+     */
+
+
+    _createClass(Field, [{
+        key: '_initField',
+        value: function _initField() {
+            var elements = arguments.length > 0 &amp;&amp; arguments[0] !== undefined ? arguments[0] : [];
+
+
+            extractElements.call(this, elements);
+
+            function extractElements(elements) {
+                var _this2 = this;
+
+                elements.forEach(function (el) {
+                    searchForFormElements.call(_this2, el);
+                });
+            }
+
+            function searchForFormElements(el) {
+
+                var type = el.type;
+
+                switch (type) {
+                    case 'button':
+                        this.buttons.push(new _button.Button({
+                            "element": el,
+                            "code": this.prepareCode(this.code),
+                            "parent": this
+                        }));
+                        break;
+                }
+            }
+        }
+
+        /**
+         * Заполняет контейнер html содержимым
+         * @private
+         */
+
+    }, {
+        key: '_generateHTML',
+        value: function _generateHTML() {
+
+            if (!this.box) {
+                this.box = document.createElement('div');
+            }
+
+            var requiredMark = this.required ? '&lt;sup style="color:red; margin-left: 4px">*&lt;/sup>' : '';
+
+            // TODO переделать для checkbox'ов и radio кнопок
+            this.box.innerHTML = (0, _template2.default)({
+                "label": this.label,
+                "requiredMark": requiredMark,
+                "id": this.id,
+                "name": this.name,
+                "multiline": this.multiline,
+                "checkbox": this.type === 'checkbox' ? true : false
+            });
+
+            if (this.multiline) {
+                this.controlEl = this.box.querySelector('textarea');
+            } else {
+                this.controlEl = this.box.querySelector('input');
+            }
+
+            this._renderButtons();
+        }
+
+        /**
+         * Рисуем кнопки
+         * @private
+         */
+
+    }, {
+        key: '_renderButtons',
+        value: function _renderButtons() {
+
+            var btnsWrapper = this.box.querySelector('.field-btns-wrapper');
+
+            if (!btnsWrapper) return;
+
+            this.buttons.forEach(function (btn) {
+                btnsWrapper.appendChild(btn.render());
+                btn.initLogic();
+            });
+        }
+
+        /**
+         * Метод определяет обязательное ли это поле
+         * @returns {boolean}
+         */
+
+    }, {
+        key: 'isRequired',
+        value: function isRequired() {
+            if (this.required) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        /**
+         * Окрашиваем поле в зеленный цвет(успешная валидация)
+         */
+
+    }, {
+        key: 'showSuccess',
+        value: function showSuccess() {
+            this.removeNotifications();
+            this.box.classList.add('has-success');
+        }
+
+        /**
+         * Окрашиваем поле в красный цвет(неуспешная валидация)
+         */
+
+    }, {
+        key: 'showError',
+        value: function showError() {
+            this.removeNotifications();
+            this.box.classList.add('has-error');
+        }
+
+        /**
+         * Убираем любое окрашивание
+         */
+
+    }, {
+        key: 'removeNotifications',
+        value: function removeNotifications() {
+            this.box.classList.remove('has-success');
+            this.box.classList.remove('has-error');
+        }
+    }, {
+        key: 'initLogic',
+        value: function initLogic() {
+
+            // если до сих пор не определен контейнер box - значит мы работаем с кастомным шаблоном, а в нем по стандарту поле должно быть завернуто в div с [data-component = "field"]
+            if (!this.box) {
+                var input = this.parent.box.querySelector('#' + this.id);
+                this.controlEl = input;
+                this.box = input.closest('[data-component = "field"]');
+            }
+
+            this.buttons.forEach(function (btn) {
+                btn.initLogic();
+            });
+
+            this.addHandlers();
+        }
+    }, {
+        key: 'applyProperties',
+        value: function applyProperties() {
+            if (this.hidden) {
+                this.hide();
+            } else {
+                this.show();
+            }
+
+            if (this.enabled) {
+                this.enable();
+            } else {
+                this.disable();
+            }
+        }
+
+        ///// Public methods /////
+
+
+    }, {
+        key: 'enable',
+        value: function enable() {
+            this.buttons.forEach(function (btn) {
+                btn.enable();
+            });
+        }
+    }, {
+        key: 'disable',
+        value: function disable() {
+            this.buttons.forEach(function (btn) {
+                btn.disable();
+            });
+        }
+    }, {
+        key: 'setValue',
+        value: function setValue(newValue) {}
+    }, {
+        key: 'getValue',
+        value: function getValue() {}
+
+        /**
+         * Генерирует DOM элемент с полем и возвращает его
+         * @returns {object} - DOM элемент с формой
+         */
+
+    }, {
+        key: 'render',
+        value: function render() {
+
+            this._generateHTML();
+
+            return this.box;
+        }
+    }]);
+
+    return Field;
+}(_component.Component);
+
+/***/ }),
+
+/***/ 56:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Button = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i &lt; props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _component = __webpack_require__(31);
+
+var _template = __webpack_require__(58);
+
+var _template2 = _interopRequireDefault(_template);
+
+function _interopRequireDefault(obj) { return obj &amp;&amp; obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call &amp;&amp; (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" &amp;&amp; superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass &amp;&amp; superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Button = exports.Button = function (_Component) {
+    _inherits(Button, _Component);
+
+    function Button(options) {
+        _classCallCheck(this, Button);
+
+        var _this = _possibleConstructorReturn(this, (Button.__proto__ || Object.getPrototypeOf(Button)).call(this, options));
+
+        _this.label = options.element.properties.label || '';
+
+        _this.controlEl = null;
+
+        _this.caption = options.element.properties.caption || '';
+        _this.icon = options.element.properties.icon || '';
+        _this.style = options.element.properties.style || 'btn btn-default';
+
+        _this.hidden = options.element.properties.hidden || false;
+        _this.enabled = options.element.properties.enabled || true;
+        return _this;
+    }
+
+    /**
+     * Заполняет контейнер html содержимым
+     * @private
+     */
+
+
+    _createClass(Button, [{
+        key: '_generateHTML',
+        value: function _generateHTML() {
+
+            if (!this.box) {
+                this.box = document.createElement('div');
+            }
+
+            this.box.style.display = 'inline-block';
+
+            this.box.innerHTML = (0, _template2.default)({
+                "id": this.id,
+                "className": this.style,
+                "caption": this.caption
+            });
+
+            this.controlEl = this.box.querySelector('button');
+        }
+    }, {
+        key: 'initLogic',
+        value: function initLogic() {
+
+            // если до сих пор не определен контейнер box - значит мы работаем с кастомным шаблоном, а в нем по стандарту поле должно быть завернуто в div с [data-component = "button"]
+            if (!this.box) {
+                var button = this.parent.box.querySelector('#' + this.id);
+                if (!button) return;
+                this.controlEl = button;
+                this.box = button.closest('[data-component = "button"]');
+            }
+
+            this.addHandlers();
+        }
+    }, {
+        key: 'applyProperties',
+        value: function applyProperties() {
+            if (this.hidden) {
+                this.hide();
+            } else {
+                this.show();
+            }
+
+            if (this.enabled) {
+                this.enable();
+            } else {
+                this.disable();
+            }
+        }
+
+        ///// Public methods /////
+
+    }, {
+        key: 'enable',
+        value: function enable() {
+            // при кастомном макете элемент может быть не орпеделен
+            if (!this.controlEl) return;
+            this.controlEl.removeAttribute('disabled');
+        }
+    }, {
+        key: 'disable',
+        value: function disable() {
+            // при кастомном макете элемент может быть не орпеделен
+            if (!this.controlEl) return;
+            this.controlEl.setAttribute('disabled', true);
+        }
+
+        /**
+         * Генерирует DOM элемент с кнопкой и возвращает его
+         * @returns {object} - DOM элемент с формой
+         */
+
+    }, {
+        key: 'render',
+        value: function render() {
+
+            this._generateHTML();
+
+            return this.box;
+        }
+    }]);
+
+    return Button;
+}(_component.Component);
+
+/***/ }),
+
+/***/ 57:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.SimpleField = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i &lt; props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+var _field = __webpack_require__(55);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call &amp;&amp; (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" &amp;&amp; superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass &amp;&amp; superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var SimpleField = exports.SimpleField = function (_Field) {
+    _inherits(SimpleField, _Field);
+
+    function SimpleField(options) {
+        _classCallCheck(this, SimpleField);
+
+        var _this = _possibleConstructorReturn(this, (SimpleField.__proto__ || Object.getPrototypeOf(SimpleField)).call(this, options));
+
+        _this.type = options.element.properties.type || 'text';
+
+        if (options.element.properties.type === 'checkbox') {
+            _this.value = false;
+        } else {
+            _this.value = '';
+        }
+
+        return _this;
+    }
+
+    ///// Private methods /////
+
+    _createClass(SimpleField, [{
+        key: 'initLogic',
+        value: function initLogic() {
+            _get(SimpleField.prototype.__proto__ || Object.getPrototypeOf(SimpleField.prototype), 'initLogic', this).call(this);
+            this._applyW2ui();
+            this.applyProperties();
+            this._addListeners();
+        }
+    }, {
+        key: '_applyW2ui',
+        value: function _applyW2ui() {
+            if (!this.controlEl) return;
+
+            var config = {};
+
+            if (this.type === 'time') {
+                config.format = 'h24';
+            }
+
+            $(this.controlEl).w2field(this.type, config);
+            // убираем w2ui классы для стилизации
+            this.controlEl.classList.remove('w2field');
+            this.controlEl.classList.remove('w2ui-input');
+        }
+
+        /**
+         *  Сохраняет значение из инпута в свойство value
+         * @param event
+         * @private
+         */
+
+    }, {
+        key: '_saveChanges',
+        value: function _saveChanges(event) {
+            if (event.target.type === "checkbox") {
+                this.value = event.target.checked;
+                // Если float то надо заменять запятую на точку
+            } else if (this.type === 'float') {
+                if (typeof event.target.value == "string") {
+                    this.value = event.target.value.replace(/,/, ".");
+                }
+            } else {
+                this.value = event.target.value;
+            }
+
+            this.trigger('changeValue');
+        }
+
+        /**
+         *  Добавляем наблюдение за событиями controlEl
+         * @private
+         */
+
+    }, {
+        key: '_addListeners',
+        value: function _addListeners() {
+            // в w2ui при работе с датой и временем не срабатывает событие change, поэтому ориентируемся на потерю фокуса
+            this.controlEl.addEventListener('blur', this._saveChanges.bind(this));
+        }
+
+        ///// Public methods /////
+
+    }, {
+        key: 'enable',
+        value: function enable() {
+            // вызываем родительский метод чтобы активировать кнопки
+            _get(SimpleField.prototype.__proto__ || Object.getPrototypeOf(SimpleField.prototype), 'enable', this).call(this);
+            // + своя логика
+            // при кастомном макете элемент может быть не орпеделен
+            if (!this.controlEl) return;
+            this.controlEl.removeAttribute('disabled');
+        }
+    }, {
+        key: 'disable',
+        value: function disable() {
+            // вызываем родительский метод чтобы деактивировать кнопки
+            _get(SimpleField.prototype.__proto__ || Object.getPrototypeOf(SimpleField.prototype), 'disable', this).call(this);
+            // + своя логика
+            // при кастомном макете элемент может быть не орпеделен
+            if (!this.controlEl) return;
+            this.controlEl.setAttribute('disabled', 'true');
+        }
+    }, {
+        key: 'getValue',
+        value: function getValue() {
+            return this.value;
+        }
+    }, {
+        key: 'setValue',
+        value: function setValue(newValue) {
+            this.value = newValue;
+            this.controlEl.value = newValue;
+            // если меняем checkbox
+            if (this.value === true) {
+                this.controlEl.checked = true;
+            } else if (this.value === false) {
+                this.controlEl.checked = false;
+            }
+            // Это непотребство нужно для того чтобы w2ui отреагировал на изменение и применил форматирование к данным
+            $(this.controlEl).data('w2field').change(new Event('change'));
+        }
+    }]);
+
+    return SimpleField;
+}(_field.Field);
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+
+/***/ }),
+
+/***/ 58:
+/***/ (function(module, exports, __webpack_require__) {
+
+var Handlebars = __webpack_require__(7);
+module.exports = (Handlebars['default'] || Handlebars).template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3="function", alias4=container.escapeExpression;
+
+  return "&lt;button id = \""
+    + alias4(((helper = (helper = helpers.id || (depth0 != null ? depth0.id : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"id","hash":{},"data":data}) : helper)))
+    + "\" class = \""
+    + alias4(((helper = (helper = helpers.className || (depth0 != null ? depth0.className : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"className","hash":{},"data":data}) : helper)))
+    + "\" type = \"button\" style = \"margin-left:5px\">"
+    + alias4(((helper = (helper = helpers.caption || (depth0 != null ? depth0.caption : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"caption","hash":{},"data":data}) : helper)))
+    + "&lt;/button>";
+},"useData":true});
+
+/***/ }),
+
+/***/ 59:
+/***/ (function(module, exports, __webpack_require__) {
+
+var Handlebars = __webpack_require__(7);
+module.exports = (Handlebars['default'] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3="function", alias4=container.escapeExpression;
+
+  return "        &lt;textarea name = \""
+    + alias4(((helper = (helper = helpers.name || (depth0 != null ? depth0.name : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"name","hash":{},"data":data}) : helper)))
+    + "\" rows=\"3\" class=\"form-control\" id = "
+    + alias4(((helper = (helper = helpers.id || (depth0 != null ? depth0.id : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"id","hash":{},"data":data}) : helper)))
+    + ">&lt;/textarea>\r\n";
+},"3":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return ((stack1 = helpers["if"].call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.checkbox : depth0),{"name":"if","hash":{},"fn":container.program(4, data, 0),"inverse":container.program(6, data, 0),"data":data})) != null ? stack1 : "");
+},"4":function(container,depth0,helpers,partials,data) {
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3="function", alias4=container.escapeExpression;
+
+  return "            &lt;input type = \"checkbox\" name = \""
+    + alias4(((helper = (helper = helpers.name || (depth0 != null ? depth0.name : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"name","hash":{},"data":data}) : helper)))
+    + "\" id = "
+    + alias4(((helper = (helper = helpers.id || (depth0 != null ? depth0.id : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"id","hash":{},"data":data}) : helper)))
+    + " />\r\n";
+},"6":function(container,depth0,helpers,partials,data) {
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3="function", alias4=container.escapeExpression;
+
+  return "            &lt;input name = \""
+    + alias4(((helper = (helper = helpers.name || (depth0 != null ? depth0.name : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"name","hash":{},"data":data}) : helper)))
+    + "\" class=\"form-control\" id = "
+    + alias4(((helper = (helper = helpers.id || (depth0 != null ? depth0.id : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"id","hash":{},"data":data}) : helper)))
+    + " />\r\n";
+},"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=helpers.helperMissing, alias3="function";
+
+  return "&lt;div class=\"form-group\">\r\n    &lt;label class=\"col-sm-2 control-label\">"
+    + container.escapeExpression(((helper = (helper = helpers.label || (depth0 != null ? depth0.label : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"label","hash":{},"data":data}) : helper)))
+    + ((stack1 = ((helper = (helper = helpers.requiredMark || (depth0 != null ? depth0.requiredMark : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"requiredMark","hash":{},"data":data}) : helper))) != null ? stack1 : "")
+    + "&lt;/label>\r\n    &lt;div class = \"col-sm-7\">\r\n"
+    + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.multiline : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.program(3, data, 0),"data":data})) != null ? stack1 : "")
+    + "\r\n    &lt;/div>\r\n    &lt;div class = \"field-btns-wrapper col-sm-3\">\r\n\r\n    &lt;/div>\r\n&lt;/div>";
+},"useData":true});
+
+/***/ }),
+
+/***/ 60:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.DropdownField = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i &lt; props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+var _field = __webpack_require__(55);
+
+var _index = __webpack_require__(3);
+
+__webpack_require__(61);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call &amp;&amp; (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" &amp;&amp; superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass &amp;&amp; superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+//подключаем библиотеку и экспортируем переменные из нее
+var magiclib = __webpack_require__(62);
+//подключаем стили
+
+var DropdownField = exports.DropdownField = function (_Field) {
+    _inherits(DropdownField, _Field);
+
+    function DropdownField(options) {
+        _classCallCheck(this, DropdownField);
+
+        var _this = _possibleConstructorReturn(this, (DropdownField.__proto__ || Object.getPrototypeOf(DropdownField)).call(this, options));
+
+        _this.type = options.element.properties.type || 'reference';
+        // количество элементов, которые могут быть выбраны
+        _this.maxSelection = options.element.properties.maxSelection || 1;
+
+        _this.value = [];
+
+        // объект magicSuggest, так как проще большинство действий совершать через него, а не через controlEl
+        _this.magicObj = null;
+        return _this;
+    }
+
+    ///// Private methods /////
+
+    _createClass(DropdownField, [{
+        key: 'initLogic',
+        value: function initLogic() {
+            _get(DropdownField.prototype.__proto__ || Object.getPrototypeOf(DropdownField.prototype), 'initLogic', this).call(this);
+            this._applyMagicSuggest();
+            this.applyProperties();
+            this._addListeners();
+        }
+    }, {
+        key: '_applyMagicSuggest',
+        value: function _applyMagicSuggest() {
+            this.magicObj = $(this.controlEl).magicSuggest({
+                //"style" : "width : 50% !important; display : inline-block"
+                "allowFreeEntries": false,
+                "editable": true,
+                "maxSelection": this.maxSelection
+            });
+        }
+    }, {
+        key: '_saveChanges',
+        value: function _saveChanges(value) {
+            this.value = value;
+        }
+    }, {
+        key: '_addListeners',
+        value: function _addListeners() {
+            var _this2 = this;
+
+            if (!this.magicObj) return;
+
+            $(this.magicObj).on('selectionchange', function (e, ms, records) {
+                _this2._saveChanges(records);
+                _this2.trigger('changeValue');
+            });
+
+            $(this.magicObj).on('focus', function () {
+                _this2.trigger('focus');
+            });
+
+            $(this.magicObj).on('keyup', function (e, magic, v) {
+
+                var newValue = _this2.magicObj.getRawValue();
+
+                //различные системные кнопки, клики которых не надо обрабатывать
+                var forbiddenKeyCodes = [13, 16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 44, 45, 46, 91, 93, 144, 145];
+
+                if (forbiddenKeyCodes.indexOf(v.keyCode) !== -1) {
+                    return;
+                } else if (newValue) {
+                    _this2.getListDataFromServer(_this2.magicObj.getRawValue());
+                } else {
+                    _this2.clearListData();
+                }
+            });
+        }
+
+        ///// Public methods /////
+
+    }, {
+        key: 'enable',
+        value: function enable() {
+            // вызываем родительский метод чтобы активировать кнопки
+            _get(DropdownField.prototype.__proto__ || Object.getPrototypeOf(DropdownField.prototype), 'enable', this).call(this);
+            // + своя логика
+            if (this.magicObj) {
+                this.magicObj.enable();
+            }
+        }
+    }, {
+        key: 'disable',
+        value: function disable() {
+            // вызываем родительский метод чтобы активировать кнопки
+            _get(DropdownField.prototype.__proto__ || Object.getPrototypeOf(DropdownField.prototype), 'disable', this).call(this);
+            // + своя логика
+            if (this.magicObj) {
+                this.magicObj.disable();
+            }
+        }
+    }, {
+        key: 'getValue',
+        value: function getValue() {
+            return this.value;
+        }
+    }, {
+        key: 'setValue',
+        value: function setValue(newValue) {
+            var _this3 = this;
+
+            if (newValue.length) {
+                this.value = [];
+                newValue.forEach(function (item) {
+                    _this3.value.push(newValue);
+                });
+                this.magicObj.setSelection(newValue);
+            }
+        }
+
+        /**
+         * Получить значения выпадающего списка
+         * @returns {array}
+         */
+
+    }, {
+        key: 'getListData',
+        value: function getListData() {
+            return this.magicObj.getData();
+        }
+
+        /**
+         * Установить значения выпадающего списка
+         * @param {array} data
+         */
+
+    }, {
+        key: 'setListData',
+        value: function setListData(data) {
+            this.magicObj.setData(data);
+        }
+    }, {
+        key: 'clearListData',
+        value: function clearListData(data) {
+            this.setListData([]);
+        }
+
+        /**
+         *  Метод отправляет запрос на сервер за порцией данных, подходящей под введенный текст
+         */
+
+    }, {
+        key: 'getListDataFromServer',
+        value: function getListDataFromServer(text) {
+            var _this4 = this;
+
+            var request = new _index.AjaxSender({
+                url: 'http://localhost:1234/api',
+                msg: JSON.stringify({
+                    "method": "getSuggestion",
+                    "obj": this.object,
+                    "name": this.name,
+                    "id": this.id,
+                    "text": text
+                })
+            });
+
+            var requestPromise = request.sendQuery();
+
+            requestPromise.then(function (result) {
+                var suggestion = prepareDataForList.call(_this4, result);
+                _this4.setListData(suggestion);
+            }).catch(function (err) {
+                console.log(err);
+            });
+
+            /**
+             * Подготавливаем данные в формат {"id": '',"name" : ''}
+             */
+            function prepareDataForList(data) {
+                var result = [];
+
+                // делаем в попытке, потому что мало ли что нам придет в data
+                try {
+                    var values = data.content.fk[this.id];
+                    if (values) result = values;
+                } catch (err) {
+                    console.log(err);
+                }
+
+                return result;
+            }
+        }
+    }]);
+
+    return DropdownField;
+}(_field.Field);
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+
+/***/ }),
+
+/***/ 61:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 62:
+/***/ (function(module, exports, __webpack_require__) {
+
+/*** IMPORTS FROM imports-loader ***/
+var jQuery = __webpack_require__(1);
+
+/**
+ * Multiple Selection Component for Bootstrap
+ * Check nicolasbize.github.io/magicsuggest/ for latest updates.
+ *
+ * Author:       Nicolas Bize
+ * Created:      Feb 8th 2013
+ * Last Updated: Oct 16th 2014
+ * Version:      2.1.4
+ * Licence:      MagicSuggest is licenced under MIT licence (http://opensource.org/licenses/MIT)
+ */
+(function ($) {
+    "use strict";
+    var MagicSuggest = function (element, options) {
+        var ms = this;
+
+        /**
+         * Initializes the MagicSuggest component
+         */
+        var defaults = {
+            /**********  CONFIGURATION PROPERTIES ************/
+            /**
+             * Restricts or allows the user to validate typed entries.
+             * Defaults to true.
+             */
+            allowFreeEntries: true,
+
+            /**
+             * Restricts or allows the user to add the same entry more than once
+             * Defaults to false.
+             */
+            allowDuplicates: false,
+
+            /**
+             * Additional config object passed to each $.ajax call
+             */
+            ajaxConfig: {},
+
+            /**
+             * If a single suggestion comes out, it is preselected.
+             */
+            autoSelect: true,
+
+            /**
+             * Auto select the first matching item with multiple items shown
+             */
+            selectFirst: false,
+
+            /**
+             * Allow customization of query parameter
+             */
+            queryParam: 'query',
+
+            /**
+             * A function triggered just before the ajax request is sent, similar to jQuery
+             */
+            beforeSend: function () {
+            },
+
+            /**
+             * A custom CSS class to apply to the field's underlying element.
+             */
+            cls: '',
+
+            /**
+             * JSON Data source used to populate the combo box. 3 options are available here:
+             * No Data Source (default)
+             *    When left null, the combo box will not suggest anything. It can still enable the user to enter
+             *    multiple entries if allowFreeEntries is * set to true (default).
+             * Static Source
+             *    You can pass an array of JSON objects, an array of strings or even a single CSV string as the
+             *    data source.For ex. data: [* {id:0,name:"Paris"}, {id: 1, name: "New York"}]
+             *    You can also pass any json object with the results property containing the json array.
+             * Url
+             *     You can pass the url from which the component will fetch its JSON data.Data will be fetched
+             *     using a POST ajax request that will * include the entered text as 'query' parameter. The results
+             *     fetched from the server can be:
+             *     - an array of JSON objects (ex: [{id:...,name:...},{...}])
+             *     - a string containing an array of JSON objects ready to be parsed (ex: "[{id:...,name:...},{...}]")
+             *     - a JSON object whose data will be contained in the results property
+             *      (ex: {results: [{id:...,name:...},{...}]
+             * Function
+             *     You can pass a function which returns an array of JSON objects  (ex: [{id:...,name:...},{...}])
+             *     The function can return the JSON data or it can use the first argument as function to handle the data.
+             *     Only one (callback function or return value) is needed for the function to succeed.
+             *     See the following example:
+             *     function (response) { var myjson = [{name: 'test', id: 1}]; response(myjson); return myjson; }
+             */
+            data: null,
+
+            /**
+             * Additional parameters to the ajax call
+             */
+            dataUrlParams: {},
+
+            /**
+             * Start the component in a disabled state.
+             */
+            disabled: false,
+
+            /**
+             * Name of JSON object property that defines the disabled behaviour
+             */
+            disabledField: null,
+
+            /**
+             * Name of JSON object property displayed in the combo list
+             */
+            displayField: 'name',
+
+            /**
+             * Set to false if you only want mouse interaction. In that case the combo will
+             * automatically expand on focus.
+             */
+            editable: true,
+
+            /**
+             * Set starting state for combo.
+             */
+            expanded: false,
+
+            /**
+             * Automatically expands combo on focus.
+             */
+            expandOnFocus: false,
+
+            /**
+             * JSON property by which the list should be grouped
+             */
+            groupBy: null,
+
+            /**
+             * Set to true to hide the trigger on the right
+             */
+            hideTrigger: false,
+
+            /**
+             * Set to true to highlight search input within displayed suggestions
+             */
+            highlight: true,
+
+            /**
+             * A custom ID for this component
+             */
+            id: null,
+
+            /**
+             * A class that is added to the info message appearing on the top-right part of the component
+             */
+            infoMsgCls: '',
+
+            /**
+             * Additional parameters passed out to the INPUT tag. Enables usage of AngularJS's custom tags for ex.
+             */
+            inputCfg: {},
+
+            /**
+             * The class that is applied to show that the field is invalid
+             */
+            invalidCls: 'ms-inv',
+
+            /**
+             * Set to true to filter data results according to case. Useless if the data is fetched remotely
+             */
+            matchCase: false,
+
+            /**
+             * Once expanded, the combo's height will take as much room as the # of available results.
+             *    In case there are too many results displayed, this will fix the drop down height.
+             */
+            maxDropHeight: 290,
+
+            /**
+             * Defines how long the user free entry can be. Set to null for no limit.
+             */
+            maxEntryLength: null,
+
+            /**
+             * A function that defines the helper text when the max entry length has been surpassed.
+             */
+            maxEntryRenderer: function (v) {
+                return 'Please reduce your entry by ' + v + ' character' + (v > 1 ? 's' : '');
+            },
+
+            /**
+             * The maximum number of results displayed in the combo drop down at once.
+             */
+            maxSuggestions: null,
+
+            /**
+             * The maximum number of items the user can select if multiple selection is allowed.
+             *    Set to null to remove the limit.
+             */
+            maxSelection: 10,
+
+            /**
+             * A function that defines the helper text when the max selection amount has been reached. The function has a single
+             *    parameter which is the number of selected elements.
+             */
+            maxSelectionRenderer: function (v) {
+                return 'Вы не можете выбрать более, чем ' + v + ' объект' + (v > 1 ? 's' : '');
+            },
+
+            /**
+             * The method used by the ajax request.
+             */
+            method: 'POST',
+
+            /**
+             * The minimum number of characters the user must type before the combo expands and offers suggestions.
+             */
+            minChars: 0,
+
+            /**
+             * A function that defines the helper text when not enough letters are set. The function has a single
+             *    parameter which is the difference between the required amount of letters and the current one.
+             */
+            minCharsRenderer: function (v) {
+                return 'Пожалуйста, введите еще ' + v + ' симв.';
+                //return 'Please type ' + v + ' more character' + (v > 1 ? 's' : '');
+            },
+
+            /**
+             * Whether or not sorting / filtering should be done remotely or locally.
+             * Use either 'local' or 'remote'
+             */
+            mode: 'local',
+
+            /**
+             * The name used as a form element.
+             */
+            name: null,
+
+            /**
+             * The text displayed when there are no suggestions.
+             */
+            noSuggestionText: 'No suggestions',
+
+            /**
+             * The default placeholder text when nothing has been entered
+             */
+            placeholder: 'Type or click here',
+
+            /**
+             * A function used to define how the items will be presented in the combo
+             */
+            renderer: null,
+
+            /**
+             * Whether or not this field should be required
+             */
+            required: false,
+
+            /**
+             * Set to true to render selection as a delimited string
+             */
+            resultAsString: false,
+
+            /**
+             * Text delimiter to use in a delimited string.
+             */
+            resultAsStringDelimiter: ',',
+
+            /**
+             * Name of JSON object property that represents the list of suggested objects
+             */
+            resultsField: 'results',
+
+            /**
+             * A custom CSS class to add to a selected item
+             */
+            selectionCls: '',
+
+            /**
+             * An optional element replacement in which the selection is rendered
+             */
+            selectionContainer: null,
+
+            /**
+             * Where the selected items will be displayed. Only 'right', 'bottom' and 'inner' are valid values
+             */
+            selectionPosition: 'inner',
+
+            /**
+             * A function used to define how the items will be presented in the tag list
+             */
+            selectionRenderer: null,
+
+            /**
+             * Set to true to stack the selectioned items when positioned on the bottom
+             *    Requires the selectionPosition to be set to 'bottom'
+             */
+            selectionStacked: false,
+
+            /**
+             * Direction used for sorting. Only 'asc' and 'desc' are valid values
+             */
+            sortDir: 'asc',
+
+            /**
+             * name of JSON object property for local result sorting.
+             *    Leave null if you do not wish the results to be ordered or if they are already ordered remotely.
+             */
+            sortOrder: null,
+
+            /**
+             * If set to true, suggestions will have to start by user input (and not simply contain it as a substring)
+             */
+            strictSuggest: false,
+
+            /**
+             * Custom style added to the component container.
+             */
+            style: '',
+
+            /**
+             * If set to true, the combo will expand / collapse when clicked upon
+             */
+            toggleOnClick: false,
+
+
+            /**
+             * Amount (in ms) between keyboard registers.
+             */
+            typeDelay: 400,
+
+            /**
+             * If set to true, tab won't blur the component but will be registered as the ENTER key
+             */
+            useTabKey: false,
+
+            /**
+             * If set to true, using comma will validate the user's choice
+             */
+            useCommaKey: true,
+
+
+            /**
+             * Determines whether or not the results will be displayed with a zebra table style
+             */
+            useZebraStyle: false,
+
+            /**
+             * initial value for the field
+             */
+            value: null,
+
+            /**
+             * name of JSON object property that represents its underlying value
+             */
+            valueField: 'id',
+
+            /**
+             * regular expression to validate the values against
+             */
+            vregex: null,
+
+            /**
+             * type to validate against
+             */
+            vtype: null
+        };
+
+        var conf = $.extend({}, options);
+        var cfg = $.extend(true, {}, defaults, conf);
+
+        /**********  PUBLIC METHODS ************/
+        /**
+         * Add one or multiple json items to the current selection
+         * @param items - json object or array of json objects
+         * @param isSilent - (optional) set to true to suppress 'selectionchange' event from being triggered
+         */
+        this.addToSelection = function (items, isSilent) {
+            if (!cfg.maxSelection || _selection.length &lt; cfg.maxSelection) {
+                if (!$.isArray(items)) {
+                    items = [items];
+                }
+                var valuechanged = false;
+                $.each(items, function (index, json) {
+                    if (cfg.allowDuplicates || $.inArray(json[cfg.valueField], ms.getValue()) === -1) {
+                        _selection.push(json);
+                        valuechanged = true;
+                    }
+                });
+                if (valuechanged === true) {
+                    self._renderSelection();
+                    this.empty();
+                    if (isSilent !== true) {
+                        $(this).trigger('selectionchange', [this, this.getSelection()]);
+                    }
+                }
+            }
+            this.input.attr('placeholder', (cfg.selectionPosition === 'inner' &amp;&amp; this.getValue().length > 0) ? '' : cfg.placeholder);
+        };
+
+        /**
+         * Clears the current selection
+         * @param isSilent - (optional) set to true to suppress 'selectionchange' event from being triggered
+         */
+        this.clear = function (isSilent) {
+            this.removeFromSelection(_selection.slice(0), isSilent); // clone array to avoid concurrency issues
+        };
+
+        /**
+         * Collapse the drop down part of the combo
+         */
+        this.collapse = function () {
+            if (cfg.expanded === true) {
+                this.combobox.detach();
+                cfg.expanded = false;
+                $(this).trigger('collapse', [this]);
+            }
+        };
+
+        /**
+         * Set the component in a disabled state.
+         */
+        this.disable = function () {
+            this.container.addClass('ms-ctn-disabled');
+            cfg.disabled = true;
+            ms.input.attr('disabled', true);
+        };
+
+        /**
+         * Empties out the combo user text
+         */
+        this.empty = function () {
+            this.input.val('');
+        };
+
+        /**
+         * Set the component in a enable state.
+         */
+        this.enable = function () {
+            this.container.removeClass('ms-ctn-disabled');
+            cfg.disabled = false;
+            ms.input.attr('disabled', false);
+        };
+
+        /**
+         * Expand the drop drown part of the combo.
+         */
+        this.expand = function () {
+            if (!cfg.expanded &amp;&amp; (this.input.val().length >= cfg.minChars || this.combobox.children().size() > 0)) {
+                this.combobox.appendTo(this.container);
+                self._processSuggestions();
+                cfg.expanded = true;
+                $(this).trigger('expand', [this]);
+            }
+        };
+
+        /**
+         * Retrieve component enabled status
+         */
+        this.isDisabled = function () {
+            return cfg.disabled;
+        };
+
+        /**
+         * Checks whether the field is valid or not
+         * @return {boolean}
+         */
+        this.isValid = function () {
+            var valid = cfg.required === false || _selection.length > 0;
+            if (cfg.vtype || cfg.vregex) {
+                $.each(_selection, function (index, item) {
+                    valid = valid &amp;&amp; self._validateSingleItem(item[cfg.valueField]);
+                });
+            }
+            return valid;
+        };
+
+        /**
+         * Gets the data params for current ajax request
+         */
+        this.getDataUrlParams = function () {
+            return cfg.dataUrlParams;
+        };
+
+        /**
+         * Gets the name given to the form input
+         */
+        this.getName = function () {
+            return cfg.name;
+        };
+
+        /**
+         * Retrieve an array of selected json objects
+         * @return {Array}
+         */
+        this.getSelection = function () {
+            return _selection;
+        };
+
+        /**
+         * Retrieve the current text entered by the user
+         */
+        this.getRawValue = function () {
+            return ms.input.val();
+        };
+
+        /**
+         * Retrieve an array of selected values
+         */
+        this.getValue = function () {
+            return $.map(_selection, function (o) {
+                return o[cfg.valueField];
+            });
+        };
+
+        /**
+         * Remove one or multiples json items from the current selection
+         * @param items - json object or array of json objects
+         * @param isSilent - (optional) set to true to suppress 'selectionchange' event from being triggered
+         */
+        this.removeFromSelection = function (items, isSilent) {
+            if (!$.isArray(items)) {
+                items = [items];
+            }
+            var valuechanged = false;
+            $.each(items, function (index, json) {
+                var i = $.inArray(json[cfg.valueField], ms.getValue());
+                if (i > -1) {
+                    _selection.splice(i, 1);
+                    valuechanged = true;
+                }
+            });
+            if (valuechanged === true) {
+                self._renderSelection();
+                if (isSilent !== true) {
+                    $(this).trigger('selectionchange', [this, this.getSelection()]);
+                }
+                if (cfg.expandOnFocus) {
+                    ms.expand();
+                }
+                if (cfg.expanded) {
+                    self._processSuggestions();
+                }
+            }
+            this.input.attr('placeholder', (cfg.selectionPosition === 'inner' &amp;&amp; this.getValue().length > 0) ? '' : cfg.placeholder);
+        };
+
+        /**
+         * Get current data
+         */
+        this.getData = function () {
+            return _cbData;
+        };
+
+        /**
+         * Set up some combo data after it has been rendered
+         * @param data
+         */
+        this.setData = function (data) {
+            cfg.data = data;
+            self._processSuggestions();
+        };
+
+        /**
+         * Sets the name for the input field so it can be fetched in the form
+         * @param name
+         */
+        this.setName = function (name) {
+            cfg.name = name;
+            if (name) {
+                cfg.name += name.indexOf('[]') > 0 ? '' : '[]';
+            }
+            if (ms._valueContainer) {
+                $.each(ms._valueContainer.children(), function (i, el) {
+                    el.name = cfg.name;
+                });
+            }
+        };
+
+        /**
+         * Sets the current selection with the JSON items provided
+         * @param items
+         */
+        this.setSelection = function (items) {
+            this.clear();
+            this.addToSelection(items);
+        };
+
+        /**
+         * Sets a value for the combo box. Value must be an array of values with data type matching valueField one.
+         * @param data
+         */
+        this.setValue = function (values) {
+            var items = [];
+
+            $.each(values, function (index, value) {
+                // first try to see if we have the full objects from our data set
+                var found = false;
+                $.each(_cbData, function (i, item) {
+                    if (item[cfg.valueField] == value) {
+                        items.push(item);
+                        found = true;
+                        return false;
+                    }
+                });
+                if (!found) {
+                    if (typeof(value) === 'object') {
+                        items.push(value);
+                    } else {
+                        var json = {};
+                        json[cfg.valueField] = value;
+                        json[cfg.displayField] = value;
+                        items.push(json);
+                    }
+                }
+            });
+            if (items.length > 0) {
+                this.addToSelection(items);
+            }
+        };
+
+        /**
+         * Sets data params for subsequent ajax requests
+         * @param params
+         */
+        this.setDataUrlParams = function (params) {
+            cfg.dataUrlParams = $.extend({}, params);
+        };
+
+        /**********  PRIVATE ************/
+        var _selection = [],      // selected objects
+            _comboItemHeight = 0, // height for each combo item.
+            _timer,
+            _hasFocus = false,
+            _groups = null,
+            _cbData = [],
+            _ctrlDown = false,
+            KEYCODES = {
+                BACKSPACE: 8,
+                TAB: 9,
+                ENTER: 13,
+                CTRL: 17,
+                ESC: 27,
+                SPACE: 32,
+                UPARROW: 38,
+                DOWNARROW: 40
+            };
+
+        var self = {
+
+            /**
+             * Empties the result container and refills it with the array of json results in input
+             * @private
+             */
+            _displaySuggestions: function (data) {
+                ms.combobox.show();
+                ms.combobox.empty();
+
+                var resHeight = 0, // total height taken by displayed results.
+                    nbGroups = 0;
+
+                if (_groups === null) {
+                    self._renderComboItems(data);
+                    resHeight = _comboItemHeight * data.length;
+                }
+                else {
+                    for (var grpName in _groups) {
+                        nbGroups += 1;
+                        $('&lt;div/>', {
+                            'class': 'ms-res-group',
+                            html: grpName
+                        }).appendTo(ms.combobox);
+                        self._renderComboItems(_groups[grpName].items, true);
+                    }
+                    var _groupItemHeight = ms.combobox.find('.ms-res-group').outerHeight();
+                    if (_groupItemHeight !== null) {
+                        var tmpResHeight = nbGroups * _groupItemHeight;
+                        resHeight = (_comboItemHeight * data.length) + tmpResHeight;
+                    } else {
+                        resHeight = _comboItemHeight * (data.length + nbGroups);
+                    }
+                }
+
+                if (resHeight &lt; ms.combobox.height() || resHeight &lt;= cfg.maxDropHeight) {
+                    ms.combobox.height(resHeight);
+                }
+                else if (resHeight >= ms.combobox.height() &amp;&amp; resHeight > cfg.maxDropHeight) {
+                    ms.combobox.height(cfg.maxDropHeight);
+                }
+
+                if (data.length === 1 &amp;&amp; cfg.autoSelect === true) {
+                    ms.combobox.children().filter(':not(.ms-res-item-disabled):last').addClass('ms-res-item-active');
+                }
+
+                if (cfg.selectFirst === true) {
+                    ms.combobox.children().filter(':not(.ms-res-item-disabled):first').addClass('ms-res-item-active');
+                }
+
+                if (data.length === 0 &amp;&amp; ms.getRawValue() !== "") {
+                    var noSuggestionText = cfg.noSuggestionText.replace(/\{\{.*\}\}/, ms.input.val());
+                    self._updateHelper(noSuggestionText);
+                    ms.collapse();
+                }
+
+                // When free entry is off, add invalid class to input if no data matches
+                if (cfg.allowFreeEntries === false) {
+                    if (data.length === 0) {
+                        $(ms.input).addClass(cfg.invalidCls);
+                        ms.combobox.hide();
+                    } else {
+                        $(ms.input).removeClass(cfg.invalidCls);
+                    }
+                }
+            },
+
+            /**
+             * Returns an array of json objects from an array of strings.
+             * @private
+             */
+            _getEntriesFromStringArray: function (data) {
+                var json = [];
+                $.each(data, function (index, s) {
+                    var entry = {};
+                    entry[cfg.displayField] = entry[cfg.valueField] = $.trim(s);
+                    json.push(entry);
+                });
+                return json;
+            },
+
+            /**
+             * Replaces html with highlighted html according to case
+             * @param html
+             * @private
+             */
+            _highlightSuggestion: function (html) {
+                var q = ms.input.val();
+
+                //escape special regex characters
+                var specialCharacters = ['^', '$', '*', '+', '?', '.', '(', ')', ':', '!', '|', '{', '}', '[', ']'];
+
+                $.each(specialCharacters, function (index, value) {
+                    q = q.replace(value, "\\" + value);
+                })
+
+                if (q.length === 0) {
+                    return html; // nothing entered as input
+                }
+
+                var glob = cfg.matchCase === true ? 'g' : 'gi';
+                return html.replace(new RegExp('(' + q + ')(?!([^&lt;]+)?>)', glob), '&lt;em>$1&lt;/em>');
+            },
+
+            /**
+             * Moves the selected cursor amongst the list item
+             * @param dir - 'up' or 'down'
+             * @private
+             */
+            _moveSelectedRow: function (dir) {
+                if (!cfg.expanded) {
+                    ms.expand();
+                }
+                var list, start, active, scrollPos;
+                list = ms.combobox.find(".ms-res-item:not(.ms-res-item-disabled)");
+                if (dir === 'down') {
+                    start = list.eq(0);
+                }
+                else {
+                    start = list.filter(':last');
+                }
+                active = ms.combobox.find('.ms-res-item-active:not(.ms-res-item-disabled):first');
+                if (active.length > 0) {
+                    if (dir === 'down') {
+                        start = active.nextAll('.ms-res-item:not(.ms-res-item-disabled)').first();
+                        if (start.length === 0) {
+                            start = list.eq(0);
+                        }
+                        scrollPos = ms.combobox.scrollTop();
+                        ms.combobox.scrollTop(0);
+                        if (start[0].offsetTop + start.outerHeight() > ms.combobox.height()) {
+                            ms.combobox.scrollTop(scrollPos + _comboItemHeight);
+                        }
+                    }
+                    else {
+                        start = active.prevAll('.ms-res-item:not(.ms-res-item-disabled)').first();
+                        if (start.length === 0) {
+                            start = list.filter(':last');
+                            ms.combobox.scrollTop(_comboItemHeight * list.length);
+                        }
+                        if (start[0].offsetTop &lt; ms.combobox.scrollTop()) {
+                            ms.combobox.scrollTop(ms.combobox.scrollTop() - _comboItemHeight);
+                        }
+                    }
+                }
+                list.removeClass("ms-res-item-active");
+                start.addClass("ms-res-item-active");
+            },
+
+            /**
+             * According to given data and query, sort and add suggestions in their container
+             * @private
+             */
+            _processSuggestions: function (source) {
+                var json = null, data = source || cfg.data;
+                if (data !== null) {
+                    if (typeof(data) === 'function') {
+                        data = data.call(ms, ms.getRawValue());
+                    }
+                    if (typeof(data) === 'string') { // get results from ajax
+                        $(ms).trigger('beforeload', [ms]);
+                        var queryParams = {}
+                        queryParams[cfg.queryParam] = ms.input.val();
+                        var params = $.extend(queryParams, cfg.dataUrlParams);
+                        if (params.part === "") {
+                            return;
+                        }
+                        $.ajax($.extend({
+                            type: cfg.method,
+                            url: data,
+                            data: params,
+                            dataType: 'json',
+                            beforeSend: cfg.beforeSend,
+                            success: function (asyncData) {
+                                parseMessage(asyncData);
+                                if (asyncData.message === "") {
+                                    asyncData = [];
+                                }
+                                json = typeof(asyncData) === 'string' ? JSON.parse(asyncData) : asyncData;
+                                self._processSuggestions(json);
+                                $(ms).trigger('load', [ms, json]);
+                                if (self._asyncValues) {
+                                    ms.setValue(typeof(self._asyncValues) === 'string' ? JSON.parse(self._asyncValues) : self._asyncValues);
+                                    self._renderSelection();
+                                    delete(self._asyncValues);
+                                }
+                            },
+                            error: function () {
+                                throw("Could not reach server");
+                            }
+                        }, cfg.ajaxConfig));
+                        return;
+                    } else { // results from local array
+                        if (data.length > 0 &amp;&amp; typeof(data[0]) === 'string') { // results from array of strings
+                            _cbData = self._getEntriesFromStringArray(data);
+                        } else { // regular json array or json object with results property
+                            _cbData = data[cfg.resultsField] || data;
+                        }
+                    }
+                    var sortedData = cfg.mode === 'remote' ? _cbData : self._sortAndTrim(_cbData);
+                    self._displaySuggestions(self._group(sortedData));
+
+                }
+            },
+
+            /**
+             * Render the component to the given input DOM element
+             * @private
+             */
+            _render: function (el) {
+                ms.setName(cfg.name);  // make sure the form name is correct
+                // holds the main div, will relay the focus events to the contained input element.
+                ms.container = $('&lt;div/>', {
+                    'class': 'ms-ctn form-control ' + (cfg.resultAsString ? 'ms-as-string ' : '') + cfg.cls +
+                    ($(el).hasClass('input-lg') ? ' input-lg' : '') +
+                    ($(el).hasClass('input-sm') ? ' input-sm' : '') +
+                    (cfg.disabled === true ? ' ms-ctn-disabled' : '') +
+                    (cfg.editable === true ? '' : ' ms-ctn-readonly') +
+                    (cfg.hideTrigger === false ? '' : ' ms-no-trigger'),
+                    style: cfg.style,
+                    id: cfg.id
+                });
+                ms.container.focus($.proxy(handlers._onFocus, this));
+                ms.container.blur($.proxy(handlers._onBlur, this));
+                ms.container.keydown($.proxy(handlers._onKeyDown, this));
+                ms.container.keyup($.proxy(handlers._onKeyUp, this));
+
+                // holds the input field
+                ms.input = $('&lt;input/>', $.extend({
+                    type: 'text',
+                    'class': cfg.editable === true ? '' : ' ms-input-readonly',
+                    readonly: !cfg.editable,
+                    placeholder: cfg.placeholder,
+                    disabled: cfg.disabled
+                }, cfg.inputCfg));
+
+                ms.input.focus($.proxy(handlers._onInputFocus, this));
+                ms.input.click($.proxy(handlers._onInputClick, this));
+
+                // holds the suggestions. will always be placed on focus
+                ms.combobox = $('&lt;div/>', {
+                    'class': 'ms-res-ctn dropdown-menu'
+                }).height(cfg.maxDropHeight);
+
+                // bind the onclick and mouseover using delegated events (needs jQuery >= 1.7)
+                ms.combobox.on('click', 'div.ms-res-item', $.proxy(handlers._onComboItemSelected, this));
+                ms.combobox.on('mouseover', 'div.ms-res-item', $.proxy(handlers._onComboItemMouseOver, this));
+
+                if (cfg.selectionContainer) {
+                    ms.selectionContainer = cfg.selectionContainer;
+                    $(ms.selectionContainer).addClass('ms-sel-ctn');
+                } else {
+                    ms.selectionContainer = $('&lt;div/>', {
+                        'class': 'ms-sel-ctn'
+                    });
+                }
+                ms.selectionContainer.click($.proxy(handlers._onFocus, this));
+
+                if (cfg.selectionPosition === 'inner' &amp;&amp; !cfg.selectionContainer) {
+                    ms.selectionContainer.append(ms.input);
+                }
+                else {
+                    ms.container.append(ms.input);
+                }
+
+                ms.helper = $('&lt;span/>', {
+                    'class': 'ms-helper ' + cfg.infoMsgCls
+                });
+                self._updateHelper();
+                ms.container.append(ms.helper);
+
+
+                // Render the whole thing
+                $(el).replaceWith(ms.container);
+
+                if (!cfg.selectionContainer) {
+                    switch (cfg.selectionPosition) {
+                        case 'bottom':
+                            ms.selectionContainer.insertAfter(ms.container);
+                            if (cfg.selectionStacked === true) {
+                                ms.selectionContainer.width(ms.container.width());
+                                ms.selectionContainer.addClass('ms-stacked');
+                            }
+                            break;
+                        case 'right':
+                            ms.selectionContainer.insertAfter(ms.container);
+                            ms.container.css('float', 'left');
+                            break;
+                        default:
+                            ms.container.append(ms.selectionContainer);
+                            break;
+                    }
+                }
+
+
+                // holds the trigger on the right side
+                if (cfg.hideTrigger === false) {
+                    ms.trigger = $('&lt;div/>', {
+                        'class': 'ms-trigger',
+                        html: '&lt;div class="ms-trigger-ico">&lt;/div>'
+                    });
+                    ms.trigger.click($.proxy(handlers._onTriggerClick, this));
+                    ms.container.append(ms.trigger);
+                }
+
+                $(window).resize($.proxy(handlers._onWindowResized, this));
+
+                // do not perform an initial call if we are using ajax unless we have initial values
+                if (cfg.value !== null || cfg.data !== null) {
+                    if (typeof(cfg.data) === 'string') {
+                        self._asyncValues = cfg.value;
+                        self._processSuggestions();
+                    } else {
+                        self._processSuggestions();
+                        if (cfg.value !== null) {
+                            ms.setValue(cfg.value);
+                            self._renderSelection();
+                        }
+                    }
+
+                }
+
+                $("body").click(function (e) {
+                    if (ms.container.hasClass('ms-ctn-focus') &amp;&amp;
+                        ms.container.has(e.target).length === 0 &amp;&amp;
+                        e.target.className.indexOf('ms-res-item') &lt; 0 &amp;&amp;
+                        e.target.className.indexOf('ms-close-btn') &lt; 0 &amp;&amp;
+                        ms.container[0] !== e.target) {
+                        handlers._onBlur();
+                    }
+                });
+
+                if (cfg.expanded === true) {
+                    cfg.expanded = false;
+                    ms.expand();
+                }
+            },
+
+            /**
+             * Renders each element within the combo box
+             * @private
+             */
+            _renderComboItems: function (items, isGrouped) {
+                var ref = this, html = '';
+                $.each(items, function (index, value) {
+                    var displayed = cfg.renderer !== null ? cfg.renderer.call(ref, value) : value[cfg.displayField];
+                    var disabled = cfg.disabledField !== null &amp;&amp; value[cfg.disabledField] === true;
+                    var resultItemEl = $('&lt;div/>', {
+                        'class': 'ms-res-item ' + (isGrouped ? 'ms-res-item-grouped ' : '') +
+                        (disabled ? 'ms-res-item-disabled ' : '') +
+                        (index % 2 === 1 &amp;&amp; cfg.useZebraStyle === true ? 'ms-res-odd' : ''),
+                        html: cfg.highlight === true ? self._highlightSuggestion(displayed) : displayed,
+                        'data-json': JSON.stringify(value)
+                    });
+                    html += $('&lt;div/>').append(resultItemEl).html();
+                });
+                ms.combobox.append(html);
+                _comboItemHeight = ms.combobox.find('.ms-res-item:first').outerHeight();
+            },
+
+            /**
+             * Renders the selected items into their container.
+             * @private
+             */
+            _renderSelection: function () {
+                var ref = this, w = 0, inputOffset = 0, items = [],
+                    asText = cfg.resultAsString === true &amp;&amp; !_hasFocus;
+
+                ms.selectionContainer.find('.ms-sel-item').remove();
+                if (ms._valueContainer !== undefined) {
+                    ms._valueContainer.remove();
+                }
+
+                $.each(_selection, function (index, value) {
+
+                    var selectedItemEl, delItemEl,
+                        selectedItemHtml = cfg.selectionRenderer !== null ? cfg.selectionRenderer.call(ref, value) : value[cfg.displayField];
+
+                    var validCls = self._validateSingleItem(value[cfg.displayField]) ? '' : ' ms-sel-invalid';
+
+                    // tag representing selected value
+                    if (asText === true) {
+                        selectedItemEl = $('&lt;div/>', {
+                            'class': 'ms-sel-item ms-sel-text ' + cfg.selectionCls + validCls,
+                            html: selectedItemHtml + (index === (_selection.length - 1) ? '' : cfg.resultAsStringDelimiter)
+                        }).data('json', value);
+                    }
+                    else {
+                        selectedItemEl = $('&lt;div/>', {
+                            'class': 'ms-sel-item ' + cfg.selectionCls + validCls,
+                            html: selectedItemHtml
+                        }).data('json', value);
+
+                        if (cfg.disabled === false) {
+                            // small cross img
+                            delItemEl = $('&lt;span/>', {
+                                'class': 'ms-close-btn'
+                            }).data('json', value).appendTo(selectedItemEl);
+
+                            delItemEl.click($.proxy(handlers._onTagTriggerClick, ref));
+                        }
+                    }
+
+                    items.push(selectedItemEl);
+                });
+                ms.selectionContainer.prepend(items);
+
+                // store the values, behaviour of multiple select
+                ms._valueContainer = $('&lt;div/>', {
+                    style: 'display: none;'
+                });
+                $.each(ms.getValue(), function (i, val) {
+                    var el = $('&lt;input/>', {
+                        type: 'hidden',
+                        name: cfg.name,
+                        value: val
+                    });
+                    el.appendTo(ms._valueContainer);
+                });
+                ms._valueContainer.appendTo(ms.selectionContainer);
+
+                if (cfg.selectionPosition === 'inner' &amp;&amp; !cfg.selectionContainer) {
+                    ms.input.width(0);
+                    inputOffset = ms.input.offset().left - ms.selectionContainer.offset().left;
+                    w = ms.container.width() - inputOffset - 42;
+                    ms.input.width(w);
+                }
+
+                if (_selection.length === cfg.maxSelection) {
+                    self._updateHelper(cfg.maxSelectionRenderer.call(this, _selection.length));
+                } else {
+                    ms.helper.hide();
+                }
+            },
+
+            /**
+             * Select an item either through keyboard or mouse
+             * @param item
+             * @private
+             */
+            _selectItem: function (item) {
+                if (cfg.maxSelection === 1) {
+                    _selection = [];
+                }
+                ms.addToSelection(item.data('json'));
+                item.removeClass('ms-res-item-active');
+                if (cfg.expandOnFocus === false || _selection.length === cfg.maxSelection) {
+                    ms.collapse();
+                }
+                if (!_hasFocus) {
+                    ms.input.focus();
+                } else if (_hasFocus &amp;&amp; (cfg.expandOnFocus || _ctrlDown)) {
+                    self._processSuggestions();
+                    if (_ctrlDown) {
+                        ms.expand();
+                    }
+                }
+            },
+
+            /**
+             * Sorts the results and cut them down to max # of displayed results at once
+             * @private
+             */
+            _sortAndTrim: function (data) {
+                var q = ms.getRawValue(),
+                    filtered = [],
+                    newSuggestions = [],
+                    selectedValues = ms.getValue();
+                // filter the data according to given input
+                if (q.length > 0) {
+                    $.each(data, function (index, obj) {
+                        var name = obj[cfg.displayField];
+                        if ((cfg.matchCase === true &amp;&amp; name.indexOf(q) > -1) ||
+                            (cfg.matchCase === false &amp;&amp; name.toLowerCase().indexOf(q.toLowerCase()) > -1)) {
+                            if (cfg.strictSuggest === false || name.toLowerCase().indexOf(q.toLowerCase()) === 0) {
+                                filtered.push(obj);
+                            }
+                        }
+                    });
+                }
+                else {
+                    filtered = data;
+                }
+                // take out the ones that have already been selected
+                $.each(filtered, function (index, obj) {
+                    if (cfg.allowDuplicates || $.inArray(obj[cfg.valueField], selectedValues) === -1) {
+                        newSuggestions.push(obj);
+                    }
+                });
+                // sort the data
+                if (cfg.sortOrder !== null) {
+                    newSuggestions.sort(function (a, b) {
+                        if (a[cfg.sortOrder] &lt; b[cfg.sortOrder]) {
+                            return cfg.sortDir === 'asc' ? -1 : 1;
+                        }
+                        if (a[cfg.sortOrder] > b[cfg.sortOrder]) {
+                            return cfg.sortDir === 'asc' ? 1 : -1;
+                        }
+                        return 0;
+                    });
+                }
+                // trim it down
+                if (cfg.maxSuggestions &amp;&amp; cfg.maxSuggestions > 0) {
+                    newSuggestions = newSuggestions.slice(0, cfg.maxSuggestions);
+                }
+
+                return newSuggestions;
+
+            },
+
+            _group: function (data) {
+                // build groups
+                if (cfg.groupBy !== null) {
+                    _groups = {};
+
+                    $.each(data, function (index, value) {
+                        var props = cfg.groupBy.indexOf('.') > -1 ? cfg.groupBy.split('.') : cfg.groupBy;
+                        var prop = value[cfg.groupBy];
+                        if (typeof(props) != 'string') {
+                            prop = value;
+                            while (props.length > 0) {
+                                prop = prop[props.shift()];
+                            }
+                        }
+                        if (_groups[prop] === undefined) {
+                            _groups[prop] = {title: prop, items: [value]};
+                        }
+                        else {
+                            _groups[prop].items.push(value);
+                        }
+                    });
+                }
+                return data;
+            },
+
+            /**
+             * Update the helper text
+             * @private
+             */
+            _updateHelper: function (html) {
+                ms.helper.html(html);
+                if (!ms.helper.is(":visible")) {
+                    ms.helper.fadeIn();
+                }
+            },
+
+            /**
+             * Validate an item against vtype or vregex
+             * @private
+             */
+            _validateSingleItem: function (value) {
+                if (cfg.vregex !== null &amp;&amp; cfg.vregex instanceof RegExp) {
+                    return cfg.vregex.test(value);
+                } else if (cfg.vtype !== null) {
+                    switch (cfg.vtype) {
+                        case 'alpha':
+                            return (/^[a-zA-Z_]+$/).test(value);
+                        case 'alphanum':
+                            return (/^[a-zA-Z0-9_]+$/).test(value);
+                        case 'email':
+                            return (/^(\w+)([\-+.][\w]+)*@(\w[\-\w]*\.){1,5}([A-Za-z]){2,6}$/).test(value);
+                        case 'url':
+                            return (/(((^https?)|(^ftp)):\/\/([\-\w]+\.)+\w{2,3}(\/[%\-\w]+(\.\w{2,})?)*(([\w\-\.\?\\\/+@&amp;#;`~=%!]*)(\.\w{2,})?)*\/?)/i).test(value);
+                        case 'ipaddress':
+                            return (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/).test(value);
+                    }
+                }
+                return true;
+            }
+        };
+
+        var handlers = {
+            /**
+             * Triggered when blurring out of the component
+             * @private
+             */
+            _onBlur: function () {
+                ms.container.removeClass('ms-ctn-focus');
+                ms.collapse();
+                _hasFocus = false;
+                if (ms.getRawValue() !== '' &amp;&amp; cfg.allowFreeEntries === true) {
+                    var obj = {};
+                    obj[cfg.displayField] = obj[cfg.valueField] = ms.getRawValue().trim();
+                    ms.addToSelection(obj);
+                }
+                self._renderSelection();
+
+                if (ms.isValid() === false) {
+                    ms.container.addClass(cfg.invalidCls);
+                }
+
+                else if (ms.input.val() !== '' &amp;&amp; cfg.allowFreeEntries === false) {
+                    ms.empty();
+                    self._updateHelper('');
+                }
+
+                $(ms).trigger('blur', [ms]);
+            },
+
+            /**
+             * Triggered when hovering an element in the combo
+             * @param e
+             * @private
+             */
+            _onComboItemMouseOver: function (e) {
+                var target = $(e.currentTarget);
+                if (!target.hasClass('ms-res-item-disabled')) {
+                    ms.combobox.children().removeClass('ms-res-item-active');
+                    target.addClass('ms-res-item-active');
+                }
+            },
+
+            /**
+             * Triggered when an item is chosen from the list
+             * @param e
+             * @private
+             */
+            _onComboItemSelected: function (e) {
+                var target = $(e.currentTarget);
+                if (!target.hasClass('ms-res-item-disabled')) {
+                    self._selectItem($(e.currentTarget));
+                }
+            },
+
+            /**
+             * Triggered when focusing on the container div. Will focus on the input field instead.
+             * @private
+             */
+            _onFocus: function () {
+                ms.input.focus();
+            },
+
+            /**
+             * Triggered when clicking on the input text field
+             * @private
+             */
+            _onInputClick: function () {
+                if (ms.isDisabled() === false &amp;&amp; _hasFocus) {
+                    if (cfg.toggleOnClick === true) {
+                        if (cfg.expanded) {
+                            ms.collapse();
+                        } else {
+                            ms.expand();
+                        }
+                    }
+                }
+            },
+
+            /**
+             * Triggered when focusing on the input text field.
+             * @private
+             */
+            _onInputFocus: function () {
+                if (ms.isDisabled() === false &amp;&amp; !_hasFocus) {
+                    _hasFocus = true;
+                    ms.container.addClass('ms-ctn-focus');
+                    ms.container.removeClass(cfg.invalidCls);
+
+                    var curLength = ms.getRawValue().length;
+                    if (cfg.expandOnFocus === true) {
+                        ms.expand();
+                    }
+
+                    if (_selection.length === cfg.maxSelection) {
+                        self._updateHelper(cfg.maxSelectionRenderer.call(this, _selection.length));
+                    } else if (curLength &lt; cfg.minChars) {
+                        self._updateHelper(cfg.minCharsRenderer.call(this, cfg.minChars - curLength));
+                    }
+
+                    self._renderSelection();
+                    $(ms).trigger('focus', [ms]);
+                }
+            },
+
+            /**
+             * Triggered when the user presses a key while the component has focus
+             * This is where we want to handle all keys that don't require the user input field
+             * since it hasn't registered the key hit yet
+             * @param e keyEvent
+             * @private
+             */
+            _onKeyDown: function (e) {
+                // check how tab should be handled
+                var active = ms.combobox.find('.ms-res-item-active:not(.ms-res-item-disabled):first'),
+                    freeInput = ms.input.val();
+                $(ms).trigger('keydown', [ms, e]);
+
+                if (e.keyCode === KEYCODES.TAB &amp;&amp; (cfg.useTabKey === false ||
+                    (cfg.useTabKey === true &amp;&amp; active.length === 0 &amp;&amp; ms.input.val().length === 0))) {
+                    handlers._onBlur();
+                    return;
+                }
+                switch (e.keyCode) {
+                    case KEYCODES.BACKSPACE:
+                        if (freeInput.length === 0 &amp;&amp; ms.getSelection().length > 0 &amp;&amp; cfg.selectionPosition === 'inner') {
+                            _selection.pop();
+                            self._renderSelection();
+                            $(ms).trigger('selectionchange', [ms, ms.getSelection()]);
+                            ms.input.attr('placeholder', (cfg.selectionPosition === 'inner' &amp;&amp; ms.getValue().length > 0) ? '' : cfg.placeholder);
+                            ms.input.focus();
+                            e.preventDefault();
+                        }
+                        break;
+                    case KEYCODES.TAB:
+                    case KEYCODES.ESC:
+                        e.preventDefault();
+                        break;
+                    case KEYCODES.ENTER:
+                        if (freeInput !== '' || cfg.expanded) {
+                            e.preventDefault();
+                        }
+                        break;
+                    case KEYCODES.COMMA:
+                        if (cfg.useCommaKey === true) {
+                            e.preventDefault();
+                        }
+                        break;
+                    case KEYCODES.CTRL:
+                        _ctrlDown = true;
+                        break;
+                    case KEYCODES.DOWNARROW:
+                        e.preventDefault();
+                        self._moveSelectedRow("down");
+                        break;
+                    case KEYCODES.UPARROW:
+                        e.preventDefault();
+                        self._moveSelectedRow("up");
+                        break;
+                    default:
+                        if (_selection.length === cfg.maxSelection) {
+                            e.preventDefault();
+                        }
+                        break;
+                }
+            },
+
+            /**
+             * Triggered when a key is released while the component has focus
+             * @param e
+             * @private
+             */
+            _onKeyUp: function (e) {
+                var freeInput = ms.getRawValue(),
+                    inputValid = $.trim(ms.input.val()).length > 0 &amp;&amp;
+                        (!cfg.maxEntryLength || $.trim(ms.input.val()).length &lt;= cfg.maxEntryLength),
+                    selected,
+                    obj = {};
+
+                $(ms).trigger('keyup', [ms, e]);
+
+                clearTimeout(_timer);
+
+                // collapse if escape, but keep focus.
+                if (e.keyCode === KEYCODES.ESC &amp;&amp; cfg.expanded) {
+                    ms.combobox.hide();
+                }
+                // ignore a bunch of keys
+                if ((e.keyCode === KEYCODES.TAB &amp;&amp; cfg.useTabKey === false) || (e.keyCode > KEYCODES.ENTER &amp;&amp; e.keyCode &lt; KEYCODES.SPACE)) {
+                    if (e.keyCode === KEYCODES.CTRL) {
+                        _ctrlDown = false;
+                    }
+                    return;
+                }
+                switch (e.keyCode) {
+                    case KEYCODES.UPARROW:
+                    case KEYCODES.DOWNARROW:
+                        e.preventDefault();
+                        break;
+                    case KEYCODES.ENTER:
+                    case KEYCODES.TAB:
+                    case KEYCODES.COMMA:
+                        if (e.keyCode !== KEYCODES.COMMA || cfg.useCommaKey === true) {
+                            e.preventDefault();
+                            if (cfg.expanded === true) { // if a selection is performed, select it and reset field
+                                selected = ms.combobox.find('.ms-res-item-active:not(.ms-res-item-disabled):first');
+                                if (selected.length > 0) {
+                                    self._selectItem(selected);
+                                    return;
+                                }
+                            }
+                            // if no selection or if freetext entered and free entries allowed, add new obj to selection
+                            if (inputValid === true &amp;&amp; cfg.allowFreeEntries === true) {
+                                obj[cfg.displayField] = obj[cfg.valueField] = freeInput.trim();
+                                ms.addToSelection(obj);
+                                ms.collapse(); // reset combo suggestions
+                                ms.input.focus();
+                            }
+                            break;
+                        }
+                    default:
+                        if (_selection.length === cfg.maxSelection) {
+                            self._updateHelper(cfg.maxSelectionRenderer.call(this, _selection.length));
+                        }
+                        else {
+                            if (freeInput.length &lt; cfg.minChars) {
+                                self._updateHelper(cfg.minCharsRenderer.call(this, cfg.minChars - freeInput.length));
+                                if (cfg.expanded === true) {
+                                    ms.collapse();
+                                }
+                            }
+                            else if (cfg.maxEntryLength &amp;&amp; freeInput.length > cfg.maxEntryLength) {
+                                self._updateHelper(cfg.maxEntryRenderer.call(this, freeInput.length - cfg.maxEntryLength));
+                                if (cfg.expanded === true) {
+                                    ms.collapse();
+                                }
+                            }
+                            else {
+                                ms.helper.hide();
+                                if (cfg.minChars &lt;= freeInput.length) {
+                                    _timer = setTimeout(function () {
+                                        if (cfg.expanded === true) {
+                                            self._processSuggestions();
+                                        } else {
+                                            ms.expand();
+                                        }
+                                    }, cfg.typeDelay);
+                                }
+                            }
+                        }
+                        break;
+                }
+            },
+
+            /**
+             * Triggered when clicking upon cross for deletion
+             * @param e
+             * @private
+             */
+            _onTagTriggerClick: function (e) {
+                ms.removeFromSelection($(e.currentTarget).data('json'));
+            },
+
+            /**
+             * Triggered when clicking on the small trigger in the right
+             * @private
+             */
+            _onTriggerClick: function () {
+                if (ms.isDisabled() === false &amp;&amp; !(cfg.expandOnFocus === true &amp;&amp; _selection.length === cfg.maxSelection)) {
+                    $(ms).trigger('triggerclick', [ms]);
+                    if (cfg.expanded === true) {
+                        ms.collapse();
+                    } else {
+                        var curLength = ms.getRawValue().length;
+                        if (curLength >= cfg.minChars) {
+                            ms.input.focus();
+                            ms.expand();
+                        } else {
+                            self._updateHelper(cfg.minCharsRenderer.call(this, cfg.minChars - curLength));
+                        }
+                    }
+                }
+            },
+
+            /**
+             * Triggered when the browser window is resized
+             * @private
+             */
+            _onWindowResized: function () {
+                self._renderSelection();
+            }
+        };
+
+        // startup point
+        if (element !== null) {
+            self._render(element);
+        }
+    };
+
+    $.fn.magicSuggest = function (options) {
+        var obj = $(this);
+
+        if (obj.size() === 1 &amp;&amp; obj.data('magicSuggest')) {
+            return obj.data('magicSuggest');
+        }
+
+        obj.each(function (i) {
+            // assume $(this) is an element
+            var cntr = $(this);
+
+            // Return early if this element already has a plugin instance
+            if (cntr.data('magicSuggest')) {
+                return;
+            }
+
+            if (this.nodeName.toLowerCase() === 'select') { // rendering from select
+                options.data = [];
+                options.value = [];
+                $.each(this.children, function (index, child) {
+                    if (child.nodeName &amp;&amp; child.nodeName.toLowerCase() === 'option') {
+                        options.data.push({id: child.value, name: child.text});
+                        if ($(child).attr('selected')) {
+                            options.value.push(child.value);
+                        }
+                    }
+                });
+            }
+
+            var def = {};
+            // set values from DOM container element
+            $.each(this.attributes, function (i, att) {
+                def[att.name] = att.name === 'value' &amp;&amp; att.value !== '' ? JSON.parse(att.value) : att.value;
+            });
+
+            var field = new MagicSuggest(this, $.extend([], $.fn.magicSuggest.defaults, options, def));
+            cntr.data('magicSuggest', field);
+            field.container.data('magicSuggest', field);
+        });
+
+        if (obj.size() === 1) {
+            return obj.data('magicSuggest');
+        }
+        return obj;
+    };
+
+    $.fn.magicSuggest.defaults = {};
+})(jQuery);
+
+
+
+/***/ }),
+
+/***/ 63:
+/***/ (function(module, exports, __webpack_require__) {
+
+var Handlebars = __webpack_require__(7);
+module.exports = (Handlebars['default'] || Handlebars).template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    return "\r\n&lt;form class=\"form-horizontal\" role=\"form\" style = \"padding: 20px;\">\r\n    &lt;div class = \"fields-wrapper\">&lt;/div>\r\n    &lt;div class = \"form-btns-wrapper\" style = \"text-align: center\">&lt;/div>\r\n&lt;/form>";
+},"useData":true});
+
+/***/ })
+
+});
+//# sourceMappingURL=0.bandle.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#default">default</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Aug 02 2017 10:00:27 GMT+0800 (RTZ 7 (зима))
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
