@@ -15,6 +15,7 @@ export class Layout extends componentLib.Component {
         this.saveInWindow();
         this.getAttributes(param.element);
         this.render();
+        console.log(this);
     }
 
     getAttributes(attributes) {

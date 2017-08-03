@@ -18,6 +18,7 @@ export class Grid extends component.Component {
      * @param params.
      */
     constructor(params) {
+        console.log(params);
         super(params);
         this.pagination = false;//пагинация
         this.hierachy = false;//иерархия
@@ -43,8 +44,6 @@ export class Grid extends component.Component {
         this.pagination = attributes.properties.pagination || false;//пагинация
         this.hierachy = attributes.properties.hierachy || false;//иерархия
         this.limit = attributes.properties.limit;
-        this.path = attributes.properties.path;
-        this.id = attributes.id;
         this.header = attributes.properties.header || "";
         for (let i in attributes.elements) {
             if (attributes.elements[i].type === 'column') {
@@ -567,6 +566,7 @@ export class Grid extends component.Component {
                 render: renders[this.columnsRaw[i].type] || null
             })
         }
+        console.log(columns);
         return columns;
     }
 

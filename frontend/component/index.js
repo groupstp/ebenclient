@@ -21,15 +21,13 @@ export class Component {
         this.code = this.prepareCode(options.code) || {};
         // данные компонента
         this.content = options.content || [];
+        this.path = options.element.path || '';
         //идентификатор
-        this.id = options.element.id;
+        this.id = this.path.replace(':', '_') + '_' + options.element.type;
         //массив деток, нужен для каскадного обновления
         this.children = [];
         //записываемся в дети родителю
         this.recInChildren();
-        //тип и имя объекта для которго строится компонент
-        this.object = options.element.properties.object || "";
-        this.name = options.element.properties.name || "";
     }
 
     /**
