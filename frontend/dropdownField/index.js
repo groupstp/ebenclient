@@ -63,7 +63,7 @@ export class DropdownField extends Field {
             //различные системные кнопки, клики которых не надо обрабатывать
             let forbiddenKeyCodes = [13, 16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 44, 45, 46, 91, 93, 144, 145];
 
-            if (forbiddenKeyCodes.indexOf(v.keyCode) !== -1){
+            if (forbiddenKeyCodes.indexOf(v.keyCode) !== -1) {
                 return;
             } else if (newValue) {
                 this.getListDataFromServer(this.magicObj.getRawValue());
@@ -126,7 +126,7 @@ export class DropdownField extends Field {
         this.magicObj.setData(data);
     }
 
-    clearListData(data){
+    clearListData(data) {
         this.setListData([]);
     }
 
@@ -163,8 +163,16 @@ export class DropdownField extends Field {
 
             // делаем в попытке, потому что мало ли что нам придет в data
             try {
-                let values = data.content.fk[this.id];
-                if (values) result = values;
+                let values = data.content[0].fk[this.id];
+                if (values) {
+                    let ids = Object.keys(values);
+                    ids.forEach((id) => {
+                        result.push({
+                            "id" : id,
+                            "name" : values[id]
+                        });
+                    });
+                }
             }
             catch
                 (err) {
