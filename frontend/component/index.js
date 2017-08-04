@@ -23,7 +23,7 @@ export class Component {
         this.content = options.content || [];
         this.path = options.element.path || '';
         //идентификатор
-        this.id = this.path.replace(':', '_') + '_' + options.element.type;
+        this.id = this.path.replace(':', '-') + '-' + options.element.type;
         //массив деток, нужен для каскадного обновления
         this.children = [];
         //записываемся в дети родителю

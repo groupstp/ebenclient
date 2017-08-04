@@ -65,9 +65,9 @@ menu.on('menuItemSelected', event => {
             url: /*'http://localhost:1234/get'*/ /*'server.json'*/ 'http://localhost:12345',
             msg: /*"obj=" + detail.obj + '&name=' + detail.name*/ /*''*/ JSON.stringify({
                 action: 'get',
-                path: detail.obj + ':' + detail.name,
+                path: detail.obj + '-' + detail.name,
                 data: {
-                    type: 'fullPage'
+                    type: 'listForm'
                 }
             }),
             before: function () {

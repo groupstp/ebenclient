@@ -33,7 +33,6 @@ export class Grid extends component.Component {
         this.handlers = {};//массив обработчиков событий таблицы
         this.groupedBy = [];//колонки по которым группируются записи
         this.showGroupCol = '';//колонка в которую выводится результат группировки
-        this.path = "";
         this.saveInWindow();
         this.getAttributes(params.element);
         this.render();

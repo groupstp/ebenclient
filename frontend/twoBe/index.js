@@ -10,7 +10,7 @@ export default class twoBe {
     }
 
     static getDefaultParams() {
-        return ({url: 'http://localhost:1234'});
+        return ({url: 'http://localhost:12345'});
     }
 
     static getById(id) {
@@ -80,7 +80,7 @@ export default class twoBe {
 class Request {
     constructor() {
         this.url = '';
-        this.param = [];
+        this.param = {};
         this.before = '';
         this.success = '';
         this.error = '';
@@ -93,8 +93,16 @@ class Request {
         return this;
     }
 
+    addData(key, value) {
+        if (this.param.data === undefined) {
+            this.param.data = {};
+        }
+        this.param.data[key] = value;
+        return this;
+    }
+
     addParam(key, value) {
-        this.param.push(key + '=' + value);
+        this.param[key] = value;
         return this;
     }
 
@@ -118,11 +126,6 @@ class Request {
         return this;
     }
 
-    addQueryString(string) {
-        this.queryString = string;
-        return this;
-    }
-
     send() {
         /*if (this.cacheKey !== null && localStorage[this.cacheKey] !== undefined) {
          this.success(twoBe.getCache(this.cacheKey));
@@ -130,7 +133,7 @@ class Request {
          }*/
         let request = new tools.AjaxSender({
             url: this.url,
-            msg: this.param.join('&') + (this.queryString.length === 0 ? '' : '&' + this.queryString),
+            msg: JSON.stringify(this.param),
             before: function () {
                 this.before();
             }.bind(this)
