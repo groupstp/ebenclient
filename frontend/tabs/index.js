@@ -35,7 +35,7 @@ export class Tabs extends componentLib.Component {
             let aHref = document.createElement('a');
             aHref.innerHTML = this.tabsContent[id].properties.header;
             aHref.setAttribute('data-toggle', 'pill');
-            aHref.setAttribute('href', '#' + id);
+            aHref.setAttribute('href', '#' + this.path + '-tab-' + id);
             aHref.data = id;
             li.appendChild(aHref);
         }

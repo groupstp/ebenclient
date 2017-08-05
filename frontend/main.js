@@ -70,6 +70,8 @@ menu.on('menuItemSelected', event => {
                     type: 'listForm'
                 }
             }),
+            //url: /*'http://localhost:1234/get'*/ /*'server.json'*/ 'http://localhost:1234/get',
+            //msg: "obj=" + detail.obj + '&name=' + detail.name,
             before: function () {
                 locker.lock();
             }.bind(this)
