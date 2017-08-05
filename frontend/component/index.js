@@ -15,7 +15,7 @@ export class Component {
         //в случае пустот
         options.element = options.element || {};
         options.element.properties = options.element.properties || {};
-        options.id = options.id || "";
+        options.element.id = options.element.id || "";
         // собятия элемента, объект с именем события и именем обработчика события
         this.events = options.element.events || null;
         // объект с именем обработчика события и кодом этого обработчика
@@ -24,7 +24,7 @@ export class Component {
         this.content = options.content || [];
         this.path = options.element.path || '';
         //идентификатор
-        this.id = this.path.replace(':', '-')  + '-' + options.element.type + (options.id ? '-' + options.id : "");
+        this.id = this.path + '-' + options.element.type + (options.element.id !== "" ? '-' + options.element.id : "");
         //массив деток, нужен для каскадного обновления
         this.children = [];
         //записываемся в дети родителю

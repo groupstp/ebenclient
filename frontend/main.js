@@ -54,7 +54,7 @@ menu.on('menuItemSelected', event => {
      buildMain(builder);
      }*/
     if (detail.obj === 'ref' || detail.obj === 'doc' || detail.obj === 'st') {
-        let objectID = detail.obj + '&' + detail.name;
+        let objectID = detail.obj + '-' + detail.name;
         let page = builder.showPage(objectID, detail.caption);
         console.log('boxForElement', page);
         let locker = new tools.Freezer({
@@ -62,8 +62,8 @@ menu.on('menuItemSelected', event => {
             message: 'Загрузка'
         });
         let mainQuery = new tools.AjaxSender({
-            url: /*'http://localhost:1234/get'*/ /*'server.json'*/ 'http://localhost:12345',
-            msg: /*"obj=" + detail.obj + '&name=' + detail.name*/ /*''*/ JSON.stringify({
+            url: 'http://localhost:12345',
+            msg: JSON.stringify({
                 action: 'get',
                 path: detail.obj + '-' + detail.name,
                 data: {

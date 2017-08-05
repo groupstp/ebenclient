@@ -175,16 +175,21 @@ class Page {
     }
 
     reload() {
-        let object = this.children[0].object;
-        let name = this.children[0].name;
+        let path = this.children[0].path;
         this.clear();
         let locker = new tools.Freezer({
             place: this.generatedBox,
             message: 'Загрузка'
         });
         let mainQuery = new tools.AjaxSender({
-            url: 'http://localhost:1234/get' /*'server.json'*/,
-            msg: "obj=" + object + '&name=' + name /*''*/,
+            url: 'http://localhost:12345',
+            msg: JSON.stringify({
+                action: 'get',
+                path: path,
+                data: {
+                    type: 'listForm'
+                }
+            }),
             before: function () {
                 locker.lock();
             }.bind(this)

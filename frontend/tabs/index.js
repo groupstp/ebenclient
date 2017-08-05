@@ -9,58 +9,88 @@ export class Tabs extends componentLib.Component {
         super(params);
         this.tabsContent = [];
         this.getAttributes(params.element);
-        this.buildTabsHeaders();
         this.buildTabs();
-        console.log(this);
     }
 
     getAttributes(attributes) {
-        this.tabsContent = this.makeAsos(attributes.elements, 'id');
-        for (let id in this.tabsContent) {
-            if (this.tabsContent[id].events !== undefined) {
-                for (let event in this.tabsContent[id].events) {
-                    this.tabsContent[id].events[event] = this.code[this.tabsContent[id].events[event]];
+        //собираем данные для генерации объектов вкладок
+        this.tabsContent = attributes.elements;
+        for (let i in this.tabsContent) {
+            if (this.tabsContent[i].events !== undefined) {
+                for (let event in this.tabsContent[i].events) {
+                    this.tabsContent[i].events[event] = this.code[this.tabsContent[i].events[event]];
                 }
             }
         }
     }
 
-    buildTabsHeaders() {
+    /**
+     * Функция строит вкладки
+     */
+    buildTabs() {
+        //контейнер для таблеток
         let navTabs = document.createElement('ul');
         navTabs.className = "nav nav-pills";
         this.box.appendChild(navTabs);
-        for (let id in this.tabsContent) {
+        //генерируем вкладки
+        this.buildTabsContent();
+        //формируем ссылки на сгенерированые вкладки
+        for (let i in this.children) {
             let li = document.createElement('li');
             navTabs.appendChild(li);
             let aHref = document.createElement('a');
-            aHref.innerHTML = this.tabsContent[id].properties.header;
+            aHref.innerHTML = this.tabsContent[i].properties.header;
             aHref.setAttribute('data-toggle', 'pill');
-            aHref.setAttribute('href', '#' + this.path + '-tab-' + id);
-            aHref.data = id;
+            aHref.setAttribute('href', '#' + this.children[i].id);
+            aHref.data = i;
             li.appendChild(aHref);
+            //навешиваем обработчики, в контекст передаем объект вкладки
+            //beforeShow
+            $('a[href="#' + this.children[i].id + '"]').on('show.bs.tab', $.proxy(function (e) {
+                for (let i in this.children) {
+                    this.children[i].refresh();
+                }
+                if (!this._showByFunc) {
+                    if (this.events !== null && this.events.beforeShow !== undefined) {
+                        this._beforeEvent = e;
+                        this.events.beforeShow.call(this, this);
+                    }
+                }
+            }, this.children[i]))
+            //afterShow
+            $('a[href="#' + this.children[i].id + '"]').on('shown.bs.tab', $.proxy(function (e) {
+                if (this.events !== null && this.events.afterShow !== undefined) {
+                    this.events.afterShow.call(this, this);
+                }
+            }, this.children[i]))
         }
+        //по умолчанию показываем первую вкладку
+        this.children[0].show();
     }
 
-    buildTabs() {
+    /**
+     * Строим объекты-вкладки
+     */
+    buildTabsContent() {
+        //генерируем контейнер
         let tabContent = document.createElement('div');
         tabContent.className = 'tab-content';
-        console.log(this.box.clientHeight);
         tabContent.style.height = (this.box.clientHeight - 45) + 'px';
         this.box.appendChild(tabContent);
-        for (let id in this.tabsContent) {
+        //вызываем конструкторы
+        for (let i in this.tabsContent) {
             let tab = new Tab({
-                id: id,
                 code: this.code,
                 content: this.content,
-                element: this.tabsContent[id],
+                element: this.tabsContent[i],
                 box: tabContent,
                 parent: this
             })
         }
-        this.children[0].show();
     }
 
     refresh() {
+        //TODO при изменении размеров попапа вкладки не изменяют своих размеров(((
         for (let i in this.children) {
             this.children[i].refresh();
         }
@@ -146,23 +176,5 @@ class Tab extends componentLib.Component {
         if (this.tabContent !== null) {
             this.fill();
         }
-
-        $('a[href="#' + this.id + '"]').on('show.bs.tab', $.proxy(function (e) {
-            for (let i in this.children) {
-                this.children[i].refresh();
-            }
-            if (!this._showByFunc) {
-                if (this.events !== null && this.events.beforeShow !== undefined) {
-                    this._beforeEvent = e;
-                    this.events.beforeShow.call(this, this);
-                }
-            }
-        }, this))
-        //afterShow
-        $('a[href="#' + this.id + '"]').on('shown.bs.tab', $.proxy(function (e) {
-            if (this.events !== null && this.events.afterShow !== undefined) {
-                this.events.afterShow.call(this, this);
-            }
-        }, this))
     }
 }
