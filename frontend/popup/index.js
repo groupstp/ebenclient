@@ -41,6 +41,7 @@ export class Popup {
         let self = this;
         if (self.dimension === 0) {
             w2popup.close();
+            delete stpui.popup;
         } else {
             //заголовок
             document.getElementById('popupHeader').innerHTML = self.modals[self.dimension].header;
@@ -65,7 +66,6 @@ export class Popup {
 
                 });
         }
-        delete stpui.popup;
     }
 
     lock(msg = '', spinner = true) {
@@ -175,7 +175,7 @@ export class Popup {
                 bodyObj.style.height = '100%';
                 document.getElementById('popupDiv').appendChild(bodyObj);
                 var buttonsHtml = "";
-                for (var i in properties.footer) {
+                for (let i in properties.footer) {
                     buttonsHtml += '<button class="w2ui-btn" id=' + properties.footer[i].id + self.dimension + '  style="margin-left: 5px">' + properties.footer[i].properties.caption + '</button>';
                 }
                 buttonsHtml += '<button class="w2ui-btn" id=' + 'close' + self.dimension + ' style="margin-left: 5px">' + 'Назад' + '</button>';
@@ -184,14 +184,22 @@ export class Popup {
                 buttonsObj.innerHTML = buttonsHtml;
                 document.getElementById('popupBtn').appendChild(buttonsObj);
                 //навешиваем обработчики на кнопки
-                for (var i in properties.footer) {
+                for (let i in properties.footer) {
                     document.getElementById(properties.footer[i].id + self.dimension).onclick = function () {
                         let button = {
                             getProperties: function () {
-                                return {param: properties.footer[i].properties.param || null};
+                                return {
+                                    param: properties.footer[i].properties.param || null,
+                                    path: properties.body.path
+                                };
                             }
                         }
-                        properties.code[properties.footer[i].events.click](button)
+                        try {
+                            properties.code[properties.footer[i].events.click](button);
+                        } catch (err) {
+                            console.log('SERVER CODE ERROR:' + err);
+                            w2alert('Серевер вернул некорректное действие!');
+                        }
                     }.bind(self);
                 }
                 //меняем размеры
