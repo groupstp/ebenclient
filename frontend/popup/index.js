@@ -111,14 +111,23 @@ export class Popup {
                                 })
                                 // });
                                 //навешиваем обработчики на кнопки
+                                console.log(properties);
                                 for (let i in properties.footer) {
                                     document.getElementById(properties.footer[i].id + '0').onclick = function () {
                                         let button = {
                                             getProperties: function () {
-                                                return {param: properties.footer[i].properties.param || null};
+                                                return {
+                                                    param: properties.footer[i].properties.param || null,
+                                                    path: properties.body.path
+                                                };
                                             }
                                         }
-                                        properties.code[properties.footer[i].events.click](button);
+                                        try {
+                                            properties.code[properties.footer[i].events.click](button);
+                                        } catch (err) {
+                                            console.log('SERVER CODE ERROR:' + err);
+                                            w2alert('Серевер вернул некорректное действие!');
+                                        }
                                     };
                                 }
                                 //добавляем кнопку отмену

@@ -75,7 +75,7 @@ export class Tabs extends componentLib.Component {
         //генерируем контейнер
         let tabContent = document.createElement('div');
         tabContent.className = 'tab-content';
-        tabContent.style.height = (this.box.clientHeight - 45) + 'px';
+        tabContent.style.height = /*(this.box.clientHeight - 45) + 'px'*/'calc(100% - 45px)';
         this.box.appendChild(tabContent);
         //вызываем конструкторы
         for (let i in this.tabsContent) {
@@ -168,7 +168,7 @@ class Tab extends componentLib.Component {
     render() {
         let tabDiv = document.createElement('div');
         tabDiv.className = 'tab-pane';
-        tabDiv.style.height = this.box.clientHeight + 'px';
+        tabDiv.style.height = /*this.box.clientHeight + 'px'*/'calc(100% - 45px)';
         tabDiv.style.width = '100%';
         tabDiv.id = this.id;
         this.tabContainer = tabDiv;
