@@ -232,7 +232,12 @@ export class Popup {
         }
         for (let i in popupData.elements) {
             if (popupData.elements[i].type === 'header') {
-                result.header = popupData.elements[i].properties.caption;
+                if (popupData.elements[i].properties !== undefined) {
+                    result.header = popupData.elements[i].properties.caption || '';
+                } else {
+                    result.header = ''
+                }
+
             }
             if (popupData.elements[i].type === 'footer') {
                 result.footer = popupData.elements[i].elements;
