@@ -7,7 +7,9 @@ import * as componentLib from '../component'
 import * as tools from '../tools/index.js';
 import twoBe from '../twoBe/index.js';
 window.twoBe = twoBe;
-
+/**
+ * Класс для построения разметки страницы
+ */
 export class Layout extends componentLib.Component {
     constructor(param) {
         super(param);
@@ -15,7 +17,6 @@ export class Layout extends componentLib.Component {
         this.saveInWindow();
         this.getAttributes(param.element);
         this.render();
-        console.log(this);
     }
 
     getAttributes(attributes) {

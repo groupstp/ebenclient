@@ -1,33 +1,50 @@
 /**
- * Created by AHonyakov on 25.07.2017.
+ * Модуль для построения всплывающих окон
+ * @module popup
+ */
+
+/**
+ * Класс реализующий построение всплывающего окна
  */
 export class Popup {
     constructor() {
+        //уровень вложенности
         this.dimension = -1;
+        //хранит в себе окна
         this.modals = [];
         if (window.stpui === undefined) {
             window.stpui = {};
         }
+        //может существовать только один объект попап
         window.stpui.popup = this;
     }
 
+    /**
+     * Функция выполняет показ нового модального окна
+     * @param data - информация приходящая с сервера в определенном формате
+     */
     showNewModal(data) {
         let popupProperties = this.getParams(data);
         this.getPlace(popupProperties).then(
             place => {
                 let layoutLib = require('../layout/index.js');
-                let layuout = new layoutLib.Layout({
+                let layout = new layoutLib.Layout({
                         box: place,
                         element: popupProperties.body,
                         content: data.content,
                         code: data.code
                     }
                 );
-                this.modals[this.dimension].object = layuout;
+                this.modals[this.dimension].object = layout;
             }
         );
     }
 
+    /**
+     * Функция преобразует текстовое представлние кода, продублирована из компонента
+     * @param oldCode - строковый код
+     * @returns {{}}
+     */
     prepareCode(oldCode) {
         let newCode = {};
         for (let funcName in oldCode) {
@@ -37,6 +54,9 @@ export class Popup {
         return newCode;
     }
 
+    /**
+     * Закрывает очередную модаль
+     */
     close() {
         let self = this;
         if (self.dimension === 0) {
@@ -68,14 +88,38 @@ export class Popup {
         }
     }
 
+    /**
+     * Замораживает попап
+     * @param msg - сообщение
+     * @param spinner - показывать ли спинннер
+     */
     lock(msg = '', spinner = true) {
         w2popup.lock(msg, spinner);
     }
 
+    /**
+     * Размораживает попап
+     */
     unlock() {
         w2popup.unlock();
     }
 
+    hide() {
+        document.getElementById('w2ui-lock').style.display = 'none';
+        document.getElementById('w2ui-popup').style.display = 'none';
+    }
+
+    unhide() {
+        document.getElementById('w2ui-lock').style.display = '';
+        document.getElementById('w2ui-popup').style.display = '';
+    }
+
+
+    /**
+     * Получает место для построения содержимого модали, взято из старого проекта
+     * @param properties - свойства модали
+     * @returns {Promise}
+     */
     getPlace(properties) {
         let self = this;
         return new Promise(function (resolve, reject) {
@@ -91,7 +135,7 @@ export class Popup {
                 buttonsHtml = '<div id="popupBtn"><div id="popupBtn0">' + buttonsHtml + '</div></div>';
                 //формируем контейнер для панели
                 var bodyHtml = '<div id="popupDiv" style="position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px;"><div id="popup0" style="position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px;"></div></div>';
-                //конфигурируем окно
+                //конфигурируем окно в2уи
                 w2popup.open({
                         title: '<div id="popupHeader">' + properties.header + '</div>',
                         height: properties.height,
@@ -102,14 +146,12 @@ export class Popup {
                         modal: true,
                         onOpen: function (event) {
                             event.onComplete = function () {
-                                //w2popup.resize(properties.width, properties.height, function () {
                                 self.dimension++;
                                 self.modals.push({
                                     header: properties.header,
                                     width: w2popup.get().width,
                                     height: w2popup.get().height
                                 })
-                                // });
                                 //навешиваем обработчики на кнопки
                                 console.log(properties);
                                 for (let i in properties.footer) {
@@ -224,8 +266,12 @@ export class Popup {
         })
     }
 
+    /**
+     * Функция из приходящей информации получает информацию об очередной модали - заголовок, тело, кнопки, размеры, а также код
+     * @param data
+     * @returns {{code: *}}
+     */
     getParams(data) {
-        console.log(data);
         let popupData = data.elements[0];
         let result = {
             code: this.prepareCode(data.code)

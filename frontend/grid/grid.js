@@ -12,13 +12,11 @@ import * as component from '../component'
  */
 export class Grid extends component.Component {
     /**
-     * @augments componentLib.Component
      * @param {Object} params - содержит данные для создания
-     * @extends componentLib.Component
-     * @param params.
+     * @augments componentLib.Component
+     * @param params
      */
     constructor(params) {
-        console.log(params);
         super(params);
         this.pagination = false;//пагинация
         this.hierachy = false;//иерархия
@@ -36,7 +34,6 @@ export class Grid extends component.Component {
         this.saveInWindow();
         this.getAttributes(params.element);
         this.render();
-        console.log(this);
     }
 
     getAttributes(attributes) {
@@ -539,18 +536,49 @@ export class Grid extends component.Component {
     makeColumns() {
         window.showFiles = function (recid, col, index, column_index) {
             console.log(recid, col);
-            //console.log(w2ui[this.id].getCellHTML(index, column_index));
-            /*$('#' + '').w2overlay({
-             openAbove: false,
-             align: 'none',
-             html: '<div style="padding: 10px; line-height: 150%">' + 'sdfsdfsdf' + '</div>'
-             });*/
+            console.log(w2ui[this.id].getCellHTML(index, column_index));
+            console.log('gird_' + this.id + '_data_' + index + '_' + column_index);
+            let links = '';
+            for (let i in w2ui[this.id].get(recid)[col]) {
+                links += '<p><a target="_blank" href="' + w2ui[this.id].get(recid)[col][i] + '">Файл ' + i + '</a></p>'
+            }
+            $('#' + 'grid_' + this.id + '_data_' + index + '_' + column_index).w2overlay({
+                openAbove: false,
+                align: 'none',
+                html: '<div style="padding: 10px; line-height: 150%">'
+                + '<p>Ссылки на файлы</p><br>'
+                + links
+                + '</div>'
+            });
         }.bind(this);
         let renders = {
             "files": function (record, index, column_index) {
-                return ('<button onclick=showFiles("' + record.recid
-                + '","' + this.columns[column_index].field + '",' + index
-                + ',' + column_index + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
+                if (record[this.columns[column_index].field] === undefined || record[this.columns[column_index].field] === null || record[this.columns[column_index].field].length === 0) {
+                    return ('Нет файлов');
+                } else {
+                    return ('<button onclick=showFiles("' + record.recid
+                    + '","' + this.columns[column_index].field + '",' + index
+                    + ',' + column_index + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
+                }
+            },
+            'timestamp': function (record, index, column_index) {
+                let fData = '';
+                let ufData = record[this.columns[column_index].field];
+                fData = w2utils.formatDateTime(ufData, 'dd-mm-yyyy|h:m');
+                return fData;
+            },
+            'float': 'float:2',
+            'date': function (record, index, column_index) {
+                let fData = '';
+                let ufData = record[this.columns[column_index].field];
+                fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
+                return fData;
+            },
+            'boolean': function (record, index, column_index) {
+                let fData = '';
+                let ufData = record[this.columns[column_index].field];
+                fData = (ufData ? 'да' : 'нет');
+                return fData;
             }
         }
         let columns = [];

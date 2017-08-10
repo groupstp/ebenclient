@@ -86,6 +86,9 @@ export class Component {
         }
     }
 
+    /**
+     * Уничтожает компонент
+     */
     destroy() {
         this.box.innerHTML = '';
         delete stpui[this.id];
@@ -128,7 +131,7 @@ export class Component {
     }
 
     reload() {
-        console.log('reload ' + this.id);
+
     }
 
     /**

@@ -4,9 +4,13 @@
 
 import * as componentLib from '../component';
 import * as tools from '../tools/index.js';
+/**
+ * Класс для построения вкладок
+ */
 export class Tabs extends componentLib.Component {
     constructor(params) {
         super(params);
+        //массив для данных о вкладках
         this.tabsContent = [];
         this.getAttributes(params.element);
         this.buildTabs();
@@ -89,23 +93,31 @@ export class Tabs extends componentLib.Component {
         }
     }
 
+    /**
+     * Обновление
+     */
     refresh() {
-        //TODO при изменении размеров попапа вкладки не изменяют своих размеров(((
         for (let i in this.children) {
             this.children[i].refresh();
         }
     }
 }
 
-
+/**
+ * Класс сторит одну вкладку
+ */
 class Tab extends componentLib.Component {
     constructor(params) {
         super(params);
+        //контейнер вкладки
         this.tabContainer = null;
+        //показывает ести ли во вкладке контент
         this.isFilled = false;
+        //информация о вкладке
         this.tabContent = null;
         this._beforeEvent = '';
         this._showByFunc = false;
+        //хранит объект заморозки
         this._freezer = '';
         this.getAttributes(params.element);
         this.render();
@@ -118,17 +130,27 @@ class Tab extends componentLib.Component {
             this.tabContent = attributes.elements[0]
     }
 
+    /**
+     * Обновление
+     */
     refresh() {
         for (let i in this.children) {
             this.children[i].refresh();
         }
     }
 
+    /**
+     * показать вкладку программно
+     */
     show() {
         this._showByFunc = true;
         $('a[href="#' + this.id + '"]').tab('show');
     }
 
+    /**
+     * Заморозить вкладку
+     * @param msg - сообщение
+     */
     lock(msg = '') {
         let freezer = new tools.Freezer({
             place: this.tabContainer,
@@ -139,11 +161,17 @@ class Tab extends componentLib.Component {
         this._freezer = freezer;
     }
 
+    /**
+     * Разморозить
+     */
     unlock() {
         this.isFilled = false;
         this._freezer.unlock();
     }
 
+    /**
+     * Прекратить показ текущей вкладки
+     */
     stop() {
         this._beforeEvent.preventDefault();
     }
@@ -152,6 +180,10 @@ class Tab extends componentLib.Component {
         this.isFilled = value;
     }
 
+    /**
+     * Заполнить вкладку
+     * @param data
+     */
     fill(data) {
         let layoutLib = require('../layout/index.js');
         let layout = new layoutLib.Layout({
@@ -168,7 +200,7 @@ class Tab extends componentLib.Component {
     render() {
         let tabDiv = document.createElement('div');
         tabDiv.className = 'tab-pane';
-        tabDiv.style.height = /*this.box.clientHeight + 'px'*/'calc(100% - 45px)';
+        tabDiv.style.height = 'calc(100% - 45px)';
         tabDiv.style.width = '100%';
         tabDiv.id = this.id;
         this.tabContainer = tabDiv;

@@ -27,7 +27,13 @@ window.w2ui = w2lib.w2ui;
 window.w2utils = w2lib.w2utils;
 window.w2confirm = w2lib.w2confirm;
 window.jQuery = jQuery;
+//проба сокетов
 
+// var socket = new WebSocket("ws://localhost:8081");
+// socket.onmessage = function (event) {
+//     let incomingMessage = event.data;
+//     w2alert(incomingMessage);
+// };
 //проверка токена
 let token = new tools.tokenAuth(config.name).checkToken();
 if (token === undefined) {
@@ -35,7 +41,10 @@ if (token === undefined) {
 }
 let ruLocale = require('./libraries/w2ui/ru-ru.json')
 w2utils.locale(ruLocale);
-//строим меню
+//строим меню или не строим
+if (localStorage[config.name + '_ObjInfo'] === undefined) {
+    document.location.href = 'index.html';
+}
 let info = JSON.parse(localStorage[config.name + '_ObjInfo']);
 var menu = new menuTopFixed({
     name: config.caption,
@@ -45,7 +54,6 @@ var menu = new menuTopFixed({
 let containerDiv = document.getElementById('container');
 //строим менеджер страниц
 let builder = new contentBuilder({box: containerDiv, onHome: buildMain});
-console.log('builder', builder);
 buildMain(builder);
 //подписка на клик, роутер системы
 menu.on('menuItemSelected', event => {
@@ -90,6 +98,7 @@ menu.on('menuItemSelected', event => {
                 },
                 error => {
                     locker.unlock();
+                    page.generatedBox.innerHTML = '<h1>Получение данных окончилось неудачей!</h1>'
                     w2alert(error);
                 }
             )
@@ -102,7 +111,7 @@ menu.on('menuItemSelected', event => {
 
 function buildMain(builder) {
     let place = builder.showPage('main', 'Главная страница').generatedBox;
-    place.innerHTML = '<div style = "text-align: center"><img src="mainPage.gif" alt=""></div>';
+    place.innerHTML = '<div style = "text-align: center"><img src="mainPage.gif" alt="" class="fa-spin"><p><h1>Вы на главной странице!</h1></p></div>';
 }
 
 

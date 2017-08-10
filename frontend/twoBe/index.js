@@ -127,10 +127,10 @@ class Request {
     }
 
     send() {
-        /*if (this.cacheKey !== null && localStorage[this.cacheKey] !== undefined) {
+        if (this.cacheKey !== null && localStorage[this.cacheKey] !== undefined) {
             this.success(twoBe.getCache(this.cacheKey));
             return;
-        }*/
+        }
         let request = new tools.AjaxSender({
             url: this.url,
             msg: JSON.stringify(this.param),
