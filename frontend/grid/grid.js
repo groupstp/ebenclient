@@ -8,29 +8,90 @@ import * as tools from '../tools/index.js';
 
 import * as component from '../component'
 /**
- * Класс представляет собой компонент таблицы
+ * @classdesc Класс представляет собой компонент таблицы
+ * @extends module:component.Component
  */
 export class Grid extends component.Component {
-    /**
-     * @param {Object} params - содержит данные для создания
-     * @augments componentLib.Component
-     * @param params
-     */
     constructor(params) {
         super(params);
-        this.pagination = false;//пагинация
-        this.hierachy = false;//иерархия
+        /**
+         * Пагинация
+         * @member
+         * @type {boolean}
+         */
+        this.pagination = false;
+        /**
+         * Иерархия
+         * @member
+         * @type {boolean}
+         */
+        this.hierachy = false;
+        /**
+         * Лимит подгружения
+         * @member
+         * @type {boolean}
+         */
         this.limit = false;
+        /**
+         * Заголовок таблицы
+         * @member
+         * @type {string}
+         */
         this.header = "";
-        this.columnsRaw = [];//колонки таблицы в сыром виде
+        /**
+         * Колонки таблицы в сыром виде
+         * @member
+         * @type {array}
+         */
+        this.columnsRaw = [];
+        /**
+         * Тулбар таблицы
+         * @member
+         * @type {object}
+         */
         this.toolbar = {};
-        this.recordsBS = [];//строки таблицы до поиска
+        /**
+         * Cтроки таблицы до поиска
+         * @member
+         * @type {array}
+         */
+        this.recordsBS = [];
+        /**
+         * Строки таблицы из формата
+         * @member
+         * @type {object}
+         */
         this.recordsRaw = {};//строки таблицы из формата
-        this.fk = [];//внешние ключи
-        this.btns = {};//кнопки таблицы
-        this.handlers = {};//массив обработчиков событий таблицы
-        this.groupedBy = [];//колонки по которым группируются записи
-        this.showGroupCol = '';//колонка в которую выводится результат группировки
+        /**
+         * Внешние ключи
+         * @member
+         * @type {array}
+         */
+        this.fk = [];
+        /**
+         * Кнопки таблицы
+         * @member
+         * @type {object}
+         */
+        this.btns = {};
+        /**
+         * Массив обработчиков событий таблицы
+         * @member
+         * @type {object}
+         */
+        this.handlers = {};
+        /**
+         * Колонки по которым группируются записи
+         * @member
+         * @type {array}
+         */
+        this.groupedBy = [];
+        /**
+         * Колонка в которую выводится результат группировки
+         * @member
+         * @type {string}
+         */
+        this.showGroupCol = '';
         this.saveInWindow();
         this.getAttributes(params.element);
         this.render();
@@ -219,7 +280,6 @@ export class Grid extends component.Component {
 
     /**
      * Преобразует формат в массив кнопок таблицы
-     * @private
      */
     setButtons() {
         //преобразуем приходящий код
@@ -240,18 +300,24 @@ export class Grid extends component.Component {
         }
     }
 
+    /**
+     * Фризит таблицу
+     * @param msg - выводимое сообщение
+     */
     lock(msg = '') {
         w2ui[this.id].lock(msg, true);
     }
 
+    /**
+     * Размораживает таблицу
+     */
     unlock() {
         w2ui[this.id].unlock();
     }
 
     /**
      * Делaем тулбар
-     * @returns {{items: Array, onClick: (function(this:grid))}}
-     * @private
+     * @returns {{items: Array, onClick: (function(this:Grid))}}
      */
     makeToolbar() {
         let tlb = {
@@ -318,10 +384,18 @@ export class Grid extends component.Component {
         return tlb;
     }
 
+    /**
+     * Получает идентификатор выделенной записи
+     * @returns {}
+     */
     getSelectedID() {
         return (w2ui[this.id].getSelection()[0] || null);
     }
 
+    /**
+     * Получает идентификаторы выделенных записей
+     * @returns {}
+     */
     getSelectedIDs() {
         return (w2ui[this.id].getSelection()[0] === null ? null : w2ui[this.id].getSelection())
     }
@@ -454,6 +528,10 @@ export class Grid extends component.Component {
         return obj;
     }
 
+    /**
+     * Перезагружет записи
+     * @param data - данные с сервера
+     */
     reloadRecords(data) {
         this.recordsRaw = data.content[0].records;
         this.fk = data.content[0].fk;
@@ -467,8 +545,7 @@ export class Grid extends component.Component {
      * Подготоваливаем записи для в2грид
      * @param recordsRaw - записи
      * @param fk - внешние ключи
-     * @returns {Array}
-     * @private
+     * @returns {Array} - массив записей
      */
     makeRecords(recordsRaw, fk) {
         if (recordsRaw === undefined) {
@@ -530,8 +607,7 @@ export class Grid extends component.Component {
 
     /**
      * Делаем колонки
-     * @returns {Array}
-     * @private
+     * @returns {Array} - массив колонок
      */
     makeColumns() {
         window.showFiles = function (recid, col, index, column_index) {
@@ -600,7 +676,6 @@ export class Grid extends component.Component {
 
     /**
      * Формирование массива событий таблицы
-     * @private
      */
     setHandlers() {
         //преобразуем приходящий код
@@ -626,8 +701,7 @@ export class Grid extends component.Component {
      * @param params - уровни
      * @param col - куда поместить
      * @param d - уровень
-     * @returns {Array}
-     * @private
+     * @returns {Array} - массив сгруппированных записей
      */
     groupBy(records, columns, params, col, d = 0) {
         let style = ['background-color: #F9FBBB', 'background-color: #DDFBBB'];
@@ -684,6 +758,9 @@ export class Grid extends component.Component {
     /**
      * Выделяет строку в иеарахическом справочнике, который подгружается сразу
      * @param id - что выделить
+     * @param expand - нужно ли разворачивать дерево
+     * @param light - нужно ли подсвечивать
+     * @return {boolean} - резульат выделения
      */
     selectInTree(id, expand = true, light = true) {
         let path = this.findPathInTree(id, w2ui[this.id].records, [], 0);
@@ -702,12 +779,13 @@ export class Grid extends component.Component {
     }
 
     /**
-     * Формирует путь до искомой записи в дереве
+     * Формирует путь до искомой записи в дереве (рекурсия)
      * @param id - что выделить
      * @param records - строки в формате в2уи
      * @param path - путь
-     * @returns {*}
-     * @private
+     * @param deep - глубина поиска
+     * @returns {array}  - путь жо искомой записи
+
      */
     findPathInTree(id, records, path, deep) {
         for (let i in records) {
@@ -727,9 +805,11 @@ export class Grid extends component.Component {
     }
 
 }
-
-export class GridNew
-    extends Grid {
+/**
+ * Класс для тестирования возможностей таблиц - скорее всего не работает((
+ * @extends module:grid.Grid
+ */
+export class GridNew extends Grid {
     setHandlers() {
         super.setHandlers();
         /*обработчик поиска в таблице*/
@@ -744,7 +824,7 @@ export class GridNew
                 msg: '',
                 before: function () {
                     w2ui[this.id].lock('Поиск', true);
-                    let searchNotification = new tools.browserNotification(
+                    let searchNotification = new tools.BrowserNotification(
                         'Поиск',
                         {body: 'Поиск по запросу ' + event.searchValue}
                     )
@@ -799,7 +879,7 @@ export class GridNew
             this.handlers.parser = function (responseText) {
                 responseText = responseText.toString();
                 responseText = JSON.parse(responseText);
-                responseText = new tools.unzipper(responseText).unzippedData;
+                responseText = new tools.Unzipper(responseText).unzippedData;
                 if (responseText.status === 'success') {
                     responseText = responseText.message;
                     let recs = this.makeRecords(responseText.content[0].records, responseText.content[0].fk);

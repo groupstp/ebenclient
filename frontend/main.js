@@ -1,5 +1,12 @@
 /**
- * Created by AHonyakov on 02.06.2017.
+ * Модуль для построения главной страницы приложения
+ * @module mainPage
+ * @requires menu
+ * @requires w2ui {@link https://w2ui.com}
+ * @requires jQuery
+ * @requires config
+ * @requires tools
+ * @requires contentBuilder
  */
 
 'use strict'
@@ -35,7 +42,7 @@ window.jQuery = jQuery;
 //     w2alert(incomingMessage);
 // };
 //проверка токена
-let token = new tools.tokenAuth(config.name).checkToken();
+let token = new tools.TokenAuth(config.name).checkToken();
 if (token === undefined) {
     document.location.href = 'index.html';
 }
@@ -58,54 +65,17 @@ buildMain(builder);
 //подписка на клик, роутер системы
 menu.on('menuItemSelected', event => {
     let detail = event.detail;
-    /*if (detail.obj === 'main') {
-     buildMain(builder);
-     }*/
     if (detail.obj === 'ref' || detail.obj === 'doc' || detail.obj === 'st') {
-        let objectID = detail.obj + '-' + detail.name;
-        let page = builder.showPage(objectID, detail.caption);
-        console.log('boxForElement', page);
-        let locker = new tools.Freezer({
-            place: page.generatedBox,
-            message: 'Загрузка'
-        });
-        let mainQuery = new tools.AjaxSender({
-            url: 'http://localhost:12345',
-            msg: JSON.stringify({
-                action: 'get',
-                path: detail.obj + '-' + detail.name,
-                data: {
-                    type: 'listForm'
-                }
-            }),
-            before: function () {
-                locker.lock();
-            }.bind(this)
-        });
-        mainQuery.sendQuery()
-            .then(
-                response => {
-                    locker.unlock();
-                    let layoutLib = require('./layout/index.js');
-                    let layout = new layoutLib.Layout({
-                            box: page.generatedBox,
-                            element: response.elements[0],
-                            content: response.content,
-                            code: response.code,
-                            parent: page
-                        }
-                    );
-                },
-                error => {
-                    locker.unlock();
-                    page.generatedBox.innerHTML = '<h1>Получение данных окончилось неудачей!</h1>'
-                    w2alert(error);
-                }
-            )
+        let path = detail.obj + '-' + detail.name;
+        let page = builder.showPage(path, detail.caption);
+        //загружаем содержимое страницы с сервера
+        page.load();
+        //выделить пункт меню
+        menu.selectItem(path);
     }
     /*кнопка выход*/
     if (detail.obj === 'exit') {
-        new tools.tokenAuth(config.name).exit('index.html');
+        new tools.TokenAuth(config.name).exit('index.html');
     }
 })
 

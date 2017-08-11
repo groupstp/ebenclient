@@ -1,16 +1,29 @@
 /**
  * Модуль для построения всплывающих окон
  * @module popup
+ * @requires tools
+ * @requires component
  */
 
 /**
- * Класс реализующий построение всплывающего окна
+ * @classdesc Класс реализующий построение всплывающего окна
  */
 export class Popup {
+    /**
+     * @constructor
+     */
     constructor() {
-        //уровень вложенности
+        /**
+         * Уровень вложенности
+         * @member
+         * @type {number}
+         */
         this.dimension = -1;
-        //хранит в себе окна
+        /**
+         * Хранит в себе окна
+         * @member
+         * @type {array}
+         */
         this.modals = [];
         if (window.stpui === undefined) {
             window.stpui = {};
@@ -41,9 +54,7 @@ export class Popup {
     }
 
     /**
-     * Функция преобразует текстовое представлние кода, продублирована из компонента
-     * @param oldCode - строковый код
-     * @returns {{}}
+     * @see module:component.Component#prepareCode
      */
     prepareCode(oldCode) {
         let newCode = {};
@@ -90,8 +101,8 @@ export class Popup {
 
     /**
      * Замораживает попап
-     * @param msg - сообщение
-     * @param spinner - показывать ли спинннер
+     * @param {string} msg - сообщение
+     * @param {boolean} spinner - показывать ли спинннер
      */
     lock(msg = '', spinner = true) {
         w2popup.lock(msg, spinner);
@@ -104,11 +115,17 @@ export class Popup {
         w2popup.unlock();
     }
 
+    /**
+     * Скрывает попап
+     */
     hide() {
         document.getElementById('w2ui-lock').style.display = 'none';
         document.getElementById('w2ui-popup').style.display = 'none';
     }
 
+    /**
+     * Показывает
+     */
     unhide() {
         document.getElementById('w2ui-lock').style.display = '';
         document.getElementById('w2ui-popup').style.display = '';
@@ -268,8 +285,8 @@ export class Popup {
 
     /**
      * Функция из приходящей информации получает информацию об очередной модали - заголовок, тело, кнопки, размеры, а также код
-     * @param data
-     * @returns {{code: *}}
+     * @param {object} data - данные с сервера
+     * @returns {object}
      */
     getParams(data) {
         let popupData = data.elements[0];

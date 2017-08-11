@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Documentation Source: main.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.simplex.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top ">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Documentation</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-auth.html">auth</a></li><li><a href="module-authPage.html">authPage</a></li><li><a href="module-button.html">button</a></li><li><a href="module-component.html">component</a></li><li><a href="module-config.html">config</a></li><li><a href="module-contentBuilder.html">contentBuilder</a></li><li><a href="module-dropdownField.html">dropdownField</a></li><li><a href="module-field.html">field</a></li><li><a href="module-form.html">form</a></li><li><a href="module-grid.html">grid</a></li><li><a href="module-layout.html">layout</a></li><li><a href="module-mainPage.html">mainPage</a></li><li><a href="module-map.html">map</a></li><li><a href="module-menu.html">menu</a></li><li><a href="module-popup.html">popup</a></li><li><a href="module-simpleField.html">simpleField</a></li><li><a href="module-tabs.html">tabs</a></li><li><a href="module-tools.html">tools</a></li><li><a href="module-twoBe.html">twoBe</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-button.Button.html">button.Button</a></li><li><a href="module-component.Component.html">component.Component</a></li><li><a href="module-contentBuilder-Page.html">contentBuilder~Page</a></li><li><a href="module-dropdownField.DropdownField.html">dropdownField.DropdownField</a></li><li><a href="module-field.Field.html">field.Field</a></li><li><a href="module-form.Form.html">form.Form</a></li><li><a href="module-grid.Grid.html">grid.Grid</a></li><li><a href="module-grid.GridNew.html">grid.GridNew</a></li><li><a href="module-layout.Layout.html">layout.Layout</a></li><li><a href="module-map.Map.html">map.Map</a></li><li><a href="module-popup.Popup.html">popup.Popup</a></li><li><a href="module-simpleField.SimpleField.html">simpleField.SimpleField</a></li><li><a href="module-tabs.Tabs.html">tabs.Tabs</a></li><li><a href="module-tabs-Tab.html">tabs~Tab</a></li><li><a href="module-tools.AjaxSender.html">tools.AjaxSender</a></li><li><a href="module-tools.BrowserNotification.html">tools.BrowserNotification</a></li><li><a href="module-tools.Freezer.html">tools.Freezer</a></li><li><a href="module-tools.TokenAuth.html">tools.TokenAuth</a></li><li><a href="module-tools.Unzipper.html">tools.Unzipper</a></li><li><a href="module-twoBe-Request.html">twoBe~Request</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: main.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript ">/**
+ * Модуль для построения главной страницы приложения
+ * @module mainPage
+ * @requires menu
+ * @requires w2ui {@link https://w2ui.com}
+ * @requires jQuery
+ * @requires config
+ * @requires tools
+ * @requires contentBuilder
+ */
+
+'use strict'
+//подключаем стили - можно создать несколько точек входа для каждого файла стилей
+import './libraries/bootstrap/css/bootstrap.css';
+import './libraries/fontawesome/css/font-awesome.css';
+//еще немного скриптов
+require('imports-loader?jQuery=jquery!./libraries/bootstrap/js/bootstrap.js');
+//подключаем меню, причем сразу же
+import menuTopFixed from './menu/index.js';
+//подключаем менеджер страниц
+import contentBuilder from './contentBuilder/index.js';
+//подключаем конфиг
+import {config} from './config/config.js';
+//подключаем тулзы
+import * as tools from './tools/index.js';
+//подключаем библиотеку w2ui и экспортируем переменные из нее
+const w2lib = require('imports-loader?jQuery=jquery!exports-loader?w2ui&amp;w2alert&amp;w2popup&amp;w2utils&amp;w2confirm!./libraries/w2ui/w2ui-1.5.js');
+//подключаем стили
+import './libraries/w2ui/w2ui-1.5.css';
+//импортированные переменные делаем доступными всюду, в том числе jQuery;
+window.w2popup = w2lib.w2popup;
+window.w2alert = w2lib.w2alert;
+window.w2ui = w2lib.w2ui;
+window.w2utils = w2lib.w2utils;
+window.w2confirm = w2lib.w2confirm;
+window.jQuery = jQuery;
+//проба сокетов
+
+// var socket = new WebSocket("ws://localhost:8081");
+// socket.onmessage = function (event) {
+//     let incomingMessage = event.data;
+//     w2alert(incomingMessage);
+// };
+//проверка токена
+let token = new tools.TokenAuth(config.name).checkToken();
+if (token === undefined) {
+    document.location.href = 'index.html';
+}
+let ruLocale = require('./libraries/w2ui/ru-ru.json')
+w2utils.locale(ruLocale);
+//строим меню или не строим
+if (localStorage[config.name + '_ObjInfo'] === undefined) {
+    document.location.href = 'index.html';
+}
+let info = JSON.parse(localStorage[config.name + '_ObjInfo']);
+var menu = new menuTopFixed({
+    name: config.caption,
+    place: 'topMenu',
+    objInfo: info
+});
+let containerDiv = document.getElementById('container');
+//строим менеджер страниц
+let builder = new contentBuilder({box: containerDiv, onHome: buildMain});
+buildMain(builder);
+//подписка на клик, роутер системы
+menu.on('menuItemSelected', event => {
+    let detail = event.detail;
+    if (detail.obj === 'ref' || detail.obj === 'doc' || detail.obj === 'st') {
+        let path = detail.obj + '-' + detail.name;
+        let page = builder.showPage(path, detail.caption);
+        //загружаем содержимое страницы с сервера
+        page.load();
+        //выделить пункт меню
+        menu.selectItem(path);
+    }
+    /*кнопка выход*/
+    if (detail.obj === 'exit') {
+        new tools.TokenAuth(config.name).exit('index.html');
+    }
+})
+
+function buildMain(builder) {
+    let place = builder.showPage('main', 'Главная страница').generatedBox;
+    place.innerHTML = '&lt;div style = "text-align: center">&lt;img src="mainPage.gif" alt="" class="fa-spin">&lt;p>&lt;h1>Вы на главной странице!&lt;/h1>&lt;/p>&lt;/div>';
+}
+
+
+
+
+
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a>
+	
+		on 2017-08-11T15:31:46+08:00
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : false,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>

@@ -1,10 +1,31 @@
+/**
+ * Модуль для построения объекта-контейнера страниц
+ * @module contentBuilder
+ * @requires tools
+ * @requires component
+ * @requires layout
+ * @requires config
+ */
 import * as componentLib from '../component';
 import * as tools from '../tools/index.js';
+//подключаем конфиг
+import {config} from '../config/config.js';
+let layout = require('../layout/index.js');
 /**
- * Created by AHonyakov on 21.07.2017.
- * Данный класс представляет собой реализацию скелета одностраничного приложения
+ * @classdesc Данный класс представляет собой реализацию скелета одностраничного приложения
+ * @extends module:component.Component
  */
 export default class contentBuilder extends componentLib.Component {
+    /**
+     * @constructor
+     * @param {object} options - Набор параметров для построения компонента
+     * @param {DOM} options.box - Куда поместить объект
+     * @param {object} options.parent - Кто родитель этого объекта
+     * @param {object} options.element - Сведения об элементе согласно формату
+     * @param {object} options.code - Код
+     * @param {array} options.content - Контент для элемента
+     * @param param.onHome  - действие при нажатии кнопки домой остальные
+     */
     constructor(param) {
         super(param);
         this.pageContainer = '';
@@ -13,7 +34,6 @@ export default class contentBuilder extends componentLib.Component {
         this.pages = [];//массив страниц
         this.onHome = param.onHome || null;//что делать при нажатии кнопки домой
         this.render();
-        console.log(this);
     }
 
     /**
@@ -33,7 +53,7 @@ export default class contentBuilder extends componentLib.Component {
 
     /**
      * Функция выполняет построение тулбара
-     * @param place
+     * @param {DOM} place - куда поместить
      */
     buildNavigatorToolbar(place) {
         $(place).w2toolbar({
@@ -90,6 +110,9 @@ export default class contentBuilder extends componentLib.Component {
                     }
                 }
                 if (event.item.id === 'buttonNavigatorReload') {
+                    if (this.pages[this.current].id === 'main') {
+                        return;
+                    }
                     this.pages[this.current].reload();
                 }
             }.bind(this)
@@ -106,9 +129,9 @@ export default class contentBuilder extends componentLib.Component {
 
     /**
      * Показывает страниу
-     * @param id
-     * @param caption
-     * @returns
+     * @param id - идентифкатор страницы(возможно это наш path)
+     * @param caption - подпись
+     * @returns{Page}
      */
     showPage(id, caption) {
         //меняем подпись вверху
@@ -146,27 +169,67 @@ export default class contentBuilder extends componentLib.Component {
     }
 }
 /**
- *
+ * @classdesc Класс страницы в рамках одностраничного приложения
  */
 class Page {
-    constructor(id, caption, box) {
-        this.id = id;
+    /**
+     * @constructor
+     * @param path - идентификатор страницы
+     * @param caption - подпись к странице
+     * @param box - куда поместить
+     */
+    constructor(path, caption, box) {
+        /**
+         * Идентифкатор
+         * @member
+         * @type {string}
+         */
+        this.id = path;
+        /**
+         * Подпись
+         * @member
+         * @type {string}
+         */
         this.caption = caption;
+        /**
+         * Куда поместить страницу
+         * @member
+         * @type {DOM}
+         */
         this.box = box;
+        /**
+         * Сгенерированный блок страницы
+         * @member
+         * @type {DOM}
+         */
         this.generatedBox = '';
+        /**
+         * Дети страницы
+         * @member
+         * @type {array}
+         */
         this.children = [];
         this.render();
-        console.log(this);
     }
 
+    /**
+     * Записать в дети
+     * @param {object} child
+     */
     addChildren(child) {
         this.children.push(child);
     }
 
+    /**
+     * Уничтожить страницу
+     */
     destroy() {
         this.generatedBox.parentNode.removeChild(this.generatedBox);
     }
 
+    /**
+     * Очистить страницу
+     */
     clear() {
         this.generatedBox.innerHTML = 'Перезагрузка';
         for (let i in this.children) {
@@ -174,18 +237,62 @@ class Page {
         }
     }
 
+    /**
+     * Перезагрузить страницу
+     */
     reload() {
-        let path = this.children[0].path;
+        let path = this.id;
         this.clear();
+        this.load();
+    }
+
+    /**
+     * Обновить страницу
+     */
+    refresh() {
+        for (let i in this.children) {
+            this.children[i].refresh();
+        }
+    }
+
+    /**
+     * Получить блок страницы
+     */
+    render() {
+        let boxForElement = document.createElement('div');
+        boxForElement.id = 'boxForLayout' + this.id;
+        boxForElement.style.height = '100%';
+        this.box.appendChild(boxForElement);
+        this.generatedBox = boxForElement;
+    }
+
+    /**
+     * Показать страницу
+     */
+    show() {
+        document.getElementById('boxForLayout' + this.id).style.display = '';
+    }
+
+    /**
+     * Скрыть страницу
+     */
+    hide() {
+        document.getElementById('boxForLayout' + this.id).style.display = 'none';
+    }
+
+    /**
+     * Функция загружает страницу
+     */
+    load() {
         let locker = new tools.Freezer({
             place: this.generatedBox,
             message: 'Загрузка'
         });
         let mainQuery = new tools.AjaxSender({
-            url: 'http://localhost:12345',
+            url: config.testUrl,
             msg: JSON.stringify({
                 action: 'get',
-                path: path,
+                path: this.id,
                 data: {
                     type: 'listForm'
                 }
@@ -198,8 +305,7 @@ class Page {
             .then(
                 response => {
                     locker.unlock();
-                    let layoutLib = require('../layout/index.js');
-                    let layout = new layoutLib.Layout({
+                    new layout.Layout({
                             box: this.generatedBox,
                             element: response.elements[0],
                             content: response.content,
@@ -210,30 +316,9 @@ class Page {
                 },
                 error => {
                     locker.unlock();
+                    this.generatedBox.innerHTML = '<h1>Получение данных окончилось неудачей!</h1>'
                     w2alert(error);
                 }
             )
-    }
-
-    refresh() {
-        for (let i in this.children) {
-            this.children[i].refresh();
-        }
-    }
-
-    render() {
-        let boxForElement = document.createElement('div');
-        boxForElement.id = 'boxForLayout' + this.id;
-        boxForElement.style.height = '100%';
-        this.box.appendChild(boxForElement);
-        this.generatedBox = boxForElement;
-    }
-
-    show() {
-        document.getElementById('boxForLayout' + this.id).style.display = '';
-    }
-
-    hide() {
-        document.getElementById('boxForLayout' + this.id).style.display = 'none';
     }
 }

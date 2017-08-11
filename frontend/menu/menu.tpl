@@ -20,7 +20,7 @@
                             </a>
                             <ul class="dropdown-menu">
                                 {{#each value.objects as |elem name|}}
-                                    <li id="topMenu_{{key}}_{{name}}" style="cursor: pointer" data-obj="{{key}}"
+                                    <li id="topMenu_{{key}}-{{name}}" style="cursor: pointer" data-obj="{{key}}"
                                         data-name="{{name}}" data-caption="{{elem.display}}" data-sel=true data-cl=true><a>{{elem.display}}</a></li>
                                 {{/each}}
                             </ul>

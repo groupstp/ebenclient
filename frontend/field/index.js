@@ -1,7 +1,15 @@
+/**
+ * Модуль для построения field
+ * @module field
+ * @requires button
+ * @requires component
+ */
 import {Component} from '../component';
 import {Button} from '../button';
 import template from './template.hbs'
-
+/**
+ * @extends module:component.Component
+ */
 export class Field extends Component {
 
     constructor(options) {
@@ -80,8 +88,8 @@ export class Field extends Component {
             "requiredMark": requiredMark,
             "id": this.id,
             "name": this.name,
-            "multiline" : this.multiline,
-            "checkbox" : (this.type === 'checkbox') ? true : false
+            "multiline": this.multiline,
+            "checkbox": (this.type === 'checkbox') ? true : false
         });
 
         if (this.multiline) {
@@ -115,7 +123,7 @@ export class Field extends Component {
      * Метод определяет обязательное ли это поле
      * @returns {boolean}
      */
-    isRequired(){
+    isRequired() {
         if (this.required) {
             return true;
         } else {
@@ -126,7 +134,7 @@ export class Field extends Component {
     /**
      * Окрашиваем поле в зеленный цвет(успешная валидация)
      */
-    showSuccess(){
+    showSuccess() {
         this.removeNotifications();
         this.box.classList.add('has-success');
     }
@@ -134,7 +142,7 @@ export class Field extends Component {
     /**
      * Окрашиваем поле в красный цвет(неуспешная валидация)
      */
-    showError(){
+    showError() {
         this.removeNotifications();
         this.box.classList.add('has-error');
     }
@@ -142,7 +150,7 @@ export class Field extends Component {
     /**
      * Убираем любое окрашивание
      */
-    removeNotifications(){
+    removeNotifications() {
         this.box.classList.remove('has-success');
         this.box.classList.remove('has-error');
     }
@@ -164,7 +172,7 @@ export class Field extends Component {
 
     }
 
-    applyProperties(){
+    applyProperties() {
         if (this.hidden) {
             this.hide();
         } else {
@@ -177,7 +185,6 @@ export class Field extends Component {
             this.disable();
         }
     }
-
 
 
     ///// Public methods /////
@@ -195,11 +202,11 @@ export class Field extends Component {
         });
     }
 
-    setValue(newValue){
+    setValue(newValue) {
 
     }
 
-    getValue(){
+    getValue() {
 
     }
 

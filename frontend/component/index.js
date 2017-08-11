@@ -1,31 +1,81 @@
 /**
- * Модуль для построения компонента
+ * @fileOverview Модуль для построения компонента - абстрактного объекта, часто употребляется понятие формат {@link https://vk.com}
  * @module component
+ * @requires twoBe
  */
+
 
 /**
- * Класс для построения компонента
+ * Делаем библиотеку клиентского кода общедоступной
+ */
+import twoBe from '../twoBe/index.js';
+window.twoBe = twoBe;
+/**
+ * @classdesc Класс для построения компонента - абстрактного класса для большинства отображаемых на экране объектов
  */
 export class Component {
-
+    /**
+     * @constructor
+     * @param {object} options - Набор параметров для построения компонента
+     * @param {DOM} options.box - Куда поместить объект
+     * @param {object} options.parent - Кто родитель этого объекта
+     * @param {object} options.element - Сведения об элементе согласно формату
+     * @param {object} options.code - Код
+     * @param {array} options.content - Контент для элемента
+     *
+     */
     constructor(options) {
+        /**
+         * Место для компонента
+         * @member
+         * @type {DOM}
+         */
         this.box = options.box || null;
-        // ссылка на родительский элемент
+        /**
+         * Cсылка на родительский элемент
+         * @member
+         * @type {object}
+         */
         this.parent = options.parent || null;
         //в случае пустот
         options.element = options.element || {};
         options.element.properties = options.element.properties || {};
         options.element.id = options.element.id || "";
-        // собятия элемента, объект с именем события и именем обработчика события
+        /**
+         * Cобытия элемента, объект с именем события и именем обработчика события
+         * @member
+         * @type {object}
+         */
         this.events = options.element.events || null;
-        // объект с именем обработчика события и кодом этого обработчика
+        /**
+         * Объект с именем обработчика события и кодом этого обработчика
+         * @member
+         * @type {object}
+         */
         this.code = this.prepareCode(options.code) || {};
-        // данные компонента
+        /**
+         * Данные компонента
+         * @member
+         * @type {array}
+         */
         this.content = options.content || [];
+        /**
+         * Путь к объекту данных
+         * @member
+         * @type {string}
+         */
         this.path = options.element.path || '';
-        //идентификатор
+        /**
+         * Значение для идентификации всех компнентов (опционально)
+         * @member
+         * @type {string}
+         */
         this.id = this.path + '-' + options.element.type + (options.element.id !== "" ? '-' + options.element.id : "");
-        //массив деток, нужен для каскадного обновления
+        /**
+         * Массив деток, нужен для каскадного обновления
+         * @member
+         * @type {array}
+         */
         this.children = [];
         //записываемся в дети родителю
         this.recInChildren();
@@ -51,7 +101,7 @@ export class Component {
     /**
      * Выделение записей и внешних ключей из content
      * @param contentArr - массив контента
-     * @returns {{}}
+     * @returns {object} - Объект из записей и внешних ключей к ним
      */
     prepareData(contentArr) {
         let content = {};
@@ -99,9 +149,8 @@ export class Component {
 
     /**
      * Преобразует код из строки
-     * @param oldCode
-     * @returns {{}}
-     * @private
+     * @param {object} oldCode - объект из строковых функций
+     * @returns {object} newCode - объект из функций
      */
     prepareCode(oldCode) {
         let newCode = {};
@@ -115,6 +164,8 @@ export class Component {
 
     /**
      * Активирует событие на элементе
+     * @param eventName
+     * @param data
      */
     trigger(eventName, data) {
         let customEvent = new CustomEvent(eventName, {detail: data});
@@ -130,6 +181,9 @@ export class Component {
 
     }
 
+    /**
+     * Перезагружает компонент
+     */
     reload() {
 
     }
@@ -173,8 +227,7 @@ export class Component {
      * Делает ассоциативный массив
      * @param array - массив
      * @param key - ключ
-     * @returns {{}}
-     * @private
+     * @returns {object} - ассоциативный массив
      */
     makeAsos(array, key) {
         let res = {};
@@ -185,7 +238,7 @@ export class Component {
     }
 
     /**
-     * Из формата, пришедшего с сервера, добирвает нужные поля объекта
+     * Из формата, пришедшего с сервера, добирает нужные поля объекта
      * @param attributes
      */
     getAttributes(attributes) {
@@ -194,7 +247,7 @@ export class Component {
 
     /**
      * Записывает объект в глобальную переменную
-     * @param id
+     * @param id - идентификатор, по умолчанию берется идентификатор объекта
      */
     saveInWindow(id = this.id) {
         if (window.stpui === undefined) {
@@ -204,7 +257,7 @@ export class Component {
     }
 
     /**
-     * Функция для совместимости с мобильным приложением
+     * Функция для совместимости с мобильным приложением, возвращает сам объект
      * @returns {Component}
      */
     getProperties() {

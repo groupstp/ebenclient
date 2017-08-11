@@ -1,18 +1,26 @@
 /**
- * Created by AHonyakov on 28.06.2017.
+ * @fileOverview Модуль для построения лэйаута страницы, часто употребляется понятие формат {@link https://vk.com}
+ * @module layout
+ * @requires component
+ * @requires tools
  */
 'use strict'
 
-import * as componentLib from '../component'
-import * as tools from '../tools/index.js';
-import twoBe from '../twoBe/index.js';
-window.twoBe = twoBe;
+import * as component from '../component'
 /**
  * Класс для построения разметки страницы
+ * @classdesc Класс для построения лэйаута страницы
+ * @extends module:component.Component
+ *
  */
-export class Layout extends componentLib.Component {
+export class Layout extends component.Component {
     constructor(param) {
         super(param);
+        /**
+         * Объект, содержащий панели
+         * @member
+         * @type {object}
+         */
         this.panels = {};
         this.saveInWindow();
         this.getAttributes(param.element);
@@ -31,6 +39,10 @@ export class Layout extends componentLib.Component {
         }
     }
 
+    /**
+     *
+     * @param {DOM} place - куда поместить
+     */
     render(place) {
         if (place === undefined) {
             place = this.box;
@@ -45,8 +57,7 @@ export class Layout extends componentLib.Component {
 
     /**
      * Делает объект для в2уай
-     * @returns {{name: *}}
-     * @private
+     * @returns {object} - формат для фреймворка в2уи {@link https://w2ui.com}
      */
     makew2uilayout() {
         let obj = {
@@ -71,10 +82,8 @@ export class Layout extends componentLib.Component {
 
     /**
      * Выполняет построение панелей и объектов в них
-     * @private
      */
     buildPanels() {
-        console.log(this.panels);
         for (let panel in this.panels) {
             if (this.panels[panel] === undefined) continue;
             //определяем тип содержимого
@@ -139,7 +148,6 @@ export class Layout extends componentLib.Component {
                     console.log(m);
                 });
             }
-
         }
     }
 }

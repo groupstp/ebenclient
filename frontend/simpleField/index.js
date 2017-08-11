@@ -1,5 +1,12 @@
+/**
+ * Модуль для построения simpleField
+ * @module simpleField
+ * @requires field
+ */
 import {Field} from '../field';
-
+/**
+ * @extends module:field.Field
+ */
 export class SimpleField extends Field {
     constructor(options) {
         super(options);

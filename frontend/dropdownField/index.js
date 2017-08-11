@@ -1,3 +1,9 @@
+/**
+ * Модуль для выпадающих список
+ * @module dropdownField
+ * @requires tools
+ */
+
 import {Field} from "../field";
 import {AjaxSender} from '../tools/index.js';
 
@@ -6,7 +12,9 @@ const magiclib = require('imports-loader?jQuery=jquery!../libraries/magicsuggest
 //подключаем стили
 import '../libraries/magicsuggest/magicsuggest.css';
 
-
+/**
+ * @extends module:component.Component
+ */
 export class DropdownField extends Field {
     constructor(options) {
         super(options);

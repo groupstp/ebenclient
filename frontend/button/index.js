@@ -1,6 +1,14 @@
+/**
+ * Модуль для построения кнопки
+ * @module button
+ * @requires component
+ */
+
 import {Component} from '../component';
 import template from './template.hbs';
-
+/**
+ * @extends module:component.Component
+ */
 export class Button extends Component{
 
     constructor(options){

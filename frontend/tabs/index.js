@@ -1,23 +1,30 @@
 /**
- * Created by AHonyakov on 10.07.2017.
+ * Модуль для построения таблиц
+ * @module tabs
+ * @requires component
+ * @requires tools
  */
 
 import * as componentLib from '../component';
 import * as tools from '../tools/index.js';
 /**
- * Класс для построения вкладок
+ * @classdesc Класс для построения вкладок
+ * @extends module:component.Component
  */
 export class Tabs extends componentLib.Component {
     constructor(params) {
         super(params);
-        //массив для данных о вкладках
+        /**
+         * Массив для данных о вкладках
+         * @member
+         * @type {array}
+         */
         this.tabsContent = [];
         this.getAttributes(params.element);
         this.buildTabs();
     }
 
     getAttributes(attributes) {
-        //собираем данные для генерации объектов вкладок
         this.tabsContent = attributes.elements;
         for (let i in this.tabsContent) {
             if (this.tabsContent[i].events !== undefined) {
@@ -104,7 +111,8 @@ export class Tabs extends componentLib.Component {
 }
 
 /**
- * Класс сторит одну вкладку
+ * @classdesc Класс сторит одну вкладку
+ * @extends module:component.Component
  */
 class Tab extends componentLib.Component {
     constructor(params) {
@@ -140,7 +148,7 @@ class Tab extends componentLib.Component {
     }
 
     /**
-     * показать вкладку программно
+     * Показать вкладку программно
      */
     show() {
         this._showByFunc = true;
@@ -176,6 +184,10 @@ class Tab extends componentLib.Component {
         this._beforeEvent.preventDefault();
     }
 
+    /**
+     * Сеттер для установки заполненности вкладки
+     * @param value - значение
+     */
     setFilled(value) {
         this.isFilled = value;
     }
@@ -197,6 +209,9 @@ class Tab extends componentLib.Component {
         this.isFilled = true;
     }
 
+    /**
+     * Создать дом объект вкладки
+     */
     render() {
         let tabDiv = document.createElement('div');
         tabDiv.className = 'tab-pane';

@@ -1,10 +1,23 @@
 'use strict';
+/**
+ * Модуль для построения меню
+ * @module menu
+ */
 //подключаем шаблон
 import tempalate from './menu.tpl';
 //подключаем стили
 import './menu.css';
-
+/**
+ * @classdesc Класс, строящий верхнее навигационное меню
+ */
 export default class menuTopFixed {
+    /**
+     * @constructor
+     * @param {object} options - массив опций
+     * @param {stirng} options.place - идентифкатор места
+     * @param {string} options.name - имя системы
+     * @param {object} options.objInfo - информация о доступных маршрутах
+     */
     constructor(options) {
         //идентификатор узла
         this._place = options.place;
@@ -60,17 +73,26 @@ export default class menuTopFixed {
         elem.className = 'active';
     }
 
+    /**
+     * Обрабочик нажатия на меню
+     * @param event
+     * @private
+     */
     _onMenuItemClick(event) {
         //определяем ближайший элемент с доступной обработкой клика
         let elem = $(event.target).closest('[data-cl=true]');
         if (elem.length === 0) return;
         elem = elem[0];
-        var dataset = elem.dataset;
+        let dataset = elem.dataset;
         //при необходимости выделяем
-        /*if (dataset.sel === 'true') {
+        if (dataset.sel === 'true') {
             this._setSelection(elem)
-        }*/
+        }
         //генерируем событие
         this._trigger('menuItemSelected', dataset);
+    }
+
+    selectItem(path) {
+        this._setSelection(document.getElementById('topMenu_' + path));
     }
 }

@@ -1,5 +1,8 @@
 /**
- * Created by AHonyakov on 08.06.2017.
+ * Модуль страницы авторизации
+ * @module authPage
+ * @requires config
+ * @requires auth
  */
 //импортируем конфиги и библиотеку авторизации
 import {config} from './config/config.js';

@@ -1,10 +1,11 @@
 /**
- * Created by AHonyakov on 09.06.2017.
+ * Модуль конфигурации
+ * @module config
  */
 'use strict'
 /**
  * Объект конфига
- * @type {{name: string, caption: string, defaultUrl: string, version: string, authGoogle: boolean, mainPage: string}}
+ * @type {{name: string, caption: string, defaultUrl: string, version: string, authGoogle: boolean, mainPage: string, testUrl: string}}
  */
 export let config = {
     name: 'test',
@@ -12,5 +13,6 @@ export let config = {
     defaultUrl: 'https://gag.groupstp.ru:8809',
     version: 'not your busy',
     authGoogle: true,
-    mainPage: 'main.html'
+    mainPage: 'main.html',
+    testUrl: "http://localhost:12345"
 }

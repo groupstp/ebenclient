@@ -1,5 +1,8 @@
 /**
- * Created by AHonyakov on 08.06.2017.
+ * Модуль для авторизации
+ * @module auth
+ * @requires tools
+ * @requires config
  */
 'use strict'
 //подключаем шаблон
@@ -8,7 +11,24 @@ import tempalate from './auth.tpl';
 import * as tools from '../tools/index.js'
 //подключаем стили
 import './auth.css';
+/**
+ * @classdesc Класс для построения формы авторизации и создания соответсвующих обработчиков
+ */
 export default class stpAuth {
+    /**
+     * @constructor
+     * @param {object} options - набор параметров
+     * @param {string} options.place - идентификатор места
+     * @param {string} options.urlAuth - адрес сервера
+     * @param {string} options.version - версия системы
+     * @param {string} options.name - имя системы
+     * @param {string} options.urlGet - адрес для авторизации гугл
+     * @param {string} options.urlGetTokens - адрес для получения токена
+     * @param {string} options.msgGet - сообщение для получения адреса гугл
+     * @param {string} options.msgGetTokens - сообщение для получения токена после гугл авторизации
+     * @param {string} options.authGoogle - нужна ли гугл авторизация
+     * @param {string} options.redirectUrl - куда перенаправлять в случае успешной авторизации
+     */
     constructor(options) {
         //куда поместить
         this._place = options.place;
@@ -32,6 +52,7 @@ export default class stpAuth {
         this._freezePostfix = '_signinForm';
         //куда перенаправлять в случае успеха
         this.redirectUrl = options.redirectUrl;
+        //рисуем форму
         document.getElementById(this._place).innerHTML = tempalate({
             caption: this.caption,
             version: this.version,
@@ -42,12 +63,12 @@ export default class stpAuth {
         });
         //обработчик нажатия на кнопку войти
         document.getElementById('authButton').onclick = function () {
-            this.auth();
+            this._auth();
         }.bind(this);
         //обработчик на энтер в форме пароля
         document.getElementById('passwordInput').onkeydown = function () {
             if (event.code === "Enter") {
-                this.auth();
+                this._auth();
             }
         }.bind(this);
         //активируем гугл-авторизацию
@@ -58,8 +79,9 @@ export default class stpAuth {
 
     /**
      * Собирает данные с формы и отправляет для авторизации
+     * @private
      */
-    auth() {
+    _auth() {
         let msg = this._getAuthData();
         let query = new tools.AjaxSender({
             url: this.urlAuth,
@@ -112,7 +134,7 @@ export default class stpAuth {
     }
 
     /**
-     * Делает возможной работы с помощью гугл
+     * Делает возможной авторизацию с помощью гугл
      * @private
      */
     _setGoogleAuth() {
@@ -181,7 +203,7 @@ export default class stpAuth {
      */
 
     _saveToken(token) {
-        var t = new tools.tokenAuth(this.name);
+        var t = new tools.TokenAuth(this.name);
         t.addToken(token);
     }
 

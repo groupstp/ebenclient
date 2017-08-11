@@ -1,9 +1,20 @@
+/**
+ * Модуль для построения форм
+ * @module form
+ * @requires simpleField
+ * @requires button
+ * @requires dropdownField
+ * @requires component
+ */
+
 import {Component} from '../component';
 import {SimpleField} from '../simpleField';
 import {DropdownField} from '../dropdownField';
 import {Button} from '../button';
 import template from './template.hbs';
-
+/**
+ * @extends module:component.Component
+ */
 export class Form extends Component {
     constructor(options) {
         super(options);
@@ -213,7 +224,7 @@ export class Form extends Component {
 
     /**
      * Валидация всех полей формы
-     * @returns {array of {'name':,'value':}} or false
+     * @returns {array} || false
      */
     validate() {
         let result = [];

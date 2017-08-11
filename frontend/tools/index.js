@@ -1,29 +1,40 @@
 /**
  * Модуль содержащий некоторый общий функционал
  * @module tools
+ * @requires {@link pako.js}
+ * @requires {@link http://malsup.com/jquery/block/}
  */
 
 import pako from '../libraries/pakojs/pako.js';
 require('imports-loader?jQuery=jquery!../libraries/blockUI/jquery.blockUI.js');
-export class commonTools {
-    constructor(name) {
-        this.name = name;
-    }
-
-    getTimeStr(isodate) {
-        var dateStr = isodate.substring(0, isodate.length - (isodate.length - 10));
-        return dateStr;
-    }
-}
-
-export class unzipper {
+/**
+ * @classdesc Класс для разжатия данных с сервера
+ */
+export class Unzipper {
+    /**
+     * @constructor
+     * @param zippedData - сжатые данные
+     */
     constructor(zippedData) {
+        /**
+         * Сжатые данные
+         * @member
+         * @type {gzip}
+         */
         this.zippedData = zippedData;
+        /**
+         * Разжатые данные
+         * @member
+         * @type {object}
+         */
         this.unzippedData = {};
-        this._unzip();
+        this.unzip();
     }
 
-    _unzip() {
+    /**
+     * Выполняет разжатие данных
+     */
+    unzip() {
         if (this.zippedData.message.type === "Buffer") {
             let b64 = this.zippedData.message.data;
             // Decode base64 (convert ascii to binary)
@@ -44,14 +55,49 @@ export class unzipper {
     }
 
 }
+/**
+ * @classdesc Класс для разжатия данных с сервера
+ */
 export class AjaxSender {
+    /**
+     * @constructor
+     * @param {object} options - параметры
+     * @param {string} options.url - адрес
+     * @param {string} options.msg - тело ссобщения
+     * @param {string} options.headerAccept - заголовок
+     * @param {function} options.before - действие во время ожидания
+     */
     constructor(options) {
+        /**
+         * Адрес
+         * @member
+         * @type {string}
+         */
         this.url = options.url;
+        /**
+         * Тело ссобщения
+         * @member
+         * @type {string}
+         */
         this.msg = options.msg;
+        /**
+         * Заголовок
+         * @member
+         * @type {string}
+         */
         this.headerAccept = options.headerAccept;
+        /**
+         * Действие во время ожидания
+         * @member
+         * @type {function}
+         */
         this.before = options.before;
     }
 
+    /**
+     * Отслать запрос
+     * @returns {Promise}
+     */
     sendQuery() {
         let self = this;//передача контекста через замыкание
         return new Promise(function (resolve, reject) {
@@ -66,8 +112,7 @@ export class AjaxSender {
                     //для заглушек
                     serverAns = serverAns.toString();
                     serverAns = JSON.parse(serverAns);
-                    serverAns = new unzipper(serverAns).unzippedData;
-                    console.log(serverAns);
+                    serverAns = new Unzipper(serverAns).unzippedData;
                     if (serverAns.status === 'success') {
                         resolve(serverAns.message);
                     } else {
@@ -92,20 +137,46 @@ export class AjaxSender {
         })
     }
 }
-
-export class tokenAuth {
+/**
+ * Класс для работы с токеном авторизации в куках
+ */
+export class TokenAuth {
+    /**
+     * @constructor
+     * @param name - имя токена
+     */
     constructor(name) {
+        /**
+         * Имя токена
+         * @member
+         * @type {string}
+         */
         this.name = name;
     }
 
+    /**
+     * Проверить токен
+     * @returns {string}
+     */
     checkToken() {
         return (this._getCookie(this.name));
     }
 
+    /**
+     * Добавляет токен
+     * @param token - токен
+     */
     addToken(token) {
         this._setCookie(this.name, token, {expires: 0});//устанавливаем "сессионное куки"
     }
 
+    /**
+     * Устанавливает кук
+     * @param {string} name - имя
+     * @param {string} value - значение
+     * @param options - параметры
+     * @private
+     */
     _setCookie(name, value, options) {
         options = options || {};
 
@@ -135,6 +206,13 @@ export class tokenAuth {
         document.cookie = updatedCookie;
     }
 
+    /**
+     *
+     * Получить кук
+     * @param {string} name - имя
+     * @returns {string}
+     * @private
+     */
     _getCookie(name) {
         var matches = document.cookie.match(new RegExp(
             "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
@@ -142,18 +220,34 @@ export class tokenAuth {
         return matches ? decodeURIComponent(matches[1]) : undefined;
     }
 
+    /**
+     * Удалить кук
+     * @private
+     */
     _deleteCookie() {
         this._setCookie(this.name, "", {expires: -1});
     }
 
+    /**
+     * Выполняет выход из системы
+     * @param page - куда уходить
+     */
     exit(page) {
         this._deleteCookie();
         document.location.href = page;
 
     }
 }
-
-export class browserNotification {
+/**
+ * Класс для работы с браузерными уведомлениями {@link https://developer.mozilla.org/ru/docs/Web/API/notification}
+ */
+export class BrowserNotification {
+    /**
+     * @constructor
+     * @param {string} title - заголовок
+     * @param {object} options - опции
+     * @param {string} options.body - текст оповещения
+     */
     constructor(title, options) {
         // Проверим, поддерживает ли браузер HTML5 Notifications
         if (!("Notification" in window)) {
@@ -187,12 +281,24 @@ export class browserNotification {
         }
     }
 }
+/**
+ * Замораживатель, использует {@link http://malsup.com/jquery/block/}
+ */
 export class Freezer {
+    /**
+     *
+     * @param {object} params - параметры
+     * @param {DOM} params.place - что морозить
+     * @param {text} params.message - сообщение
+     */
     constructor(params) {
         this.place = params.place || "";
-        this.message = params.message;
+        this.message = params.message || "";
     }
 
+    /**
+     * Замораживает
+     */
     lock() {
         $(this.place).block({
             css: {
@@ -208,6 +314,9 @@ export class Freezer {
         });
     }
 
+    /**
+     * Размораживает
+     */
     unlock() {
         $(this.place).unblock();
     }

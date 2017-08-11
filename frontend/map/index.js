@@ -1,3 +1,11 @@
+/**
+ * Модуль для построения карт
+ * @module map
+ * @requires {@link leaflet}
+ * @requires {@link gzm}
+ * @requires component
+ * @requires tools
+ * */
 //подключаем стили
 import '../libraries/fontawesome/css/font-awesome.css';
 import '../libraries/gzm/gzm.css';
@@ -7,12 +15,13 @@ const leafletLib = require('imports-loader?jQuery=jquery!exports-loader?L!../lib
 window.L = leafletLib;
 //подключаем gzm
 const gzmLib = require('imports-loader?jQuery=jquery!../libraries/gzm/gzm.js');
-import * as componentLib from '../component';
+import * as component from '../component';
 import * as tools from '../tools/index.js';
 /**
- * Заготовка для отображения карт
+ * Заготовка для отображения карт - будет еще серьезно дополняться и модернизироваться
+ * @extends module:component.Component
  */
-export class Map extends componentLib.Component {
+export class Map extends component.Component {
     constructor(param) {
         super(param);
         this.gzmCore = '';
@@ -25,6 +34,9 @@ export class Map extends componentLib.Component {
         this.addListeners()
     }
 
+    /**
+     * Добавляет слушателей карты
+     */
     addListeners() {
         if (this.events.mapSelected !== undefined) {
             this.gzmCore.addListener('mapSelect', function (event) {
@@ -44,6 +56,9 @@ export class Map extends componentLib.Component {
         }
     }
 
+    /**
+     * Разворчивает объекты на карте
+     */
     deployObjects() {
         this.makeObjectsForMap();
         this.gzmCore.deployObjects(this.staticObjects);
@@ -102,7 +117,7 @@ export class Map extends componentLib.Component {
 
     /**
      * Выделяет объект на карте
-     * @param uuid
+     * @param {string} uuid - идентификатор
      */
     setSelection(uuid) {
         /*
