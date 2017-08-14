@@ -41,7 +41,7 @@ export class Button extends Component{
 
         this.box.innerHTML = template({
             "id" : this.id,
-            "className" : this.style,
+            "className" : this.style + " " + this.icon,
             "caption" : this.caption
         });
 
