@@ -81,7 +81,7 @@ menu.on('menuItemSelected', event => {
 
 function buildMain(builder) {
     let place = builder.showPage('main', 'Главная страница').generatedBox;
-    place.innerHTML = '<div style = "text-align: center"><img src="mainPage.gif" alt="" class="fa-spin"><p><h1>Вы на главной странице!</h1></p></div>';
+    place.innerHTML = '<div style = "text-align: center"><img src="mainPage.gif" alt=""></div>';
 }
 
 
