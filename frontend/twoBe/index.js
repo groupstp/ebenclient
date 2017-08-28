@@ -204,6 +204,29 @@ class Request {
     }
 
     /**
+     * Сеттер для фильтра
+     * @param {string} key - ключ
+     * @param {object} value - значение
+     * @param {object} sign - тип сравнения (равно, содержит и т.д.)
+     * @returns {Request}
+     */
+    addFilterParam(key, value, sign){
+        if (sign === undefined) sign = 'equal';
+
+        if (this.param.data === undefined) {
+            this.param.data = {};
+        }
+        if (this.param.data.filter === undefined) {
+            this.param.data.filter = {};
+        }
+        this.param.data.filter[key] = {
+            value : value,
+            sign : sign
+        };
+        return this;
+    }
+
+    /**
      * Добавить параметр в запрос
      * @param {string} key - ключ
      * @param {string} value - значение

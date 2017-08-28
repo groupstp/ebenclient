@@ -66,7 +66,8 @@ buildMain(builder);
 menu.on('menuItemSelected', event => {
     let detail = event.detail;
     if (detail.obj === 'ref' || detail.obj === 'doc' || detail.obj === 'st') {
-        let path = detail.obj + '-' + detail.name;
+        //let path = detail.obj + '-' + detail.name;
+        let path = 'doc-position';
         let page = builder.showPage(path, detail.caption);
         //загружаем содержимое страницы с сервера
         page.load();
