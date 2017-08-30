@@ -525,7 +525,19 @@ export class Grid extends component.Component {
                     }
 
                 w2ui[this.id + '_toolbar'].render();
-            }.bind(this)
+            }.bind(this),
+            onDblClick: function (event) {
+                if (this.handlers.onDblClick !== undefined) {
+                    try {
+                        w2ui[this.id].select(event.recid);
+                        this.handlers.onDblClick();
+                    } catch (err) {
+                        console.log('SERVER CODE ERROR:' + err);
+                        w2alert('Серевер вернул некорректное действие!');
+                    }
+                }
+            }.bind(this),
+            searches: this.makeSearches(this.columnsRaw)
             /*searches: [
              {field: 'ID', caption: 'ID (int)', type: 'int'}
              ]*/
@@ -534,6 +546,19 @@ export class Grid extends component.Component {
          obj[event] = this.handlers[event];
          }*/
         return obj;
+    }
+
+    makeSearches(columnsRaw) {
+        let result = [];
+        let types = {
+            'string': 'text',
+            'date': 'date'
+        }
+        for (let i in columnsRaw) {
+            if (columnsRaw[i].field === this.PK) continue;
+            result.push({field: columnsRaw[i].field, caption: columnsRaw[i].caption, type: types[columnsRaw[i].type]})
+        }
+        return result;
     }
 
     /**
@@ -686,6 +711,7 @@ export class Grid extends component.Component {
      * Формирование массива событий таблицы
      */
     setHandlers() {
+        console.log(this.events);
         //преобразуем приходящий код
         for (let eventName in this.events) {
             this.handlers[eventName] = function (event) {

@@ -268,7 +268,7 @@ export class Popup {
                 h = properties.height;
                 w2popup.resize(w, h, function () {
                     self.modals.push({
-                        header: properties.header,
+                        header: document.getElementById('popupHeader').innerHTML,
                         width: w2popup.get().width,
                         height: w2popup.get().height
                     })
