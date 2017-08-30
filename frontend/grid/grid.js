@@ -92,6 +92,12 @@ export class Grid extends component.Component {
          * @type {string}
          */
         this.showGroupCol = '';
+        /**
+         * Колонка, являющаяся первичным ключом
+         * @member
+         * @type {string}
+         */
+        this.PK = '';
         this.saveInWindow();
         this.getAttributes(params.element);
         this.render();
@@ -111,12 +117,14 @@ export class Grid extends component.Component {
                 this.toolbar = attributes.elements[i];
             }
         }
+        this.PK = attributes.properties.PK || 'ID';
         this.columnsRaw = this.makeAsos(this.columnsRaw, 'field');
         let prepContent = this.prepareData(this.content);
-        this.recordsRaw = this.makeAsos(prepContent.records, 'ID');
+        this.recordsRaw = this.makeAsos(prepContent.records, this.PK);
         this.fk = prepContent.fk;
         this.setButtons();
         this.setHandlers();
+
     }
 
     /**
@@ -168,8 +176,8 @@ export class Grid extends component.Component {
      * @param data - данные с сервера при добавлении
      */
     addRecord(data) {
-        let ID = data.content[0].records[0]['ID'];
-        let recordRaw = this.makeAsos(data.content[0].records, 'ID');
+        let ID = data.content[0].records[0][this.PK];
+        let recordRaw = this.makeAsos(data.content[0].records, this.PK);
         let fk = data.content[0].fk;
         //добавление для справочника без иерархии
         if (!this.hierachy && this.groupedBy.length === 0) {
@@ -273,7 +281,7 @@ export class Grid extends component.Component {
      * @param data - данные с сервера
      */
     updateRecord(data) {
-        let ID = data.content[0].records[0]['ID'];
+        let ID = data.content[0].records[0][this.PK];
         this.deleteRecords(ID);
         this.addRecord(data);
     }
@@ -557,7 +565,7 @@ export class Grid extends component.Component {
         let records = [];
         for (let recid in recordsRaw) {
             let rec = {};
-            rec.recid = recordsRaw[recid].ID;
+            rec.recid = recordsRaw[recid][this.PK];
             for (let col in recordsRaw[recid]) {
                 if (this.columnsRaw[col] !== undefined && this.columnsRaw[col].type === 'reference') {
                     rec[col] = "";
@@ -659,7 +667,7 @@ export class Grid extends component.Component {
         }
         let columns = [];
         for (let i in this.columnsRaw) {
-            if (this.columnsRaw[i].field === 'ID') continue;
+            if (this.columnsRaw[i].field === this.PK) continue;
             columns.push({
                 field: this.columnsRaw[i].field,
                 size: '10%',
