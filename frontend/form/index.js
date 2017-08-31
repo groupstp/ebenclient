@@ -28,6 +28,13 @@ export class Form extends Component {
         // кнопки формы, но не кнопки относящиеся конкретно к полям
         this.buttons = [];
 
+        /**
+         * Колонка, являющаяся первичным ключом
+         * @member
+         * @type {string}
+         */
+        this.PK = '';
+
         // данные полей и внешние ключи
         this.data = this.prepareData(options.content);
         this.object = "";
@@ -40,6 +47,7 @@ export class Form extends Component {
     getAttributes(attributes) {
         this.object = attributes.properties.object;
         this.name = attributes.properties.name;
+        this.PK = attributes.properties.PK || 'ID';
     }
 
     ////////// Private methods //////////
@@ -227,10 +235,11 @@ export class Form extends Component {
      * @returns {array} || false
      */
     validate() {
-        let result = [];
+        let result = {};
         let errors = false;
 
         this.fields.forEach((field) => {
+            debugger;
             let value = field.getValue();
             // если получили массив, значит имеем дело с dropList и нас интересует его свойство id
             if (typeof value === 'object') {
@@ -242,10 +251,12 @@ export class Form extends Component {
 
             }
 
-            result.push({
-                "name": field.name,
-                "value": value
-            });
+            result[field.name] = value;
+            //result.push(data);
+            // result.push({
+            //     "name": field.name,
+            //     "value": value
+            // });
 
             if (field.isRequired()) {
                 if (value === '') {
@@ -268,35 +279,15 @@ export class Form extends Component {
         if (!formData) {
             return null;
         } else {
-            let modifiedArr = formData.map((item) => {
-                return item.name + '=' + item.value;
-            });
-
-            return modifiedArr.join('&');
+            // let modifiedArr = formData.map((item) => {
+            //     return item.name + '=' + item.value;
+            // });
+            //
+            // return modifiedArr.join('&');
+            return formData;
         }
     }
 
-    /**
-     * Выделение записей и внешних ключей из content
-     * @param contentArr
-     * @returns {{}}
-     * @private
-     */
-    // _prepareData(contentArr) {
-    //
-    //     let content = {};
-    //
-    //     contentArr.forEach((item) => {
-    //         if (item.forId === this.id) {
-    //             content.records = item.records || [];
-    //             content.fk = item.fk || {};
-    //         }
-    //
-    //     });
-    //
-    //     return content;
-    //
-    // }
 
     ////////// Public methods //////////
 
