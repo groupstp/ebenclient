@@ -34,6 +34,7 @@ export class Form extends Component {
          * @type {string}
          */
         this.PK = '';
+        this.ref = '';
 
         // данные полей и внешние ключи
         this.data = this.prepareData(options.content);
@@ -48,6 +49,7 @@ export class Form extends Component {
         this.object = attributes.properties.object;
         this.name = attributes.properties.name;
         this.PK = attributes.properties.PK || 'ID';
+        this.ref = attributes.properties.ref || '';
     }
 
     ////////// Private methods //////////
@@ -239,7 +241,6 @@ export class Form extends Component {
         let errors = false;
 
         this.fields.forEach((field) => {
-            debugger;
             let value = field.getValue();
             // если получили массив, значит имеем дело с dropList и нас интересует его свойство id
             if (typeof value === 'object') {
