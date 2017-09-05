@@ -5434,7 +5434,8 @@ w2utils.event = {
             }
             if (w2utils.settings.dataType == 'HTTPJSON') {
                 //handemade
-                ajaxOptions.data = $.param(ajaxOptions.data)/*{ request: JSON.stringify(ajaxOptions.data) }*/;
+                ajaxOptions.data = JSON.stringify(ajaxOptions.data);
+                //ajaxOptions.data = {request: JSON.stringify(ajaxOptions.data)};
             }
             if (w2utils.settings.dataType == 'RESTFULL') {
                 ajaxOptions.type = 'GET';
@@ -5455,7 +5456,7 @@ w2utils.event = {
                 ajaxOptions.contentType = 'application/json';
             }
             if (this.method) ajaxOptions.type = this.method;
-
+            //debugger;
             this.last.xhr_cmd = params.cmd;
             this.last.xhr_start = (new Date()).getTime();
             this.last.xhr = $.ajax(ajaxOptions)
@@ -5525,6 +5526,7 @@ w2utils.event = {
                     } else {
                         if (typeof obj.parser == 'function') {
                             data = obj.parser(responseText);
+                            console.log(data);
                             if (typeof data != 'object') {
                                 console.log('ERROR: Your parser did not return proper object');
                             }

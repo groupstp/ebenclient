@@ -7,6 +7,9 @@
 import * as tools from '../tools/index.js';
 
 import * as component from '../component'
+
+//подключаем конфиг
+import {config} from '../config/config.js';
 /**
  * @classdesc Класс представляет собой компонент таблицы
  * @extends module:component.Component
@@ -479,7 +482,7 @@ export class Grid extends component.Component {
                             }
                         }
                     }
-                    console.log(this);
+                    ;
                     if (this.handlers.onSelect !== undefined) {
                         try {
                             this.handlers.onSelect();
@@ -537,6 +540,13 @@ export class Grid extends component.Component {
                     }
                 }
             }.bind(this),
+            onRequest: function (event) {
+                console.log(event, this.handlers.onRequest);
+                if (this.handlers.onRequest !== undefined) {
+                    this.handlers.onRequest(event);
+                }
+            }.bind(this),
+            parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw)
             /*searches: [
              {field: 'ID', caption: 'ID (int)', type: 'int'}
@@ -715,7 +725,6 @@ export class Grid extends component.Component {
      * Формирование массива событий таблицы
      */
     setHandlers() {
-        console.log(this.events);
         //преобразуем приходящий код
         for (let eventName in this.events) {
             this.handlers[eventName] = function (event) {
@@ -728,6 +737,37 @@ export class Grid extends component.Component {
                 }
 
             }.bind(this)
+        }
+        if (this.pagination && !this.hierachy) {
+            //щит для пагинации
+            this.handlers.onRequest = function (event) {
+                console.log(event);
+                event.url = config.testUrl;
+                let limit = event.postData.limit;
+                let offset = event.postData.offset;
+                event.postData = {
+                    path: this.path,
+                    action: 'getContent',
+                    data: {
+                        type: 'gridRecords',
+                        limit: limit,
+                        offset: offset
+
+                    }
+                }
+
+            }.bind(this)
+            this.handlers.parser = function (responseText) {
+                responseText = responseText.toString();
+                responseText = JSON.parse(responseText);
+                responseText = new tools.Unzipper(responseText).unzippedData;
+                if (responseText.status === 'success') {
+                    responseText = responseText.message;
+                    let recs = this.makeRecords(responseText.content[0].records, responseText.content[0].fk);
+                    console.log(recs);
+                    return recs;
+                }
+            }.bind(this);
         }
 
     }
