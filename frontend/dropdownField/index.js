@@ -24,6 +24,7 @@ export class DropdownField extends Field {
         this.maxSelection = options.element.properties.maxSelection || 1;
 
         this.value = [];
+        this.link = options.element.properties.link || '';
 
         // объект magicSuggest, так как проще большинство действий совершать через него, а не через controlEl
         this.magicObj = null;
@@ -142,36 +143,24 @@ export class DropdownField extends Field {
      *  Метод отправляет запрос на сервер за порцией данных, подходящей под введенный текст
      */
     getListDataFromServer(text) {
-        let request = new AjaxSender({
-            url: 'http://localhost:1234/api',
-            msg: JSON.stringify({
-                "method": "getSuggestion",
-                "obj": this.object,
-                "name": this.name,
-                "id": this.id,
-                "text": text
-            })
-        });
-
-        let requestPromise = request.sendQuery();
-
-        requestPromise.then(result => {
-            let suggestion = prepareDataForList.call(this, result);
-            this.setListData(suggestion);
-        })
-            .catch(err => {
-                console.log(err);
-            });
+        let url = twoBe.getDefaultParams().url;
+        let self = this;
+        twoBe.createRequest().addUrl(url).addParam('action', 'getContent').addParam('path', 'ref-' + this.link).addData('type', 'getFieldValues').addFilterParam('description', text, 'consist').addBefore(function () {
+        }).addSuccess(function (data) {
+            let suggestion = prepareDataForList.call(self, data);
+            self.setListData(suggestion);
+        }).addError(function (msg) {
+            twoBe.showMessage(0, msg);
+        }).send();
 
         /**
          * Подготавливаем данные в формат {"id": '',"name" : ''}
          */
         function prepareDataForList(data) {
             let result = [];
-
             // делаем в попытке, потому что мало ли что нам придет в data
             try {
-                let values = data.content[0].fk[this.id];
+                let values = data.content[0].fk[this.link];
                 if (values) {
                     let ids = Object.keys(values);
                     ids.forEach((id) => {

@@ -310,6 +310,35 @@ export class Form extends Component {
         return result;
     }
 
+    /**
+     * Получить все поля
+     * @returns {Array}
+     */
+    getFields() {
+        return this.fields;
+    }
+
+    /**
+     * Получает все поля с типом reference(то есть dropList'ы)
+     * @returns {Array}
+     */
+    getDroplists() {
+
+        let droplists = [];
+
+        let fields = this.getFields();
+
+        fields.forEach((field) => {
+            let type = field.getType();
+            if (type === 'reference'){
+                droplists.push(fields);
+            }
+        });
+
+        return droplists;
+
+    }
+
 
     /**
      * Генерирует DOM элемент с формой и возвращает его
