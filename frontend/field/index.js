@@ -210,6 +210,10 @@ export class Field extends Component {
 
     }
 
+    getType(){
+        return this.type;
+    }
+
 
     /**
      * Генерирует DOM элемент с полем и возвращает его
