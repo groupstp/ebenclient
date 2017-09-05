@@ -556,7 +556,11 @@ export class Grid extends component.Component {
         }
         for (let i in columnsRaw) {
             if (columnsRaw[i].field === this.PK) continue;
-            result.push({field: columnsRaw[i].field, caption: columnsRaw[i].caption, type: types[columnsRaw[i].type]})
+            result.push({
+                field: columnsRaw[i].field,
+                caption: columnsRaw[i].caption,
+                type: types[columnsRaw[i].type] || 'text'
+            })
         }
         return result;
     }
