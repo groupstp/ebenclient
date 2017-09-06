@@ -352,7 +352,6 @@ export class Form extends Component {
 
         this.addHandlers();
 
-        this.
 
         // вызываем событие "rendered"
         this.trigger('rendered');
