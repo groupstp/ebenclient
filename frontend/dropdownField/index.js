@@ -38,6 +38,7 @@ export class DropdownField extends Field {
         this._applyMagicSuggest();
         this.applyProperties();
         this._addListeners();
+        this._getValuesFromServer();
     }
 
     _applyMagicSuggest() {
@@ -77,7 +78,7 @@ export class DropdownField extends Field {
                 if (forbiddenKeyCodes.indexOf(v.keyCode) !== -1) {
                     return;
                 } else if (newValue) {
-                    this.getListDataFromServer(this.magicObj.getRawValue());
+                    this._getListDataFromServer(this.magicObj.getRawValue());
                 } else {
                     this.clearListData();
                 }
@@ -137,50 +138,85 @@ export class DropdownField extends Field {
         this.magicObj.setData(data);
     }
 
-    clearListData(data) {
+    /**
+     * Удаляет все значения из выпадающего списка
+     */
+    clearListData() {
         this.setListData([]);
     }
 
     /**
      *  Метод отправляет запрос на сервер за порцией данных, подходящей под введенный текст
      */
-    getListDataFromServer(text) {
+    _getListDataFromServer(text) {
         let url = twoBe.getDefaultParams().url;
         let self = this;
         twoBe.createRequest().addUrl(url).addParam('action', 'getContent').addParam('path', 'ref-' + this.link).addData('type', 'getFieldValues').addFilterParam('description', text, 'consist').addBefore(function () {
         }).addSuccess(function (data) {
-            let suggestion = prepareDataForList.call(self, data);
+            let suggestion = self._prepareDataForList.call(self, data);
             self.setListData(suggestion);
         }).addError(function (msg) {
             twoBe.showMessage(0, msg);
         }).send();
 
-        /**
-         * Подготавливаем данные в формат {"id": '',"name" : ''}
-         */
-        function prepareDataForList(data) {
-            let result = [];
-            // делаем в попытке, потому что мало ли что нам придет в data
-            try {
-                let values = data.content[0].fk[this.link];
-                if (values) {
-                    let ids = Object.keys(values);
-                    ids.forEach((id) => {
-                        result.push({
-                            "id" : id,
-                            "name" : values[id]
-                        });
-                    });
-                }
-            }
-            catch
-                (err) {
-                console.log(err);
-            }
+    }
 
-            return result;
+    /**
+     * Подготавливаем данные в формат {"id": '',"name" : ''}
+     */
+    _prepareDataForList(data) {
+    let result = [];
+    // делаем в попытке, потому что мало ли что нам придет в data
+    try {
+        let values = data.content[0].fk[this.link];
+        if (values) {
+            let ids = Object.keys(values);
+            ids.forEach((id) => {
+                result.push({
+                    "id" : id,
+                    "name" : values[id]
+                });
+            });
         }
+    }
+    catch
+        (err) {
+        console.log(err);
+    }
+
+    return result;
+}
+
+    /**
+     * Подгружает все данные для филда, если их нет в кэше
+     * @private
+     */
+    _getValuesFromServer(){
+        if (!this.static) return;
+
+        let url = twoBe.getDefaultParams().url;
+        let request = twoBe.createRequest();
+        let self = this;
+        let cacheKey = 'dropList-' + this.link;
+
+        request.addUrl(url);
+        request.addParam('action', 'getContent');
+        request.addParam('path', 'ref-' + this.link);
+        request.addData('type', 'getFieldValues');
+        request.addCacheKey(cacheKey);
+        request.addBefore(function () {
+            self.disable();
+        }).addSuccess(function (data) {
+            let suggestion = self._prepareDataForList.call(self, data);
+            twoBe.cacheData(data, cacheKey);
+            self.setListData(suggestion);
+            self.enable();
+        }).addError(function (msg) {
+            twoBe.showMessage(0, msg);
+            self.enable();
+        }).send();
 
     }
+
 
 }
