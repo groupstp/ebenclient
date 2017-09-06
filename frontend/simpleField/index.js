@@ -25,24 +25,38 @@ export class SimpleField extends Field {
 
     initLogic() {
         super.initLogic();
-        this._applyW2ui();
+        this._applyLogic();
         this.applyProperties();
         this._addListeners();
     }
 
-    _applyW2ui() {
+    _applyLogic() {
+        // для даты и время используем bootstrap-datepicker для всего остального w2ui
+        if (this.isItDateField()){
+            this._applyDatepicker();
+        } else {
+            this._applyW2ui();
+        }
+    }
+
+    _applyW2ui(){
         if (!this.controlEl) return;
 
         let config = {};
 
-        if (this.type === 'time') {
-            config.format = 'h24';
-        }
-
         $(this.controlEl).w2field(this.type, config);
+
         // убираем w2ui классы для стилизации
         this.controlEl.classList.remove('w2field');
         this.controlEl.classList.remove('w2ui-input');
+    }
+
+    _applyDatepicker(){
+        let config = {
+            format: 'dd/mm/yyyy',
+            language: 'ru'
+        };
+        $(this.controlEl).datepicker(config);
     }
 
     /**
@@ -98,12 +112,39 @@ export class SimpleField extends Field {
 
 
     getValue() {
-        return this.value;
+        let result;
+
+        if (this.isItDateField()){
+            result = $(this.controlEl).datepicker('getDate');
+            if (result instanceof Date){
+                result = result.toISOString();
+            }
+        } else {
+            result = this.value;
+        }
+        return result;
+    }
+
+    isItDateField(){
+        let result = false;
+        if (this.type === "date" || this.type === "time" || this.type === "timestamp"){
+            result = true;
+        }
+        return result;
     }
 
     setValue(newValue) {
         this.value = newValue;
-        this.controlEl.value = newValue;
+        if (this.isItDateField()){
+            if (typeof newValue === "string"){
+                $(this.controlEl).datepicker('setDate',new Date(newValue));
+            } else if (newValue instanceof Date){
+                $(this.controlEl).datepicker('setDate',newValue);
+            }
+        } else {
+            this.controlEl.value = newValue;
+        }
+
         // если меняем checkbox
         if (this.value === true) {
             this.controlEl.checked = true;
@@ -111,7 +152,9 @@ export class SimpleField extends Field {
             this.controlEl.checked = false;
         }
         // Это непотребство нужно для того чтобы w2ui отреагировал на изменение и применил форматирование к данным
-        $(this.controlEl).data('w2field').change(new Event('change'));
+        if (!this.isItDateField()){
+            $(this.controlEl).data('w2field').change(new Event('change'));
+        }
     }
 
 }

@@ -27,6 +27,13 @@ import * as tools from './tools/index.js';
 const w2lib = require('imports-loader?jQuery=jquery!exports-loader?w2ui&w2alert&w2popup&w2utils&w2confirm!./libraries/w2ui/w2ui-1.5.js');
 //подключаем стили
 import './libraries/w2ui/w2ui-1.5.css';
+
+// datepicker
+require('imports-loader?jQuery=jquery!./libraries/bootstrap-datepicker/js/bootstrap-datepicker.min');
+require('imports-loader?jQuery=jquery!./libraries/bootstrap-datepicker/locales/bootstrap-datepicker.ru.min');
+import './libraries/bootstrap-datepicker/css/bootstrap-datepicker3.min.css';
+
+
 //импортированные переменные делаем доступными всюду, в том числе jQuery;
 window.w2popup = w2lib.w2popup;
 window.w2alert = w2lib.w2alert;
@@ -67,7 +74,7 @@ menu.on('menuItemSelected', event => {
     let detail = event.detail;
     if (detail.obj === 'ref' || detail.obj === 'doc' || detail.obj === 'st') {
         //let path = detail.obj + '-' + detail.name;
-        let path = 'ref-query';
+        let path = 'ref-testObject';
         let page = builder.showPage(path, detail.caption);
         //загружаем содержимое страницы с сервера
         page.load();

@@ -243,7 +243,7 @@ export class Form extends Component {
         this.fields.forEach((field) => {
             let value = field.getValue();
             // если получили массив, значит имеем дело с dropList и нас интересует его свойство id
-            if (typeof value === 'object') {
+            if (value && typeof value === 'object') {
                 if (value.length) {
                     value = value[0].id;
                 } else {
