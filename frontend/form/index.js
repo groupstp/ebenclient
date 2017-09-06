@@ -241,7 +241,6 @@ export class Form extends Component {
         let errors = false;
 
         this.fields.forEach((field) => {
-            //debugger;
             let value = field.getValue();
             // если получили массив, значит имеем дело с dropList и нас интересует его свойство id
             if (typeof value === 'object') {
@@ -254,11 +253,6 @@ export class Form extends Component {
             }
 
             result[field.name] = value;
-            //result.push(data);
-            // result.push({
-            //     "name": field.name,
-            //     "value": value
-            // });
 
             if (field.isRequired()) {
                 if (value === '') {
@@ -357,6 +351,9 @@ export class Form extends Component {
         this._loadData();
 
         this.addHandlers();
+
+        this.
+
         // вызываем событие "rendered"
         this.trigger('rendered');
         // ставим флаг, чтобы при повторном render'e брать данные уже с формы

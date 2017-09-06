@@ -22,6 +22,7 @@ export class DropdownField extends Field {
         this.type = options.element.properties.type || 'reference';
         // количество элементов, которые могут быть выбраны
         this.maxSelection = options.element.properties.maxSelection || 1;
+        this.static = options.element.properties.static || false;
 
         this.value = [];
         this.link = options.element.properties.link || '';
@@ -65,22 +66,23 @@ export class DropdownField extends Field {
             this.trigger('focus');
         });
 
-        $(this.magicObj).on('keyup', (e, magic, v) => {
+        if (!this.static){
+            $(this.magicObj).on('keyup', (e, magic, v) => {
 
-            let newValue = this.magicObj.getRawValue();
+                let newValue = this.magicObj.getRawValue();
 
-            //различные системные кнопки, клики которых не надо обрабатывать
-            let forbiddenKeyCodes = [13, 16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 44, 45, 46, 91, 93, 144, 145];
+                //различные системные кнопки, клики которых не надо обрабатывать
+                let forbiddenKeyCodes = [13, 16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 44, 45, 46, 91, 93, 144, 145];
 
-            if (forbiddenKeyCodes.indexOf(v.keyCode) !== -1) {
-                return;
-            } else if (newValue) {
-                this.getListDataFromServer(this.magicObj.getRawValue());
-            } else {
-                this.clearListData();
-            }
-
-        });
+                if (forbiddenKeyCodes.indexOf(v.keyCode) !== -1) {
+                    return;
+                } else if (newValue) {
+                    this.getListDataFromServer(this.magicObj.getRawValue());
+                } else {
+                    this.clearListData();
+                }
+            });
+        }
 
     }
 
