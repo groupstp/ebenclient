@@ -352,8 +352,6 @@ export class Form extends Component {
 
         this.addHandlers();
 
-        this.
-
         // вызываем событие "rendered"
         this.trigger('rendered');
         // ставим флаг, чтобы при повторном render'e брать данные уже с формы
