@@ -101,6 +101,8 @@ export class Grid extends component.Component {
          * @type {string}
          */
         this.PK = '';
+        this.selectedRecs = [];
+        this.multiselect = false;
         this.saveInWindow();
         this.getAttributes(params.element);
         this.render();
@@ -125,6 +127,8 @@ export class Grid extends component.Component {
         let prepContent = this.prepareData(this.content);
         this.recordsRaw = this.makeAsos(prepContent.records, this.PK);
         this.fk = prepContent.fk;
+        this.selectedRecs = attributes.properties.selectedRecords;
+        this.multiselect = attributes.properties.multiselect || false;
         this.setButtons();
         this.setHandlers();
 
@@ -146,6 +150,9 @@ export class Grid extends component.Component {
             $(place).w2grid(objForW2);
         }
         w2ui[this.id].refresh();
+        for (let i in this.selectedRecs) {
+            w2ui[this.id].select(this.selectedRecs[i]);
+        }
     }
 
     refresh() {
@@ -154,6 +161,7 @@ export class Grid extends component.Component {
             this.children[i].refresh();
         }
     }
+
 
     /**
      * Функция выделяет запись в таблице
@@ -457,11 +465,13 @@ export class Grid extends component.Component {
             limit: (this.pagination && !this.hierachy ? this.limit : ""),
             show: {
                 toolbar: true,
-                footer: true
+                footer: true,
+                selectColumn: (this.id.indexOf('chooseForm') >= 0 ? true : false)
             },
             columns: this.makeColumns(),
             records: this.makeRecords(),
             toolbar: this.makeToolbar(),
+            multiSelect: this.multiselect,
             onMenuClick: this.makeMenu().onClick,
             menu: this.makeMenu().items,
             onSelect: function (event) {
@@ -548,9 +558,6 @@ export class Grid extends component.Component {
             }.bind(this),
             parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw)
-            /*searches: [
-             {field: 'ID', caption: 'ID (int)', type: 'int'}
-             ]*/
         }
         /*for (let event in this.handlers) {
          obj[event] = this.handlers[event];
