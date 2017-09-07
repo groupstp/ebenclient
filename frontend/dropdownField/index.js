@@ -26,6 +26,7 @@ export class DropdownField extends Field {
 
         this.value = [];
         this.link = options.element.properties.link || '';
+        this.maxItemsInCache = options.element.properties.maxItemsInCache || 5;
 
         // объект magicSuggest, так как проще большинство действий совершать через него, а не через controlEl
         this.magicObj = null;
@@ -52,6 +53,8 @@ export class DropdownField extends Field {
 
     _saveChanges(value) {
         this.value = value;
+        // закэшируем выбранное значение
+        this._cacheValue(value);
     }
 
     _addListeners() {
@@ -67,7 +70,11 @@ export class DropdownField extends Field {
             this.trigger('focus');
         });
 
-        if (!this.static){
+        $(this.magicObj).on('expand', () => {
+            this._onExpand();
+        });
+
+        if (!this.static) {
             $(this.magicObj).on('keyup', (e, magic, v) => {
 
                 let newValue = this.magicObj.getRawValue();
@@ -107,6 +114,9 @@ export class DropdownField extends Field {
         }
     }
 
+    getRawValue(){
+        return this.magicObj.getRawValue();
+    }
 
     getValue() {
         return this.value;
@@ -165,39 +175,39 @@ export class DropdownField extends Field {
      * Подготавливаем данные в формат {"id": '',"name" : ''}
      */
     _prepareDataForList(data) {
-    let result = [];
-    // делаем в попытке, потому что мало ли что нам придет в data
-    try {
-        let values = data.content[0].fk[this.link];
-        if (values) {
-            let ids = Object.keys(values);
-            ids.forEach((id) => {
-                result.push({
-                    "id" : id,
-                    "name" : values[id]
+        let result = [];
+        // делаем в попытке, потому что мало ли что нам придет в data
+        try {
+            let values = data.content[0].fk[this.link];
+            if (values) {
+                let ids = Object.keys(values);
+                ids.forEach((id) => {
+                    result.push({
+                        "id": id,
+                        "name": values[id]
+                    });
                 });
-            });
+            }
         }
-    }
-    catch
-        (err) {
-        console.log(err);
-    }
+        catch
+            (err) {
+            console.log(err);
+        }
 
-    return result;
-}
+        return result;
+    }
 
     /**
      * Подгружает все данные для филда, если их нет в кэше
      * @private
      */
-    _getValuesFromServer(){
+    _getValuesFromServer() {
         if (!this.static) return;
 
         let url = twoBe.getDefaultParams().url;
         let request = twoBe.createRequest();
         let self = this;
-        let cacheKey = 'dropList-' + this.link;
+        let cacheKey = this._getCacheKey();
 
         request.addUrl(url);
         request.addParam('action', 'getContent');
@@ -218,5 +228,76 @@ export class DropdownField extends Field {
 
     }
 
+
+    _onExpand() {
+        if (this.static) return;
+        // don't use cache when we already typed something
+        let currentValue = this.getRawValue();
+        if (currentValue) return;
+
+        let cacheKey = this._getCacheKey();
+        let cache = twoBe.getCache(cacheKey);
+
+        if (Array.isArray(cache)) {
+            this.setListData(cache);
+        }
+
+    }
+
+    _cacheValue(valueArr) {
+
+        if (!valueArr.length) return;
+
+        let valueToCache = valueArr[0];
+
+        if (this.static) return;
+
+        let cacheKey = this._getCacheKey();
+        let cache = twoBe.getCache(cacheKey);
+
+        // cache is already exist
+        if (cache !== null) {
+
+            if (Array.isArray(cache) && valueNotInCache(valueToCache)) {
+
+                if (cache.length === this.maxItemsInCache) {
+                    cache.shift();
+                }
+
+                cache.push(valueToCache);
+                twoBe.cacheData(cache, cacheKey);
+
+            }
+
+        } else { // cache is not exist
+
+            twoBe.cacheData([valueToCache], cacheKey);
+
+        }
+
+        function valueNotInCache() {
+
+            let result = true;
+
+            for (let i in cache){
+                let id = cache[i].id;
+                if (id === valueToCache.id) {
+                    result = false;
+                    break;
+                }
+            }
+
+            return result;
+
+        }
+
+
+}
+
+
+_getCacheKey()
+{
+    return 'dropList-' + this.link;
+}
 
 }
