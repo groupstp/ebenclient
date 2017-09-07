@@ -75,6 +75,13 @@ menu.on('menuItemSelected', event => {
     if (detail.obj === 'ref' || detail.obj === 'doc' || detail.obj === 'st') {
         //let path = detail.obj + '-' + detail.name;
         let path = 'ref-testObject';
+        if (detail.name === 'qu') {
+            path = 'ref-query';
+        } else if (detail.name === 'qs') {
+            path = 'ref-product';
+        } else if (detail.name === 'bg') {
+            path = 'ref-position'
+        }
         let page = builder.showPage(path, detail.caption);
         //загружаем содержимое страницы с сервера
         page.load();

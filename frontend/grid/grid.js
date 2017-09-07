@@ -556,6 +556,13 @@ export class Grid extends component.Component {
                     this.handlers.onRequest(event);
                 }
             }.bind(this),
+            onSearch: function (event) {
+                console.log(event);
+                if (/*!this.pagination*/ true) {
+                    event.preventDefault();
+                    w2ui[this.id].searchClose();
+                }
+            }.bind(this),
             parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw)
         }
