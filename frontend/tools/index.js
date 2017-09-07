@@ -321,3 +321,10 @@ export class Freezer {
         $(this.place).unblock();
     }
 }
+
+export class utils {
+    static getISODate(rusDate, splitter = '/') {
+        let dateArr = rusDate.split(splitter);
+        return (dateArr[2] + '-' + dateArr[1] + '-' + dateArr[0])
+    }
+}

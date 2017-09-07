@@ -84,6 +84,8 @@
         "Toggle Line Numbers": "Вкл/Выкл. номера строк",
         "undo": "Отмена",
         "Yes": "Да",
-        "Yesterday": "Вчера"
+        "Yesterday": "Вчера",
+        "more than": "больше, чем",
+        "less than": "меньше, чем"
     }
 }
