@@ -103,6 +103,7 @@ export class Grid extends component.Component {
         this.PK = '';
         this.selectedRecs = [];
         this.multiselect = false;
+        this.headID = '';
         this.saveInWindow();
         this.getAttributes(params.element);
         this.render();
@@ -129,6 +130,7 @@ export class Grid extends component.Component {
         this.fk = prepContent.fk;
         this.selectedRecs = attributes.properties.selectedRecords;
         this.multiselect = attributes.properties.multiselect || false;
+        this.headID = attributes.properties.headID || '';
         this.setButtons();
         this.setHandlers();
 
@@ -557,10 +559,101 @@ export class Grid extends component.Component {
                 }
             }.bind(this),
             onSearch: function (event) {
-                console.log(event);
-                if (/*!this.pagination*/ true) {
-                    event.preventDefault();
-                    w2ui[this.id].searchClose();
+                if (/*this.pagination*/true) {
+                    //был ли сброс поиска
+                    if (!event.reset) {
+                        event.preventDefault();
+                        w2ui[this.id].searchClose();
+                        //нужен адрес и сообщение
+                        let filter = {};
+                        let relation = {
+                            or: [],
+                            and: []
+                        };
+                        let actions = {
+                            contains: 'consist',
+                            is: 'equal',
+                            between: 'between',
+                            less: 'less',
+                            more: 'greater'
+                        };
+                        for (let i in event.searchData) {
+                            let nameCol = event.searchData[i].field.split('*').join('.');
+                            if (this.fk[nameCol] !== undefined) {
+                                nameCol += '.description';
+                            }
+                            let value = event.searchData[i].value;
+                            if (event.searchData[i].type === 'date') {
+                                if (typeof(value) === 'object') {
+                                    for (let j in value) {
+                                        value[j] = tools.utils.getISODate(value[j], '/');
+                                    }
+                                } else {
+                                    value = tools.utils.getISODate(value, '/');
+                                }
+
+                            }
+                            //временно
+                            if (event.searchData[i].operator === 'between') continue;
+                            filter[nameCol] = {
+                                value: value,
+                                sign: actions[event.searchData[i].operator] || 'consist'
+                            }
+                            relation.or.push(nameCol);
+                        }
+                        //для табличных частей
+                        if (this.headID !== '') {
+                            filter.FK = {
+                                value: this.headID,
+                                sign: 'equal'
+                            }
+                        }
+                        //шлем запрос
+                        let searchQuery = new tools.AjaxSender({
+                            url: config.testUrl,
+                            msg: JSON.stringify({
+                                path: this.path,
+                                action: 'getContent',
+                                data: {
+                                    type: 'gridRecords',
+                                    filter: filter,
+                                    relation: relation
+                                }
+                            }),
+                            before: function () {
+                                w2ui[this.id].lock('Поиск', true);
+                            }.bind(this)
+                        })
+                        //в случае успеха
+                        searchQuery.sendQuery()
+                            .then(
+                                response => {
+                                    w2ui[this.id].unlock();
+                                    if (this.recordsBS[0] === undefined) {
+                                        this.recordsBS = w2ui[this.id].records;
+                                    }
+                                    w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
+                                    w2ui[this.id].searchData = event.searchData;
+                                    w2ui[this.id].localSearch();
+                                    w2ui[this.id].refresh();
+                                },
+                                error => {
+                                    w2ui[this.id].unlock();
+                                    w2alert(error);
+                                });
+                    }
+                    else {
+                        if (w2ui[this.id].searchData.length === 0) return;
+                        if (this.pagination && !this.hierachy) {
+                            w2ui[this.id].reload();
+                        } else {
+                            w2ui[this.id].clear();
+                            w2ui[this.id].records = this.recordsBS;
+                        }
+                        w2ui[this.id].searchClose();
+                        w2ui[this.id].refresh();
+                    }
+
                 }
             }.bind(this),
             parser: this.handlers.parser || "",
@@ -574,9 +667,12 @@ export class Grid extends component.Component {
 
     makeSearches(columnsRaw) {
         let result = [];
+        //переводчик типов
         let types = {
             'string': 'text',
-            'date': 'date'
+            'date': 'date',
+            'float': 'float',
+            'integer': 'int'
         }
         for (let i in columnsRaw) {
             if (columnsRaw[i].field === this.PK) continue;

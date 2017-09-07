@@ -9311,7 +9311,7 @@ w2utils.event = {
                 '    <td colspan="4" class="actions">' +
                 '        <div>' +
                 '        <button class="w2ui-btn" onclick="obj = w2ui[\'' + this.name + '\']; if (obj) { obj.searchReset(); }">' + w2utils.lang('Reset') + '</button>' +
-                '        <button class="w2ui-btn w2ui-btn-blue" onclick="obj = w2ui[\'' + this.name + '\']; if (obj) { obj.search(); }">' + w2utils.lang('Search') + '</button>' +
+                '        <button class="w2ui-btn" onclick="obj = w2ui[\'' + this.name + '\']; if (obj) { obj.search(); }">' + w2utils.lang('Search') + '</button>' +
                 '        </div>' +
                 '    </td>' +
                 '</tr></tbody></table>';

@@ -2054,7 +2054,7 @@ button.w2ui-btn-small:focus:before {
 */
 .w2ui-grid {
     position: relative;
-    border: 1px solid #c0c0c0;
+    border: /*1px solid #c0c0c0*/;
     border-radius: 2px;
     overflow: hidden !important;
 }
@@ -2142,6 +2142,7 @@ button.w2ui-btn-small:focus:before {
     overflow: hidden;
     padding: 0px;
     background-color: #ffffff;
+    border: 2px solid #f2f2f2;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -2616,8 +2617,8 @@ button.w2ui-btn-small:focus:before {
     -ms-user-select: text;
     -o-user-select: text;
     box-shadow: 0px -1px 4px #eeeeee;
-    color: #444444;
-    background-color: #f8f8f8;
+    color: white;
+    background-color: #61b266;
     border-top: 1px solid #dddddd;
     border-bottom-left-radius: 2px;
     border-bottom-right-radius: 2px;
@@ -2868,7 +2869,7 @@ button.w2ui-btn-small:focus:before {
     text-align: left;
     padding: 0px;
     border-top: 0px;
-    background-color: #f7f6f0;
+    background-color: white;
 }
 
 .w2ui-overlay .w2ui-grid-searches table {
@@ -2943,8 +2944,8 @@ button.w2ui-btn-small:focus:before {
     margin-top: 15px;
     padding: 13px 0px;
     text-align: center;
-    background-color: #efefe9;
-    border-top: 1px solid #e8e8e3;
+    background-color: white;
+    border-top: 1px solid white;
 }
 
 /*************************************************
