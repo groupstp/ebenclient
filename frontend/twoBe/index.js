@@ -40,6 +40,20 @@ export default class twoBe {
         return window.stpui[id];
     }
 
+    static getPopupPath() {
+        return window.stpui.popup.modals[window.stpui.popup.modals.length - 1].object.path;
+    }
+
+    static getGridRefs(headPath) {
+        let result = {};
+        for (let id in window.stpui) {
+            if (id.indexOf(headPath) >= 0 && id.indexOf('grid') >= 0 && id.indexOf('refs') >= 0 && id.split('refs').length - headPath.split('refs').length === 1) {
+                result[id] = window.stpui[id];
+            }
+        }
+        return result;
+    }
+
     /**
      * Строит инетрфейс по полученным данным с сервера
      * @param {object} data - данные
@@ -239,7 +253,7 @@ class Request {
      * @param {object} sign - тип сравнения (равно, содержит и т.д.)
      * @returns {Request}
      */
-    addFilterParam(key, value, sign){
+    addFilterParam(key, value, sign) {
         if (sign === undefined) sign = 'equal';
 
         if (this.param.data === undefined) {
@@ -249,8 +263,8 @@ class Request {
             this.param.data.filter = {};
         }
         this.param.data.filter[key] = {
-            value : value,
-            sign : sign
+            value: value,
+            sign: sign
         };
         return this;
     }
