@@ -149,7 +149,6 @@ export class Form extends Component {
                 }
             }
         }
-        debugger;
         //  если это форма редактирования записи табличной записи
         if (this.refID) {
             let ownerIDField = this.getField(this.refID);
