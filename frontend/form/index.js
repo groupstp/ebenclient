@@ -29,12 +29,19 @@ export class Form extends Component {
         this.buttons = [];
 
         /**
-         * Колонка, являющаяся первичным ключом
+         * Поле, являющаяся первичным ключом
          * @member
          * @type {string}
          */
         this.PK = '';
-        this.ref = '';
+
+        /**
+         * Имя поля в котором хранится id главного элемента (если это поле заполнено, то это форма редактирования ТЧ)
+         * @type {string}
+         */
+        this.refID = '';
+
+        this.ownerFormID = '';
 
         // данные полей и внешние ключи
         this.data = this.prepareData(options.content);
@@ -49,7 +56,8 @@ export class Form extends Component {
         this.object = attributes.properties.object;
         this.name = attributes.properties.name;
         this.PK = attributes.properties.PK || 'ID';
-        this.ref = attributes.properties.ref || '';
+        this.refID = attributes.properties.refID || '';
+        this.ownerFormID = attributes.properties.ownerFormID || '';
     }
 
     ////////// Private methods //////////
@@ -141,6 +149,28 @@ export class Form extends Component {
                 }
             }
         }
+        debugger;
+        //  если это форма редактирования записи табличной записи
+        if (this.refID) {
+            let ownerIDField = this.getField(this.refID);
+            if (ownerIDField) {
+                let ownerForm = getOwnerForm.call(this);
+                if (ownerForm) {
+                    let PK = ownerForm.getProperties()['PK'];
+                    let PKField  = ownerForm.getField(PK);
+                    let value = PKField.getValue();
+                    ownerIDField.setValue(value);
+                }
+            }
+        }
+
+        //
+        function getOwnerForm(){
+            if (!this.ownerFormID) return null;
+            let form = twoBe.getById(this.ownerFormID);
+            return form;
+        }
+
         /**
          * Функция возвращает массив объектов для загрузки в список выбора или в виде значения поля
          * @param values {object} - значения внешних ключей, id и value

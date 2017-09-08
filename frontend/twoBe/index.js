@@ -132,6 +132,35 @@ export default class twoBe {
                 callback();
             })
     }
+
+    /**
+     * Возвращает путь связанного c Grid элемента Form
+     * @param gridPath - Путь связанного c Grid элемента Form
+     */
+    static getFormID(gridID) {
+
+        let idParts = gridID.split('-');
+        let gridIndex;
+        let formID = '';
+
+        for (let i = 0; i < idParts.length; i++) {
+            if (idParts[i] === 'grid') {
+                gridIndex = i;
+            }
+        }
+
+        let endIndex = gridIndex - 2;
+        let arrToJoin = [];
+
+        for (let i = 0; i < endIndex; i++) {
+            arrToJoin.push(idParts[i]);
+        }
+
+        formID = arrToJoin.join('-') + '-form';
+
+        return formID;
+
+    }
 }
 /**
  * @classdesc Класс запроса
