@@ -35,7 +35,7 @@ export class Unzipper {
      * Выполняет разжатие данных
      */
     unzip() {
-        if (this.zippedData.message.type === "Buffer") {
+        if (this.zippedData.message!==undefined && this.zippedData.message.type === "Buffer") {
             let b64 = this.zippedData.message.data;
             // Decode base64 (convert ascii to binary)
             let strData = atob(b64);
