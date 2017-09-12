@@ -55,9 +55,9 @@ export class Field extends Component {
         function searchForFormElements(el) {
 
             let type = el.type;
-
             switch (type) {
                 case 'button' :
+                    el.path = this.path;
                     this.buttons.push(new Button({
                         "element": el,
                         "code": this.prepareCode(this.code),
@@ -210,7 +210,7 @@ export class Field extends Component {
 
     }
 
-    getType(){
+    getType() {
         return this.type;
     }
 
