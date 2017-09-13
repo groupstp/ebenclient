@@ -104,6 +104,7 @@ export class Grid extends component.Component {
         this.selectedRecs = [];
         this.multiselect = false;
         this.headID = '';
+        this.refCol = '';
         this.saveInWindow();
         this.getAttributes(params.element);
         this.render();
@@ -131,6 +132,7 @@ export class Grid extends component.Component {
         this.selectedRecs = attributes.properties.selectedRecords;
         this.multiselect = attributes.properties.multiselect || false;
         this.headID = attributes.properties.headID || '';
+        this.refCol = attributes.properties.refCol || '';
         this.setButtons();
         this.setHandlers();
 
@@ -603,10 +605,11 @@ export class Grid extends component.Component {
                         }
                         //для табличных частей
                         if (this.headID !== '') {
-                            filter.FK = {
+                            filter[this.refCol] = {
                                 value: this.headID,
                                 sign: 'equal'
                             }
+                            relation.and.push(this.headID);
                         }
                         //шлем запрос
                         let searchQuery = new tools.AjaxSender({

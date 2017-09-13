@@ -170,7 +170,6 @@ export class Popup {
                                     height: w2popup.get().height
                                 })
                                 //навешиваем обработчики на кнопки
-                                console.log(properties);
                                 for (let i in properties.footer) {
                                     document.getElementById(properties.footer[i].id + '0').onclick = function () {
                                         let button = {
@@ -198,7 +197,8 @@ export class Popup {
                                 closeBtn.onclick = null;
                                 closeBtn.onclick = function () {
                                     self.close();
-                                }
+                                };
+                                console.log(document.getElementById('popup0').clientHeight);
                                 resolve(document.getElementById('popup0'));
                             }
 
