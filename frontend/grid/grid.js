@@ -586,17 +586,22 @@ export class Grid extends component.Component {
                             }
                             let value = event.searchData[i].value;
                             if (event.searchData[i].type === 'date') {
-                                if (typeof(value) === 'object') {
-                                    for (let j in value) {
-                                        value[j] = tools.utils.getISODate(value[j], '/');
+                                if (typeof(event.searchData[i].value) !== 'string') {
+                                    value = [];
+                                    for (let j in event.searchData[i].value) {
+                                        value[j] = event.searchData[i].value[j];
                                     }
                                 } else {
-                                    value = tools.utils.getISODate(value, '/');
+                                    value = event.searchData[i].value
                                 }
-
+                                if (typeof(value) === 'object') {
+                                    for (let j in value) {
+                                        value[j] = tools.utils.getISODate(value[j], '-');
+                                    }
+                                } else {
+                                    value = tools.utils.getISODate(value, '-');
+                                }
                             }
-                            //временно
-                            if (event.searchData[i].operator === 'between') continue;
                             filter[nameCol] = {
                                 value: value,
                                 sign: actions[event.searchData[i].operator] || 'consist'
@@ -609,7 +614,7 @@ export class Grid extends component.Component {
                                 value: this.headID,
                                 sign: 'equal'
                             }
-                            relation.and.push(this.headID);
+                            relation.and.push(this.refCol);
                         }
                         //шлем запрос
                         let searchQuery = new tools.AjaxSender({
@@ -636,7 +641,13 @@ export class Grid extends component.Component {
                                         this.recordsBS = w2ui[this.id].records;
                                     }
                                     w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
-                                    w2ui[this.id].searchData = event.searchData;
+                                    w2ui[this.id].searchData = [];
+                                    for (let searchInd in event.searchData) {
+                                        if (event.searchData[searchInd].operator !== 'between') {
+                                            w2ui[this.id].searchData.push(event.searchData[searchInd]);
+                                        }
+
+                                    }
                                     w2ui[this.id].localSearch();
                                     w2ui[this.id].refresh();
                                 },
@@ -682,7 +693,8 @@ export class Grid extends component.Component {
             result.push({
                 field: columnsRaw[i].field,
                 caption: columnsRaw[i].caption,
-                type: types[columnsRaw[i].type] || 'text'
+                type: types[columnsRaw[i].type] || 'text',
+                options: (types[columnsRaw[i].type] === 'date' ? {format: 'dd-mm-yyyy'} : "")
             })
         }
         return result;
