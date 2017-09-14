@@ -561,6 +561,7 @@ export class Grid extends component.Component {
                 }
             }.bind(this),
             onSearch: function (event) {
+                console.log(event);
                 if (/*this.pagination*/true) {
                     //был ли сброс поиска
                     if (!event.reset) {
@@ -672,6 +673,11 @@ export class Grid extends component.Component {
             }.bind(this),
             parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw)
+        }
+        if (this.handlers.onExpand !== undefined) {
+            obj.onExpand = function (event) {
+                this.handlers.onExpand(event);
+            }.bind(this)
         }
         /*for (let event in this.handlers) {
          obj[event] = this.handlers[event];
@@ -855,7 +861,11 @@ export class Grid extends component.Component {
             this.handlers[eventName] = function (event) {
                 //в качестве параметра передаем текущий объект-таблицу
                 try {
-                    this.code[this.events[eventName]].call(this, this);
+                    let param = this;
+                    if (eventName === 'onExpand') {
+                        param = event;
+                    }
+                    this.code[this.events[eventName]].call(this, param);
                 } catch (err) {
                     console.log('SERVER CODE ERROR:' + err);
                     w2alert('Серевер вернул некорректное действие!');
