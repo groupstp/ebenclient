@@ -20,6 +20,7 @@ export class Tabs extends componentLib.Component {
          * @type {array}
          */
         this.tabsContent = [];
+        this.showFirstTab = true;
         this.getAttributes(params.element);
         this.buildTabs();
     }
@@ -33,6 +34,8 @@ export class Tabs extends componentLib.Component {
                 }
             }
         }
+        if (attributes.properties.showFirstTab !== undefined)
+            this.showFirstTab = attributes.properties.showFirstTab;
     }
 
     /**
@@ -75,8 +78,10 @@ export class Tabs extends componentLib.Component {
                 }
             }, this.children[i]))
         }
-        //по умолчанию показываем первую вкладку
-        this.children[0].show();
+        if (this.showFirstTab) {
+            //по умолчанию показываем первую вкладку
+            this.children[0].show();
+        }
     }
 
     /**

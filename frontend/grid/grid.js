@@ -7,6 +7,7 @@
 import * as tools from '../tools/index.js';
 
 import * as component from '../component'
+import * as layout from '../layout'
 
 //подключаем конфиг
 import {config} from '../config/config.js';
@@ -860,10 +861,27 @@ export class Grid extends component.Component {
         for (let eventName in this.events) {
             this.handlers[eventName] = function (event) {
                 //в качестве параметра передаем текущий объект-таблицу
+                let param = this;
                 try {
-                    let param = this;
                     if (eventName === 'onExpand') {
-                        param = event;
+                        $("#" + event.box_id).css({
+                            margin: "0px",
+                            padding: "0px",
+                            width: "100%"
+                        }).animate({height: "300px"}, 100);
+                        $("#" + event.fbox_id).css({
+                            margin: "0px",
+                            padding: "0px",
+                            width: "100%"
+                        }).animate({height: "300px"}, 100);
+                        $("#" + event.box_id).append("<div id='subgrid-body-" + event.recid + "'></div>");
+                        $("#subgrid-body-" + event.recid).height(300);
+                        w2ui[this.id].resize();
+                        param = {
+                            box: document.getElementById("subgrid-body-" + event.recid),
+                            id: event.recid,
+                            grid: this
+                        }
                     }
                     this.code[this.events[eventName]].call(this, param);
                 } catch (err) {
@@ -905,6 +923,18 @@ export class Grid extends component.Component {
             }.bind(this);
         }
 
+    }
+
+    buildInExpand(id, data) {
+        let container = document.getElementById("subgrid-body-" + id);
+        new layout.Layout({
+                box: container,
+                element: data.elements[0],
+                content: data.content,
+                code: data.code,
+                parent: this
+            }
+        );
     }
 
     /**
