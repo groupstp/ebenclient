@@ -467,7 +467,7 @@ export class Grid extends component.Component {
             autoLoad: (this.pagination ? 'auto' : false),
             header: this.header,
             url: (this.pagination && !this.hierachy ? " " : ""),
-            limit: (this.pagination && !this.hierachy ? this.limit : ""),
+            limit: (this.pagination && !this.hierachy ? /*this.limit*/"" : ""),
             show: {
                 toolbar: true,
                 footer: true,
@@ -562,7 +562,6 @@ export class Grid extends component.Component {
                 }
             }.bind(this),
             onSearch: function (event) {
-                console.log(event);
                 if (/*this.pagination*/true) {
                     //был ли сброс поиска
                     if (!event.reset) {
@@ -598,10 +597,10 @@ export class Grid extends component.Component {
                                 }
                                 if (typeof(value) === 'object') {
                                     for (let j in value) {
-                                        value[j] = tools.utils.getISODate(value[j], '-');
+                                        value[j] = tools.utils.getISODate(value[j], '/');
                                     }
                                 } else {
-                                    value = tools.utils.getISODate(value, '-');
+                                    value = tools.utils.getISODate(value, '/');
                                 }
                             }
                             filter[nameCol] = {
@@ -701,7 +700,7 @@ export class Grid extends component.Component {
                 field: columnsRaw[i].field,
                 caption: columnsRaw[i].caption,
                 type: types[columnsRaw[i].type] || 'text',
-                options: (types[columnsRaw[i].type] === 'date' ? {format: 'dd-mm-yyyy'} : "")
+                options: (types[columnsRaw[i].type] === 'date' ? /* {format: 'dd-mm-yyyy'}*/"" : "")
             })
         }
         return result;
@@ -738,14 +737,36 @@ export class Grid extends component.Component {
             let rec = {};
             rec.recid = recordsRaw[recid][this.PK];
             for (let col in recordsRaw[recid]) {
-                if (this.columnsRaw[col] !== undefined && this.columnsRaw[col].type === 'reference') {
-                    rec[col] = "";
-                    for (let j in recordsRaw[recid][col]) {
-                        rec[col] += fk[col][recordsRaw[recid][col][j]] + '; '
+                if (this.columnsRaw[col] !== undefined) {
+                    if (this.columnsRaw[col].type === 'reference') {
+                        rec[col] = "";
+                        for (let j in recordsRaw[recid][col]) {
+                            rec[col] += fk[col][recordsRaw[recid][col][j]] + '; '
+                        }
+                    } else if (this.columnsRaw[col].type === 'date') {
+                        rec[col] = Date.parse(recordsRaw[recid][col]);
+                    } else {
+                        rec[col] = recordsRaw[recid][col];
                     }
                 } else {
-                    rec[col] = recordsRaw[recid][col];
+                    if (col === 'style') {
+                        rec.w2ui = {
+                            style: recordsRaw[recid][col]
+                        }
+                    }
                 }
+                /*if (this.columnsRaw[col] !== undefined && this.columnsRaw[col].type === 'reference') {
+                 rec[col] = "";
+                 for (let j in recordsRaw[recid][col]) {
+                 rec[col] += fk[col][recordsRaw[recid][col][j]] + '; '
+                 }
+                 } else if (col === 'style') {
+                 rec.w2ui = {
+                 style: recordsRaw[recid][col]
+                 }
+                 } else {
+                 rec[col] = recordsRaw[recid][col];
+                 }*/
             }
             if (this.hierachy && this.pagination && recordsRaw[recid].isGroup !== undefined && recordsRaw[recid].isGroup) {
                 rec.w2ui = {
@@ -823,12 +844,12 @@ export class Grid extends component.Component {
                 return fData;
             },
             'float': 'float:2',
-            'date': function (record, index, column_index) {
-                let fData = '';
-                let ufData = record[this.columns[column_index].field];
-                fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
-                return fData;
-            },
+            'date': /*function (record, index, column_index) {
+             let fData = '';
+             let ufData = record[this.columns[column_index].field];
+             fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
+             return fData;
+             },*/ 'date:dd-mm-yyyy',
             'boolean': function (record, index, column_index) {
                 let fData = '';
                 let ufData = record[this.columns[column_index].field];
@@ -1048,11 +1069,13 @@ export class Grid extends component.Component {
     }
 
 }
+
 /**
  * Класс для тестирования возможностей таблиц - скорее всего не работает((
  * @extends module:grid.Grid
  */
-export class GridNew extends Grid {
+export class GridNew
+    extends Grid {
     setHandlers() {
         super.setHandlers();
         /*обработчик поиска в таблице*/
