@@ -54,6 +54,11 @@ export class Map extends component.Component {
                 this.code[this.events.mapSelected].call(this, uuid);
             }.bind(this))
         }
+        if (this.events.mapCursorMoved !== undefined) {
+            this.gzmCore.addListener('mapCursorMove', function (event) {
+                this.code[this.events.mapCursorMoved].call(this);
+            }.bind(this))
+        }
     }
 
     /**
