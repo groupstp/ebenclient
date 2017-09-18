@@ -9,9 +9,9 @@ import template from './template.hbs';
 /**
  * @extends module:component.Component
  */
-export class Button extends Component{
+export class Button extends Component {
 
-    constructor(options){
+    constructor(options) {
         super(options);
 
         this.label = options.element.properties.label || '';
@@ -24,6 +24,8 @@ export class Button extends Component{
 
         this.hidden = options.element.properties.hidden || false;
         this.enabled = options.element.properties.enabled || true;
+
+        this.param = options.element.properties.param || '';
     }
 
 
@@ -31,7 +33,7 @@ export class Button extends Component{
      * Заполняет контейнер html содержимым
      * @private
      */
-    _generateHTML(){
+    _generateHTML() {
 
         if (!this.box) {
             this.box = document.createElement('div');
@@ -40,17 +42,16 @@ export class Button extends Component{
         this.box.style.display = 'inline-block';
 
         this.box.innerHTML = template({
-            "id" : this.id,
-            "className" : this.style + " " + this.icon,
-            "caption" : this.caption
+            "id": this.id,
+            "className": this.style + " " + this.icon,
+            "caption": this.caption
         });
 
         this.controlEl = this.box.querySelector('button');
 
     }
 
-    initLogic(){
-
+    initLogic() {
         // если до сих пор не определен контейнер box - значит мы работаем с кастомным шаблоном, а в нем по стандарту поле должно быть завернуто в div с [data-component = "button"]
         if (!this.box) {
             let button = this.parent.box.querySelector('#' + this.id);
@@ -62,7 +63,7 @@ export class Button extends Component{
         this.addHandlers();
     }
 
-    applyProperties(){
+    applyProperties() {
         if (this.hidden) {
             this.hide();
         } else {
@@ -95,7 +96,7 @@ export class Button extends Component{
      * Генерирует DOM элемент с кнопкой и возвращает его
      * @returns {object} - DOM элемент с формой
      */
-    render(){
+    render() {
 
         this._generateHTML();
 

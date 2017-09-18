@@ -4,7 +4,7 @@
  * @requires tools
  * @requires component
  */
-
+import {Button} from '../button/index.js';
 /**
  * @classdesc Класс реализующий построение всплывающего окна
  */
@@ -146,9 +146,9 @@ export class Popup {
                 //формируем панель с кнопками
                 var buttonsHtml = "";
                 for (var i in properties.footer) {
-                    buttonsHtml += '<button class="w2ui-btn" id=' + properties.footer[i].id + '0' + '  style="margin-left: 5px">' + properties.footer[i].properties.caption + '</button>';
+                    //buttonsHtml += '<button class="w2ui-btn" id=' + properties.footer[i].id + '0' + '  style="margin-left: 5px">' + properties.footer[i].properties.caption + '</button>';
                 }
-                buttonsHtml += '<button class="w2ui-btn" id=' + 'close' + '0' + '  style="margin-left: 5px">' + 'Закрыть' + '</button>';
+                //buttonsHtml += '<button class="w2ui-btn" id=' + 'close' + '0' + '  style="margin-left: 5px">' + 'Закрыть' + '</button>';
                 buttonsHtml = '<div id="popupBtn"><div id="popupBtn0">' + buttonsHtml + '</div></div>';
                 //формируем контейнер для панели
                 var bodyHtml = '<div id="popupDiv" style="position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px;"><div id="popup0" style="position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px;"></div></div>';
@@ -171,27 +171,38 @@ export class Popup {
                                 })
                                 //навешиваем обработчики на кнопки
                                 for (let i in properties.footer) {
-                                    document.getElementById(properties.footer[i].id + '0').onclick = function () {
-                                        let button = {
-                                            getProperties: function () {
-                                                return {
-                                                    param: properties.footer[i].properties.param || null,
-                                                    path: properties.body.path
-                                                };
-                                            }
-                                        }
-                                        try {
-                                            properties.code[properties.footer[i].events.click](button);
-                                        } catch (err) {
-                                            console.log('SERVER CODE ERROR:' + err);
-                                            w2alert('Серевер вернул некорректное действие!');
-                                        }
-                                    };
+                                    let btnDiv = document.createElement('div');
+                                    document.getElementById('popupBtn0').appendChild(btnDiv);
+                                    properties.footer[i].path = properties.body.path;
+                                    let btn = new Button({
+                                        element: properties.footer[i],
+                                        code: properties.code,
+                                        box: btnDiv,
+                                        path: properties.body.path
+                                    });
+                                    btn.render();
+                                    btn.initLogic();
+                                    // document.getElementById(properties.footer[i].id + '0').onclick = function () {
+                                    //     let button = {
+                                    //         getProperties: function () {
+                                    //             return {
+                                    //                 param: properties.footer[i].properties.param || null,
+                                    //                 path: properties.body.path
+                                    //             };
+                                    //         }
+                                    //     }
+                                    //     try {
+                                    //         properties.code[properties.footer[i].events.click](button);
+                                    //     } catch (err) {
+                                    //         console.log('SERVER CODE ERROR:' + err);
+                                    //         w2alert('Серевер вернул некорректное действие!');
+                                    //     }
+                                    // };
                                 }
                                 //добавляем кнопку отмену
-                                document.getElementById('close0').onclick = function () {
-                                    self.close();
-                                }
+                                // document.getElementById('close0').onclick = function () {
+                                //     self.close();
+                                // }
                                 let closeBtn = jQuery('div.w2ui-popup-close')[0];
                                 $(closeBtn).unbind('click');
                                 closeBtn.onclick = null;
@@ -235,31 +246,42 @@ export class Popup {
                 document.getElementById('popupDiv').appendChild(bodyObj);
                 var buttonsHtml = "";
                 for (let i in properties.footer) {
-                    buttonsHtml += '<button class="w2ui-btn" id=' + properties.footer[i].id + self.dimension + '  style="margin-left: 5px">' + properties.footer[i].properties.caption + '</button>';
+                    //buttonsHtml += '<button class="w2ui-btn" id=' + properties.footer[i].id + self.dimension + '  style="margin-left: 5px">' + properties.footer[i].properties.caption + '</button>';
                 }
-                buttonsHtml += '<button class="w2ui-btn" id=' + 'close' + self.dimension + ' style="margin-left: 5px">' + 'Назад' + '</button>';
+                //buttonsHtml += '<button class="w2ui-btn" id=' + 'close' + self.dimension + ' style="margin-left: 5px">' + 'Назад' + '</button>';
                 var buttonsObj = document.createElement('div');
                 buttonsObj.id = 'popupBtn' + self.dimension;
                 buttonsObj.innerHTML = buttonsHtml;
                 document.getElementById('popupBtn').appendChild(buttonsObj);
                 //навешиваем обработчики на кнопки
                 for (let i in properties.footer) {
-                    document.getElementById(properties.footer[i].id + self.dimension).onclick = function () {
-                        let button = {
-                            getProperties: function () {
-                                return {
-                                    param: properties.footer[i].properties.param || null,
-                                    path: properties.body.path
-                                };
-                            }
-                        }
-                        try {
-                            properties.code[properties.footer[i].events.click](button);
-                        } catch (err) {
-                            console.log('SERVER CODE ERROR:' + err);
-                            w2alert('Серевер вернул некорректное действие!');
-                        }
-                    }.bind(self);
+                    let btnDiv = document.createElement('div');
+                    document.getElementById('popupBtn' + self.dimension).appendChild(btnDiv);
+                    properties.footer[i].path = properties.body.path;
+                    let btn = new Button({
+                        element: properties.footer[i],
+                        code: properties.code,
+                        box: btnDiv,
+                        path: properties.body.path
+                    });
+                    btn.render();
+                    btn.initLogic();
+                    //document.getElementById(properties.footer[i].id + self.dimension).onclick = function () {
+                    //     let button = {
+                    //         getProperties: function () {
+                    //             return {
+                    //                 param: properties.footer[i].properties.param || null,
+                    //                 path: properties.body.path
+                    //             };
+                    //         }
+                    //     }
+                    //     try {
+                    //         properties.code[properties.footer[i].events.click](button);
+                    //     } catch (err) {
+                    //         console.log('SERVER CODE ERROR:' + err);
+                    //         w2alert('Серевер вернул некорректное действие!');
+                    //     }
+                    // }.bind(self);
                 }
                 //меняем размеры
                 var w = 0;
@@ -274,9 +296,9 @@ export class Popup {
                     })
                     document.getElementById('popupHeader').innerHTML = properties.header;
                     //кнопка закрыть откатывает на один шаг назад
-                    document.getElementById('close' + self.dimension).onclick = function () {
-                        self.close();
-                    }
+                    // document.getElementById('close' + self.dimension).onclick = function () {
+                    //     self.close();
+                    // }
                     resolve(document.getElementById('popup' + self.dimension));
                 });
             }
