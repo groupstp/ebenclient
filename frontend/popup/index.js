@@ -5,64 +5,77 @@
  * @requires component
  */
 import {Button} from '../button/index.js';
+import {Component} from '../component';
 /**
  * @classdesc Класс реализующий построение всплывающего окна
  */
-export class Popup {
+export class Popup extends Component {
     /**
      * @constructor
      */
-    constructor() {
-        /**
-         * Уровень вложенности
-         * @member
-         * @type {number}
-         */
-        this.dimension = -1;
-        /**
-         * Хранит в себе окна
-         * @member
-         * @type {array}
-         */
-        this.modals = [];
-        if (window.stpui === undefined) {
-            window.stpui = {};
+    constructor(options) {
+        super(options);
+        this.dimension = 0;
+        this.header = '';
+        this.body = {};
+        this.footer = [];
+        this.width = 500;
+        this.height = 500;
+        this.maximized = false;
+        this.parent = this.getParent();
+        this.getAttributes(options.element);
+        this.saveInWindow(this.id);
+        this.showNewModal();
+        stpui.currentPopup = this;
+    }
+
+    getAttributes(properties) {
+        console.log(properties);
+        for (let i in properties.elements) {
+            if (properties.elements[i].type === 'header') {
+                if (properties.elements[i].properties !== undefined) {
+                    this.header = properties.elements[i].properties.caption || '';
+                } else {
+                    this.header = ''
+                }
+
+            }
+            if (properties.elements[i].type === 'footer') {
+                this.footer = properties.elements[i].elements;
+            }
+            if (properties.elements[i].type === 'body') {
+                this.body = properties.elements[i].elements[0];
+            }
         }
-        //может существовать только один объект попап
-        window.stpui.popup = this;
+        this.width = properties.properties.width;
+        this.height = properties.properties.height;
+        if (this.parent !== null) {
+            this.dimension = this.parent.dimension + 1;
+        }
+    }
+
+    getParent() {
+        return stpui.currentPopup || null;
     }
 
     /**
      * Функция выполняет показ нового модального окна
      * @param data - информация приходящая с сервера в определенном формате
      */
-    showNewModal(data) {
-        let popupProperties = this.getParams(data);
-        this.getPlace(popupProperties).then(
+    showNewModal() {
+        this.getPlace().then(
             place => {
                 let layoutLib = require('../layout/index.js');
                 let layout = new layoutLib.Layout({
                         box: place,
-                        element: popupProperties.body,
-                        content: data.content,
-                        code: data.code
+                        element: this.body,
+                        content: this.content,
+                        code: this.code,
+                        parent: this
                     }
                 );
-                this.modals[this.dimension].object = layout;
             }
         );
-    }
-
-    /**
-     * @see module:component.Component#prepareCode
-     */
-    prepareCode(oldCode) {
-        let newCode = {};
-        for (let funcName in oldCode) {
-            let func = new Function('return ' + oldCode[funcName]);
-            newCode[funcName] = func();
-        }
-        return newCode;
     }
 
     /**
@@ -70,31 +83,33 @@ export class Popup {
      */
     close() {
         let self = this;
-        if (self.dimension === 0) {
+        if (self.parent === null) {
             w2popup.close();
-            delete stpui.popup;
+            delete stpui[this.id];
+            delete stpui.currentPopup;
         } else {
             //заголовок
-            document.getElementById('popupHeader').innerHTML = self.modals[self.dimension].header;
+            document.getElementById('popupHeader').innerHTML = self.parent.header;
             //удаляем
             document.getElementById('popup' + self.dimension).parentNode.removeChild(document.getElementById('popup' + self.dimension));
             document.getElementById('popupBtn' + self.dimension).parentNode.removeChild(document.getElementById('popupBtn' + self.dimension));
             if (w2popup.get().maximized) {
                 w2popup.min();
             }
-            self.dimension--;
             //изменяем размер
-            w2popup.resize(self.modals[self.dimension].width,
-                self.modals[self.dimension].height, function () {
-                    if (self.modals[self.dimension].maximized) {
+            w2popup.resize(self.parent.width,
+                self.parent.height, function () {
+                    if (self.parent.maximized) {
                         w2popup.max();
                     }
-                    self.modals[self.dimension].object.refresh();
+                    for (let i in self.parent.children) {
+                        self.parent.children[i].refresh();
+                    }
                     //покаываем
-                    document.getElementById('popup' + self.dimension).style.display = '';
-                    document.getElementById('popupBtn' + self.dimension).style.display = '';
-                    self.modals.pop();
-
+                    document.getElementById('popup' + self.parent.dimension).style.display = '';
+                    document.getElementById('popupBtn' + self.parent.dimension).style.display = '';
+                    stpui.currentPopup = self.parent;
+                    delete stpui[self.id];
                 });
         }
     }
@@ -137,79 +152,50 @@ export class Popup {
      * @param properties - свойства модали
      * @returns {Promise}
      */
-    getPlace(properties) {
+    getPlace() {
         let self = this;
         return new Promise(function (resolve, reject) {
             //определяем статус всплывающего окна
-            if (self.dimension < 0) {
+            if (self.parent === null) {
                 //это первое модальное окно
                 //формируем панель с кнопками
-                var buttonsHtml = "";
-                for (var i in properties.footer) {
-                    //buttonsHtml += '<button class="w2ui-btn" id=' + properties.footer[i].id + '0' + '  style="margin-left: 5px">' + properties.footer[i].properties.caption + '</button>';
-                }
-                //buttonsHtml += '<button class="w2ui-btn" id=' + 'close' + '0' + '  style="margin-left: 5px">' + 'Закрыть' + '</button>';
-                buttonsHtml = '<div id="popupBtn"><div id="popupBtn0">' + buttonsHtml + '</div></div>';
+                var buttonsHtml = '<div id="popupBtn"><div id="popupBtn0"></div></div>';
                 //формируем контейнер для панели
                 var bodyHtml = '<div id="popupDiv" style="position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px;"><div id="popup0" style="position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px;"></div></div>';
                 //конфигурируем окно в2уи
                 w2popup.open({
-                        title: '<div id="popupHeader">' + properties.header + '</div>',
-                        height: properties.height,
-                        width: properties.width,
+                        title: '<div id="popupHeader">' + self.header + '</div>',
+                        height: self.height,
+                        width: self.width,
                         body: bodyHtml,
                         showMax: true,
                         buttons: buttonsHtml,
                         modal: true,
                         onOpen: function (event) {
                             event.onComplete = function () {
-                                self.dimension++;
-                                self.modals.push({
-                                    header: properties.header,
-                                    width: w2popup.get().width,
-                                    height: w2popup.get().height
-                                })
+                                this.width = w2popup.get().width;
+                                this.height = w2popup.get().height;
                                 //навешиваем обработчики на кнопки
-                                for (let i in properties.footer) {
+                                for (let i in self.footer) {
                                     let btnDiv = document.createElement('div');
                                     document.getElementById('popupBtn0').appendChild(btnDiv);
-                                    properties.footer[i].path = properties.body.path;
+                                    self.footer[i].path = self.body.path;
                                     let btn = new Button({
-                                        element: properties.footer[i],
-                                        code: properties.code,
+                                        element: self.footer[i],
+                                        code: self.code,
                                         box: btnDiv,
-                                        path: properties.body.path
+                                        path: self.body.path,
+                                        parent: self
                                     });
                                     btn.render();
                                     btn.initLogic();
-                                    // document.getElementById(properties.footer[i].id + '0').onclick = function () {
-                                    //     let button = {
-                                    //         getProperties: function () {
-                                    //             return {
-                                    //                 param: properties.footer[i].properties.param || null,
-                                    //                 path: properties.body.path
-                                    //             };
-                                    //         }
-                                    //     }
-                                    //     try {
-                                    //         properties.code[properties.footer[i].events.click](button);
-                                    //     } catch (err) {
-                                    //         console.log('SERVER CODE ERROR:' + err);
-                                    //         w2alert('Серевер вернул некорректное действие!');
-                                    //     }
-                                    // };
                                 }
-                                //добавляем кнопку отмену
-                                // document.getElementById('close0').onclick = function () {
-                                //     self.close();
-                                // }
                                 let closeBtn = jQuery('div.w2ui-popup-close')[0];
                                 $(closeBtn).unbind('click');
                                 closeBtn.onclick = null;
                                 closeBtn.onclick = function () {
-                                    self.close();
+                                    stpui.currentPopup.close();
                                 };
-                                console.log(document.getElementById('popup0').clientHeight);
                                 resolve(document.getElementById('popup0'));
                             }
 
@@ -231,108 +217,57 @@ export class Popup {
                 )
             } else {
                 //вложенное окно
-                self.modals[self.dimension].maximized = w2popup.get().maximized;
+                self.parent.maximized = w2popup.get().maximized;
                 if (w2popup.get().maximized) {
                     w2popup.min();
                 }
                 //скрываем имеющееся тело и кнопки
-                document.getElementById('popup' + (self.dimension)).style.display = 'none';
-                document.getElementById('popupBtn' + (self.dimension)).style.display = 'none';
-                self.dimension++;
+                document.getElementById('popup' + (self.parent.dimension)).style.display = 'none';
+                document.getElementById('popupBtn' + (self.parent.dimension)).style.display = 'none';
                 //формируем тело
                 var bodyObj = document.createElement('div');
                 bodyObj.id = 'popup' + self.dimension;
                 bodyObj.style.height = '100%';
                 document.getElementById('popupDiv').appendChild(bodyObj);
-                var buttonsHtml = "";
-                for (let i in properties.footer) {
-                    //buttonsHtml += '<button class="w2ui-btn" id=' + properties.footer[i].id + self.dimension + '  style="margin-left: 5px">' + properties.footer[i].properties.caption + '</button>';
-                }
-                //buttonsHtml += '<button class="w2ui-btn" id=' + 'close' + self.dimension + ' style="margin-left: 5px">' + 'Назад' + '</button>';
                 var buttonsObj = document.createElement('div');
                 buttonsObj.id = 'popupBtn' + self.dimension;
-                buttonsObj.innerHTML = buttonsHtml;
                 document.getElementById('popupBtn').appendChild(buttonsObj);
                 //навешиваем обработчики на кнопки
-                for (let i in properties.footer) {
+                console.log('footer', self.footer);
+                for (let i in self.footer) {
                     let btnDiv = document.createElement('div');
                     document.getElementById('popupBtn' + self.dimension).appendChild(btnDiv);
-                    properties.footer[i].path = properties.body.path;
+                    self.footer[i].path = self.body.path;
                     let btn = new Button({
-                        element: properties.footer[i],
-                        code: properties.code,
+                        element: self.footer[i],
+                        code: self.code,
                         box: btnDiv,
-                        path: properties.body.path
+                        path: self.body.path,
+                        parent: self
                     });
                     btn.render();
                     btn.initLogic();
-                    //document.getElementById(properties.footer[i].id + self.dimension).onclick = function () {
-                    //     let button = {
-                    //         getProperties: function () {
-                    //             return {
-                    //                 param: properties.footer[i].properties.param || null,
-                    //                 path: properties.body.path
-                    //             };
-                    //         }
-                    //     }
-                    //     try {
-                    //         properties.code[properties.footer[i].events.click](button);
-                    //     } catch (err) {
-                    //         console.log('SERVER CODE ERROR:' + err);
-                    //         w2alert('Серевер вернул некорректное действие!');
-                    //     }
-                    // }.bind(self);
                 }
+                let closeBtn = jQuery('div.w2ui-popup-close')[0];
+                $(closeBtn).unbind('click');
+                closeBtn.onclick = null;
+                closeBtn.onclick = function () {
+                    stpui.currentPopup.close();
+                };
                 //меняем размеры
                 var w = 0;
                 var h = 0;
-                w = properties.width;
-                h = properties.height;
+                w = self.width;
+                h = self.height;
                 w2popup.resize(w, h, function () {
-                    self.modals.push({
-                        header: document.getElementById('popupHeader').innerHTML,
-                        width: w2popup.get().width,
-                        height: w2popup.get().height
-                    })
-                    document.getElementById('popupHeader').innerHTML = properties.header;
-                    //кнопка закрыть откатывает на один шаг назад
-                    // document.getElementById('close' + self.dimension).onclick = function () {
-                    //     self.close();
-                    // }
+                    self.width = w2popup.get().width;
+                    self.height = w2popup.get().height;
+                    document.getElementById('popupHeader').innerHTML = self.header;
                     resolve(document.getElementById('popup' + self.dimension));
                 });
             }
         })
     }
 
-    /**
-     * Функция из приходящей информации получает информацию об очередной модали - заголовок, тело, кнопки, размеры, а также код
-     * @param {object} data - данные с сервера
-     * @returns {object}
-     */
-    getParams(data) {
-        let popupData = data.elements[0];
-        let result = {
-            code: this.prepareCode(data.code)
-        }
-        for (let i in popupData.elements) {
-            if (popupData.elements[i].type === 'header') {
-                if (popupData.elements[i].properties !== undefined) {
-                    result.header = popupData.elements[i].properties.caption || '';
-                } else {
-                    result.header = ''
-                }
 
-            }
-            if (popupData.elements[i].type === 'footer') {
-                result.footer = popupData.elements[i].elements;
-            }
-            if (popupData.elements[i].type === 'body') {
-                result.body = popupData.elements[i].elements[0];
-            }
-        }
-        result.width = popupData.properties.width;
-        result.height = popupData.properties.height;
-        return result;
-    }
 }

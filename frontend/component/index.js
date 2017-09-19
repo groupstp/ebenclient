@@ -97,6 +97,7 @@ export class Component {
             this.parent.addChildren(this);
         }
     }
+
     /**
      * Выделение записей и внешних ключей из content
      * @param contentArr - массив контента

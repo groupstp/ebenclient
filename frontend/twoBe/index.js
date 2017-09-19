@@ -69,10 +69,13 @@ export default class twoBe {
         }
         if (data.elements[0].type === 'popup') {
             let popupLib = require('../popup/index.js');
-            if (window.stpui !== undefined && window.stpui.popup === undefined) {
-                new popupLib.Popup();
-            }
-            window.stpui.popup.showNewModal(data);
+            new popupLib.Popup({
+                element: data.elements[0],
+                content: data.content,
+                code: data.code
+            });
+
+            //window.stpui.popup.showNewModal(data);
         }
     }
 

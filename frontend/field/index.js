@@ -114,7 +114,7 @@ export class Field extends Component {
 
         this.buttons.forEach((btn) => {
             btnsWrapper.appendChild(btn.render());
-            btn.initLogic();
+            //btn.initLogic();
         });
 
     }
