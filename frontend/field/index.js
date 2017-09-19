@@ -97,7 +97,7 @@ export class Field extends Component {
         } else {
             this.controlEl = this.box.querySelector('input');
         }
-
+        debugger;
         this._renderButtons();
 
     }

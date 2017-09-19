@@ -295,8 +295,7 @@ export class DropdownField extends Field {
 }
 
 
-_getCacheKey()
-{
+_getCacheKey() {
     return 'dropList-' + this.link;
 }
 
