@@ -273,6 +273,60 @@ class Request {
     }
 
     /**
+     * Сеттер для значения limit пагинации
+     * @param {object} value - значение
+     * @returns {Request}
+     */
+    addPaginationLimit(value) {
+        if (this.param.data === undefined) {
+            this.param.data = {};
+        }
+        if (this.param.data.pagination === undefined) {
+            this.param.data.pagination = {};
+        }
+
+        this.param.data.pagination.limit = value;
+        return this;
+    }
+
+    /**
+     * Сеттер для значения offset пагинации
+     * @param {object} value - значение
+     * @returns {Request}
+     */
+    addPaginationOffset(value) {
+        if (this.param.data === undefined) {
+            this.param.data = {};
+        }
+        if (this.param.data.pagination === undefined) {
+            this.param.data.pagination = {};
+        }
+
+        this.param.data.pagination.offset = value;
+        return this;
+    }
+
+    /**
+     * Сеттер для значения orderBy пагинации
+     * @param field - имя поля
+     * @param sortDirection - направление сортировки
+     */
+    addOrderByParam(field, sortDirection = 'DESC') {
+
+        if (this.param.data === undefined) {
+            this.param.data = {};
+        }
+        if (this.param.data.orderBy === undefined) {
+            this.param.data.orderBy = [];
+        }
+
+        this.param.data.orderBy.push({
+            field : field,
+            sort : sortDirection
+        })
+    }
+
+    /**
      * Добавить параметр в запрос
      * @param {string} key - ключ
      * @param {string} value - значение
