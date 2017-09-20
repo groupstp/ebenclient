@@ -131,7 +131,6 @@ export class Component {
     }
 
     addHandlers() {
-        debugger;
         for (let eventName in this.events) {
             this.box.addEventListener(eventName, this.eventHandler.bind(this));
         }

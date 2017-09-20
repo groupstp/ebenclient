@@ -60,7 +60,6 @@ export class Popup extends Component {
 
     /**
      * Функция выполняет показ нового модального окна
-     * @param data - информация приходящая с сервера в определенном формате
      */
     showNewModal() {
         this.getPlace().then(
@@ -149,7 +148,6 @@ export class Popup extends Component {
 
     /**
      * Получает место для построения содержимого модали, взято из старого проекта
-     * @param properties - свойства модали
      * @returns {Promise}
      */
     getPlace() {
@@ -268,6 +266,4 @@ export class Popup extends Component {
             }
         })
     }
-
-
 }
