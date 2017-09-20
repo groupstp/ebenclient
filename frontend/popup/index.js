@@ -231,7 +231,6 @@ export class Popup extends Component {
                 buttonsObj.id = 'popupBtn' + self.dimension;
                 document.getElementById('popupBtn').appendChild(buttonsObj);
                 //навешиваем обработчики на кнопки
-                console.log('footer', self.footer);
                 for (let i in self.footer) {
                     let btnDiv = document.createElement('div');
                     document.getElementById('popupBtn' + self.dimension).appendChild(btnDiv);

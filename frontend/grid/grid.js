@@ -467,7 +467,7 @@ export class Grid extends component.Component {
             autoLoad: (this.pagination ? 'auto' : false),
             header: this.header,
             url: (this.pagination && !this.hierachy ? " " : ""),
-            limit: (this.pagination && !this.hierachy ? /*this.limit*/"" : ""),
+            limit: (this.pagination && !this.hierachy ? this.limit : ""),
             show: {
                 toolbar: true,
                 footer: true,
