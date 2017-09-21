@@ -11,6 +11,9 @@ import * as layout from '../layout'
 
 //подключаем конфиг
 import {config} from '../config/config.js';
+
+//подключаем стили
+import './grid.css';
 /**
  * @classdesc Класс представляет собой компонент таблицы
  * @extends module:component.Component
@@ -810,32 +813,60 @@ export class Grid extends component.Component {
      * @returns {Array} - массив колонок
      */
     makeColumns() {
-        window.showFiles = function (recid, col, index, column_index) {
-            console.log(recid, col);
-            console.log(w2ui[this.id].getCellHTML(index, column_index));
-            console.log('gird_' + this.id + '_data_' + index + '_' + column_index);
-            let links = '';
-            for (let i in w2ui[this.id].get(recid)[col]) {
-                links += '<p><a target="_blank" href="' + w2ui[this.id].get(recid)[col][i] + '">Файл ' + i + '</a></p>'
-            }
-            $('#' + 'grid_' + this.id + '_data_' + index + '_' + column_index).w2overlay({
-                openAbove: false,
-                align: 'none',
-                html: '<div style="padding: 10px; line-height: 150%">'
-                + '<p>Ссылки на файлы</p><br>'
-                + links
-                + '</div>'
-            });
-        }.bind(this);
+            window.stpui.showFiles = function (recid, col, index, column_index, gridID) {
+                /*console.log(recid, col);
+                console.log(w2ui[this.id].getCellHTML(index, column_index));
+                console.log('gird_' + this.id + '_data_' + index + '_' + column_index);*/
+                // нужно для правильного контекста
+                let self = stpui[gridID];
+                let links = '';
+                for (let i in w2ui[self.id].get(recid)[col]) {
+                    links += '<p><a target="_blank" href="' + w2ui[self.id].get(recid)[col][i] + '">Файл ' + i + '</a></p>'
+                }
+                $('#' + 'grid_' + self.id + '_data_' + index + '_' + column_index).w2overlay({
+                    openAbove: false,
+                    align: 'none',
+                    html: '<div style="padding: 10px; line-height: 150%">'
+                    + '<p>Ссылки на файлы</p><br>'
+                    + links
+                    + '</div>'
+                });
+            };
+            window.stpui.showEditForm = function (recID, columnName, gridID) {
+                // нужно для правильного контекста
+                let self = stpui[gridID];
+                let link = self.columnsRaw[columnName].link;
+                let id = self.recordsRaw[recID][columnName][0];
+                let type = 'elementForm';
+                let path = 'ref-' + link;
+                let PK = self.getProperties().PK;
+                let url = twoBe.getDefaultParams().url;
+                let grid = self;
+                twoBe.createRequest().addUrl(url).addParam('action', 'get').addParam('path', path).addData('type', type).addFilterParam(PK, id).addBefore(function () {
+                    grid.lock('Идет загрузка..');
+                }).addSuccess(function (data) {
+                    twoBe.buildView(data, path + type);
+                    grid.unlock();
+                }).addError(function (msg) {
+                    twoBe.showMessage(0, msg);
+                    grid.unlock();
+                }).addCacheKey(path + type).send();
+            };
         let renders = {
             "files": function (record, index, column_index) {
                 if (record[this.columns[column_index].field] === undefined || record[this.columns[column_index].field] === null || record[this.columns[column_index].field].length === 0) {
                     return ('Нет файлов');
                 } else {
-                    return ('<button onclick=showFiles("' + record.recid
+                    return ('<button onclick=stpui.showFiles("' + record.recid
                     + '","' + this.columns[column_index].field + '",' + index
-                    + ',' + column_index + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
+                    + ',' + column_index  + ',' + this.name + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
                 }
+            },
+            "reference" : function (record, index, column_index) {
+                let columnName = this.columns[column_index].field;
+                let description = record[columnName] || '';
+                let cellContent = '<a class = "link-in-grid" onclick  = stpui.showEditForm("' + record.recid + '","' + columnName + '","' + this.name + '")>' + description + '</a>';
+                return cellContent;
             },
             'timestamp': function (record, index, column_index) {
                 let fData = '';
