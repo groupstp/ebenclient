@@ -22,7 +22,6 @@ export class Layout extends component.Component {
          * @type {object}
          */
         this.panels = {};
-        this.saveInWindow();
         this.getAttributes(param.element);
         this.render();
     }

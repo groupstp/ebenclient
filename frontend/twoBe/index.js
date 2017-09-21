@@ -74,8 +74,6 @@ export default class twoBe {
                 content: data.content,
                 code: data.code
             });
-
-            //window.stpui.popup.showNewModal(data);
         }
     }
 

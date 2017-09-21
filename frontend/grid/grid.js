@@ -15,7 +15,7 @@ import {config} from '../config/config.js';
  * @classdesc Класс представляет собой компонент таблицы
  * @extends module:component.Component
  */
-export class Grid extends component.Component {
+class BasicGrid extends component.Component {
     constructor(params) {
         super(params);
         /**
@@ -104,6 +104,7 @@ export class Grid extends component.Component {
         this.PK = '';
         this.selectedRecs = [];
         this.multiselect = false;
+        this.showSelectColumn = false;
         this.headID = '';
         this.refCol = '';
         this.saveInWindow();
@@ -132,6 +133,7 @@ export class Grid extends component.Component {
         this.fk = prepContent.fk;
         this.selectedRecs = attributes.properties.selectedRecords;
         this.multiselect = attributes.properties.multiselect || false;
+        this.showSelectColumn = attributes.properties.showSelectColumn || false;
         this.headID = attributes.properties.headID || '';
         this.refCol = attributes.properties.refCol || '';
         this.setButtons();
@@ -306,8 +308,6 @@ export class Grid extends component.Component {
      * Преобразует формат в массив кнопок таблицы
      */
     setButtons() {
-        //преобразуем приходящий код
-        //this.code = this.prepareCode(this.code);
         for (let i in this.toolbar.elements) {
             this.btns[this.toolbar.elements[i].id] = this.toolbar.elements[i].properties;
             this.btns[this.toolbar.elements[i].id].id = this.toolbar.elements[i].id;
@@ -404,7 +404,6 @@ export class Grid extends component.Component {
                 items: menuItems
             });
         }
-        console.log(tlb);
         return tlb;
     }
 
@@ -433,7 +432,6 @@ export class Grid extends component.Component {
         let pkm = {
             items: [],
             onClick: function (event) {
-                console.log(event);
                 if (this.btns[event.menuItem.id] !== undefined)
                     try {
                         this.btns[event.menuItem.id].onClick.call(this, this);
@@ -471,7 +469,7 @@ export class Grid extends component.Component {
             show: {
                 toolbar: true,
                 footer: true,
-                selectColumn: (this.id.indexOf('chooseForm') >= 0 ? true : false)
+                selectColumn: this.showSelectColumn
             },
             columns: this.makeColumns(),
             records: this.makeRecords(),
@@ -555,123 +553,6 @@ export class Grid extends component.Component {
                     }
                 }
             }.bind(this),
-            onRequest: function (event) {
-                console.log(event, this.handlers.onRequest);
-                if (this.handlers.onRequest !== undefined) {
-                    this.handlers.onRequest(event);
-                }
-            }.bind(this),
-            onSearch: function (event) {
-                if (/*this.pagination*/true) {
-                    //был ли сброс поиска
-                    if (!event.reset) {
-                        event.preventDefault();
-                        w2ui[this.id].searchClose();
-                        //нужен адрес и сообщение
-                        let filter = {};
-                        let relation = {
-                            or: [],
-                            and: []
-                        };
-                        let actions = {
-                            contains: 'consist',
-                            is: 'equal',
-                            between: 'between',
-                            less: 'less',
-                            more: 'greater'
-                        };
-                        for (let i in event.searchData) {
-                            let nameCol = event.searchData[i].field.split('*').join('.');
-                            if (this.fk[nameCol] !== undefined) {
-                                nameCol += '.description';
-                            }
-                            let value = event.searchData[i].value;
-                            if (event.searchData[i].type === 'date') {
-                                if (typeof(event.searchData[i].value) !== 'string') {
-                                    value = [];
-                                    for (let j in event.searchData[i].value) {
-                                        value[j] = event.searchData[i].value[j];
-                                    }
-                                } else {
-                                    value = event.searchData[i].value
-                                }
-                                if (typeof(value) === 'object') {
-                                    for (let j in value) {
-                                        value[j] = tools.utils.getISODate(value[j], '/');
-                                    }
-                                } else {
-                                    value = tools.utils.getISODate(value, '/');
-                                }
-                            }
-                            filter[nameCol] = {
-                                value: value,
-                                sign: actions[event.searchData[i].operator] || 'consist'
-                            }
-                            relation.or.push(nameCol);
-                        }
-                        //для табличных частей
-                        if (this.headID !== '') {
-                            filter[this.refCol] = {
-                                value: this.headID,
-                                sign: 'equal'
-                            }
-                            relation.and.push(this.refCol);
-                        }
-                        //шлем запрос
-                        let searchQuery = new tools.AjaxSender({
-                            url: config.testUrl,
-                            msg: JSON.stringify({
-                                path: this.path,
-                                action: 'getContent',
-                                data: {
-                                    type: 'gridRecords',
-                                    filter: filter,
-                                    relation: relation
-                                }
-                            }),
-                            before: function () {
-                                w2ui[this.id].lock('Поиск', true);
-                            }.bind(this)
-                        })
-                        //в случае успеха
-                        searchQuery.sendQuery()
-                            .then(
-                                response => {
-                                    w2ui[this.id].unlock();
-                                    if (this.recordsBS[0] === undefined) {
-                                        this.recordsBS = w2ui[this.id].records;
-                                    }
-                                    w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
-                                    w2ui[this.id].searchData = [];
-                                    for (let searchInd in event.searchData) {
-                                        if (event.searchData[searchInd].operator !== 'between') {
-                                            w2ui[this.id].searchData.push(event.searchData[searchInd]);
-                                        }
-
-                                    }
-                                    w2ui[this.id].localSearch();
-                                    w2ui[this.id].refresh();
-                                },
-                                error => {
-                                    w2ui[this.id].unlock();
-                                    w2alert(error);
-                                });
-                    }
-                    else {
-                        if (w2ui[this.id].searchData.length === 0) return;
-                        if (this.pagination && !this.hierachy) {
-                            w2ui[this.id].reload();
-                        } else {
-                            w2ui[this.id].clear();
-                            w2ui[this.id].records = this.recordsBS;
-                        }
-                        w2ui[this.id].searchClose();
-                        w2ui[this.id].refresh();
-                    }
-
-                }
-            }.bind(this),
-            parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw)
         }
         if (this.handlers.onExpand !== undefined) {
@@ -679,9 +560,6 @@ export class Grid extends component.Component {
                 this.handlers.onExpand(event);
             }.bind(this)
         }
-        /*for (let event in this.handlers) {
-         obj[event] = this.handlers[event];
-         }*/
         return obj;
     }
 
@@ -881,9 +759,9 @@ export class Grid extends component.Component {
         //преобразуем приходящий код
         for (let eventName in this.events) {
             this.handlers[eventName] = function (event) {
-                //в качестве параметра передаем текущий объект-таблицу
                 let param = this;
                 try {
+                    //если делаем экспанд нужно сделать предварительные действия, можно убрать в пользовательский код
                     if (eventName === 'onExpand') {
                         $("#" + event.box_id).css({
                             margin: "0px",
@@ -904,6 +782,7 @@ export class Grid extends component.Component {
                             grid: this
                         }
                     }
+                    //вызываем соответсвующий обработчик, передаем нужный параметр
                     this.code[this.events[eventName]].call(this, param);
                 } catch (err) {
                     console.log('SERVER CODE ERROR:' + err);
@@ -912,38 +791,6 @@ export class Grid extends component.Component {
 
             }.bind(this)
         }
-        if (this.pagination && !this.hierachy) {
-            //щит для пагинации
-            this.handlers.onRequest = function (event) {
-                console.log(event);
-                event.url = config.testUrl;
-                let limit = event.postData.limit;
-                let offset = event.postData.offset;
-                event.postData = {
-                    path: this.path,
-                    action: 'getContent',
-                    data: {
-                        type: 'gridRecords',
-                        limit: limit,
-                        offset: offset
-
-                    }
-                }
-
-            }.bind(this)
-            this.handlers.parser = function (responseText) {
-                responseText = responseText.toString();
-                responseText = JSON.parse(responseText);
-                responseText = new tools.Unzipper(responseText).unzippedData;
-                if (responseText.status === 'success') {
-                    responseText = responseText.message;
-                    let recs = this.makeRecords(responseText.content[0].records, responseText.content[0].fk);
-                    console.log(recs);
-                    return recs;
-                }
-            }.bind(this);
-        }
-
     }
 
     buildInExpand(id, data) {
@@ -1070,6 +917,167 @@ export class Grid extends component.Component {
 
 }
 
+
+export class Grid extends BasicGrid {
+    setHandlers() {
+        super.setHandlers();
+        if (this.pagination && !this.hierachy) {
+            //щит для пагинации
+            this.handlers.onRequest = function (event) {
+                event.url = config.testUrl;
+                let limit = event.postData.limit;
+                let offset = event.postData.offset;
+                event.postData = {
+                    path: this.path,
+                    action: 'getContent',
+                    data: {
+                        type: 'gridRecords',
+                        limit: limit,
+                        offset: offset
+
+                    }
+                }
+
+            }.bind(this)
+            this.handlers.parser = function (responseText) {
+                responseText = responseText.toString();
+                responseText = JSON.parse(responseText);
+                responseText = new tools.Unzipper(responseText).unzippedData;
+                if (responseText.status === 'success') {
+                    responseText = responseText.message;
+                    let recs = this.makeRecords(responseText.content[0].records, responseText.content[0].fk);
+                    console.log(recs);
+                    return recs;
+                }
+            }.bind(this);
+        }
+        this.handlers.onSearch = function (event) {
+            if (/*this.pagination*/true) {
+                //был ли сброс поиска
+                if (!event.reset) {
+                    event.preventDefault();
+                    w2ui[this.id].searchClose();
+                    //нужен адрес и сообщение
+                    let filter = {};
+                    let relation = {
+                        or: [],
+                        and: []
+                    };
+                    let actions = {
+                        contains: 'consist',
+                        is: 'equal',
+                        between: 'between',
+                        less: 'less',
+                        more: 'greater'
+                    };
+                    for (let i in event.searchData) {
+                        let nameCol = event.searchData[i].field.split('*').join('.');
+                        if (this.fk[nameCol] !== undefined) {
+                            nameCol += '.description';
+                        }
+                        let value = event.searchData[i].value;
+                        if (event.searchData[i].type === 'date') {
+                            if (typeof(event.searchData[i].value) !== 'string') {
+                                value = [];
+                                for (let j in event.searchData[i].value) {
+                                    value[j] = event.searchData[i].value[j];
+                                }
+                            } else {
+                                value = event.searchData[i].value
+                            }
+                            if (typeof(value) === 'object') {
+                                for (let j in value) {
+                                    value[j] = tools.utils.getISODate(value[j], '/');
+                                }
+                            } else {
+                                value = tools.utils.getISODate(value, '/');
+                            }
+                        }
+                        filter[nameCol] = {
+                            value: value,
+                            sign: actions[event.searchData[i].operator] || 'consist'
+                        }
+                        relation.or.push(nameCol);
+                    }
+                    //для табличных частей
+                    if (this.headID !== '') {
+                        filter[this.refCol] = {
+                            value: this.headID,
+                            sign: 'equal'
+                        }
+                        relation.and.push(this.refCol);
+                    }
+                    //отсылаем запрос
+                    let searchQuery = new tools.AjaxSender({
+                        url: config.testUrl,
+                        msg: JSON.stringify({
+                            path: this.path,
+                            action: 'getContent',
+                            data: {
+                                type: 'gridRecords',
+                                filter: filter,
+                                relation: relation
+                            }
+                        }),
+                        before: function () {
+                            w2ui[this.id].lock('Поиск', true);
+                        }.bind(this)
+                    })
+                    //в случае успеха
+                    searchQuery.sendQuery()
+                        .then(
+                            response => {
+                                w2ui[this.id].unlock();
+                                if (this.recordsBS[0] === undefined) {
+                                    this.recordsBS = w2ui[this.id].records;
+                                }
+                                w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
+                                w2ui[this.id].searchData = [];
+                                for (let searchInd in event.searchData) {
+                                    if (event.searchData[searchInd].operator !== 'between') {
+                                        w2ui[this.id].searchData.push(event.searchData[searchInd]);
+                                    }
+
+                                }
+                                w2ui[this.id].localSearch();
+                                w2ui[this.id].refresh();
+                            },
+                            error => {
+                                w2ui[this.id].unlock();
+                                w2alert(error);
+                            });
+                }
+                else {
+                    if (w2ui[this.id].searchData.length === 0) return;
+                    if (this.pagination && !this.hierachy) {
+                        w2ui[this.id].reload();
+                    } else {
+                        w2ui[this.id].clear();
+                        w2ui[this.id].records = this.recordsBS;
+                    }
+                    w2ui[this.id].searchClose();
+                    w2ui[this.id].refresh();
+                }
+
+            }
+        }.bind(this);
+    }
+
+    makew2uiobject() {
+        let obj = super.makew2uiobject();
+        obj.onSearch = function (event) {
+            this.handlers.onSearch(event);
+        }.bind(this);
+        obj.onRequest = function (event) {
+            console.log(event, this.handlers.onRequest);
+            if (this.handlers.onRequest !== undefined) {
+                this.handlers.onRequest(event);
+            }
+        }.bind(this);
+        obj.parser = this.handlers.parser || "";
+        return obj;
+    }
+}
 /**
  * Класс для тестирования возможностей таблиц - скорее всего не работает((
  * @extends module:grid.Grid
