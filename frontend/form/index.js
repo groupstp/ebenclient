@@ -40,8 +40,11 @@ export class Form extends Component {
          * @type {string}
          */
         this.refID = '';
-
-        this.ownerFormID = '';
+        /**
+         * id главного элемента
+         * @type {string}
+         */
+        this.headID = '';
 
         // данные полей и внешние ключи
         this.data = this.prepareData(options.content);
@@ -57,7 +60,7 @@ export class Form extends Component {
         this.name = attributes.properties.name;
         this.PK = attributes.properties.PK || 'ID';
         this.refID = attributes.properties.refID || '';
-        this.ownerFormID = attributes.properties.ownerFormID || '';
+        this.headID = attributes.properties.headID || '';
     }
 
     ////////// Private methods //////////
@@ -153,21 +156,8 @@ export class Form extends Component {
         if (this.refID) {
             let ownerIDField = this.getField(this.refID);
             if (ownerIDField) {
-                let ownerForm = getOwnerForm.call(this);
-                if (ownerForm) {
-                    let PK = ownerForm.getProperties()['PK'];
-                    let PKField  = ownerForm.getField(PK);
-                    let value = PKField.getValue();
-                    ownerIDField.setValue(value);
-                }
+                ownerIDField.setValue(this.headID);
             }
-        }
-
-        //
-        function getOwnerForm(){
-            if (!this.ownerFormID) return null;
-            let form = twoBe.getById(this.ownerFormID);
-            return form;
         }
 
         /**
