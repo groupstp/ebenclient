@@ -3193,7 +3193,7 @@ w2utils.event = {
         this.markSearch = true;
         this.columnTooltip = 'normal'; // can be normal, top, bottom, left, right
         this.disableCVS = false;    // disable Column Virtual Scroll
-        this.textSearch = 'begins'; // default search type for text
+        this.textSearch = 'contains'; // default search type for text
 
         this.total = 0;     // server total
         this.limit = 100;
@@ -9377,7 +9377,7 @@ w2utils.event = {
                 var operator = operators[0]; // default operator
                 if ($.isPlainObject(operator)) operator = operator.oper;
                 if (typeof search.options != 'object') search.options = {};
-                if (search.type == 'text') operator = 'begins'; // default operator for text
+                if (search.type == 'text') operator = 'contains'; // default operator for text
                 // only accept search.operator if it is valid
                 for (var i = 0; i < operators.length; i++) {
                     var oper = operators[i];
@@ -15996,7 +15996,7 @@ var w2prompt = function (label, title, callBack) {
                         cacheMax: 250,
                         maxDropHeight: 350,          // max height for drop down menu
                         maxDropWidth: null,         // if null then auto set
-                        match: 'begins',     // ['contains', 'is', 'begins', 'ends']
+                        match: 'contains',     // ['contains', 'is', 'begins', 'ends']
                         silent: true,
                         icon: null,
                         iconStyle: '',

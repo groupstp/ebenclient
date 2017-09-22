@@ -110,6 +110,7 @@ class BasicGrid extends component.Component {
         this.showSelectColumn = false;
         this.headID = '';
         this.refCol = '';
+        this.sortBy = [];
         this.saveInWindow();
         this.getAttributes(params.element);
         this.render();
@@ -139,6 +140,9 @@ class BasicGrid extends component.Component {
         this.showSelectColumn = attributes.properties.showSelectColumn || false;
         this.headID = attributes.properties.headID || '';
         this.refCol = attributes.properties.refCol || '';
+        this.sortBy = attributes.properties.sortBy || [];
+        this.groupedBy = attributes.properties.groupBy || null;
+        this.showGroupCol = attributes.properties.showGroupCol || null;
         this.setButtons();
         this.setHandlers();
 
@@ -158,6 +162,17 @@ class BasicGrid extends component.Component {
             $(this.box).w2grid(objForW2);
         } else {
             $(place).w2grid(objForW2);
+        }
+        if (this.showGroupCol && this.groupedBy) {
+            let groupedRecs = this.groupBy(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
+            w2ui[this.id].clear();
+            for (let i in this.groupedBy) {
+                w2ui[this.id].removeColumn(this.groupedBy[i]);
+            }
+            w2ui[this.id].records = groupedRecs;
+            for (let i in this.selectedRecs) {
+                w2ui[this.id].select(this.selectedRecs[i]);
+            }
         }
         w2ui[this.id].refresh();
         for (let i in this.selectedRecs) {
@@ -207,7 +222,11 @@ class BasicGrid extends component.Component {
             $.extend(true, this.fk, fk);
             //преобразуем запись
             let record = this.makeRecords(recordRaw, fk)[0];
-            w2ui[this.id].add(record);
+            w2ui[this.id].add(record, true);
+            if (!this.pagination) {
+                w2ui[this.id].localSort();
+                w2ui[this.id].refresh();
+            }
             //делаем выделение записи
             this.selectRecord(ID);
         }
@@ -557,7 +576,12 @@ class BasicGrid extends component.Component {
                 }
             }.bind(this),
             searches: this.makeSearches(this.columnsRaw)
+
         }
+        for (let i in this.sortBy) {
+            this.sortBy[i].direction = this.sortBy[i].sort;
+        }
+        obj.sortData = this.sortBy;
         if (this.handlers.onExpand !== undefined) {
             obj.onExpand = function (event) {
                 this.handlers.onExpand(event);
@@ -575,13 +599,20 @@ class BasicGrid extends component.Component {
             'float': 'float',
             'integer': 'int'
         }
+        let operators = {
+            'string': ['is', 'contains'],
+            'date': ['is', 'between'],
+            'float': ['is', 'between', 'less than', 'more than'],
+            'integer': ['is', 'between', 'less than', 'more than']
+        }
         for (let i in columnsRaw) {
             if (columnsRaw[i].field === this.PK) continue;
             result.push({
                 field: columnsRaw[i].field,
                 caption: columnsRaw[i].caption,
                 type: types[columnsRaw[i].type] || 'text',
-                options: (types[columnsRaw[i].type] === 'date' ? /* {format: 'dd-mm-yyyy'}*/"" : "")
+                options: (types[columnsRaw[i].type] === 'date' ? /* {format: 'dd-mm-yyyy'}*/"" : ""),
+                operators: operators[columnsRaw[i].type] || ['contains']
             })
         }
         return result;
@@ -626,6 +657,7 @@ class BasicGrid extends component.Component {
                         }
                     } else if (this.columnsRaw[col].type === 'date') {
                         rec[col] = Date.parse(recordsRaw[recid][col]);
+
                     } else {
                         rec[col] = recordsRaw[recid][col];
                     }
@@ -691,45 +723,45 @@ class BasicGrid extends component.Component {
      * @returns {Array} - массив колонок
      */
     makeColumns() {
-            window.stpui.showFiles = function (recid, col, index, column_index, gridID) {
-                /*console.log(recid, col);
-                console.log(w2ui[this.id].getCellHTML(index, column_index));
-                console.log('gird_' + this.id + '_data_' + index + '_' + column_index);*/
-                // нужно для правильного контекста
-                let self = stpui[gridID];
-                let links = '';
-                for (let i in w2ui[self.id].get(recid)[col]) {
-                    links += '<p><a target="_blank" href="' + w2ui[self.id].get(recid)[col][i] + '">Файл ' + i + '</a></p>'
-                }
-                $('#' + 'grid_' + self.id + '_data_' + index + '_' + column_index).w2overlay({
-                    openAbove: false,
-                    align: 'none',
-                    html: '<div style="padding: 10px; line-height: 150%">'
-                    + '<p>Ссылки на файлы</p><br>'
-                    + links
-                    + '</div>'
-                });
-            };
-            window.stpui.showEditForm = function (recID, columnName, gridID) {
-                // нужно для правильного контекста
-                let self = stpui[gridID];
-                let link = self.columnsRaw[columnName].link;
-                let id = self.recordsRaw[recID][columnName][0];
-                let type = 'elementForm';
-                let path = 'ref-' + link;
-                let PK = self.getProperties().PK;
-                let url = twoBe.getDefaultParams().url;
-                let grid = self;
-                twoBe.createRequest().addUrl(url).addParam('action', 'get').addParam('path', path).addData('type', type).addFilterParam(PK, id).addBefore(function () {
-                    grid.lock('Идет загрузка..');
-                }).addSuccess(function (data) {
-                    twoBe.buildView(data, path + type);
-                    grid.unlock();
-                }).addError(function (msg) {
-                    twoBe.showMessage(0, msg);
-                    grid.unlock();
-                }).addCacheKey(path + type).send();
-            };
+        window.stpui.showFiles = function (recid, col, index, column_index, gridID) {
+            /*console.log(recid, col);
+             console.log(w2ui[this.id].getCellHTML(index, column_index));
+             console.log('gird_' + this.id + '_data_' + index + '_' + column_index);*/
+            // нужно для правильного контекста
+            let self = stpui[gridID];
+            let links = '';
+            for (let i in w2ui[self.id].get(recid)[col]) {
+                links += '<p><a target="_blank" href="' + w2ui[self.id].get(recid)[col][i] + '">Файл ' + i + '</a></p>'
+            }
+            $('#' + 'grid_' + self.id + '_data_' + index + '_' + column_index).w2overlay({
+                openAbove: false,
+                align: 'none',
+                html: '<div style="padding: 10px; line-height: 150%">'
+                + '<p>Ссылки на файлы</p><br>'
+                + links
+                + '</div>'
+            });
+        };
+        window.stpui.showEditForm = function (recID, columnName, gridID) {
+            // нужно для правильного контекста
+            let self = stpui[gridID];
+            let link = self.columnsRaw[columnName].link;
+            let id = self.recordsRaw[recID][columnName][0];
+            let type = 'elementForm';
+            let path = 'ref-' + link;
+            let PK = self.getProperties().PK;
+            let url = twoBe.getDefaultParams().url;
+            let grid = self;
+            twoBe.createRequest().addUrl(url).addParam('action', 'get').addParam('path', path).addData('type', type).addFilterParam(PK, id).addBefore(function () {
+                grid.lock('Идет загрузка..');
+            }).addSuccess(function (data) {
+                twoBe.buildView(data, path + type);
+                grid.unlock();
+            }).addError(function (msg) {
+                twoBe.showMessage(0, msg);
+                grid.unlock();
+            }).addCacheKey(path + type).send();
+        };
         let renders = {
             "files": function (record, index, column_index) {
                 if (record[this.columns[column_index].field] === undefined || record[this.columns[column_index].field] === null || record[this.columns[column_index].field].length === 0) {
@@ -737,10 +769,10 @@ class BasicGrid extends component.Component {
                 } else {
                     return ('<button onclick=stpui.showFiles("' + record.recid
                     + '","' + this.columns[column_index].field + '",' + index
-                    + ',' + column_index  + ',' + this.name + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
+                    + ',' + column_index + ',' + this.name + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
                 }
             },
-            "reference" : function (record, index, column_index) {
+            "reference": function (record, index, column_index) {
                 let columnName = this.columns[column_index].field;
                 let description = record[columnName] || '';
                 let cellContent = '<a class = "link-in-grid" onclick  = stpui.showEditForm("' + record.recid + '","' + columnName + '","' + this.name + '")>' + description + '</a>';
@@ -852,12 +884,15 @@ class BasicGrid extends component.Component {
         for (let recid in records) {
             var disp = "";
             var val = "";
-            if (columns[params[d]].type !== 'reference') {
-                val = records[recid][params[d]];
-                disp = val;
-            } else {
+            if (columns[params[d]].type === 'reference') {
                 val = records[recid][params[d]][0];
                 disp = this.fk[params[d]][records[recid][params[d]][0]];
+            } else if (columns[params[d]].type === 'date') {
+                val = records[recid][params[d]];
+                disp = w2utils.date(val);
+            } else {
+                val = records[recid][params[d]];
+                disp = val;
             }
             if (res[val] === undefined) {
                 res[val] = [];
@@ -880,7 +915,7 @@ class BasicGrid extends component.Component {
                     "style": style[d]
                 }
             };
-            rec[col] = columns[params[d]].caption + ' : ' + keys[i];
+            rec[col] = columns[params[d]].caption + ' : ' + (keys[i] ? keys[i] : 'Не указано');
             resw2.push(rec);
         }
         d++;
@@ -955,17 +990,26 @@ export class Grid extends BasicGrid {
         if (this.pagination && !this.hierachy) {
             //щит для пагинации
             this.handlers.onRequest = function (event) {
+                console.log(event.postData);
                 event.url = config.testUrl;
                 let limit = event.postData.limit;
                 let offset = event.postData.offset;
+                let sort = event.postData.sort;
+                let orderBy = [];
+                for (let i in sort) {
+                    orderBy.push({
+                        field: sort[i].field,
+                        sort: sort[i].direction.toUpperCase()
+                    })
+                }
                 event.postData = {
                     path: this.path,
                     action: 'getContent',
                     data: {
                         type: 'gridRecords',
                         limit: limit,
-                        offset: offset
-
+                        offset: offset,
+                        orderBy: orderBy
                     }
                 }
 
@@ -977,8 +1021,10 @@ export class Grid extends BasicGrid {
                 if (responseText.status === 'success') {
                     responseText = responseText.message;
                     let recs = this.makeRecords(responseText.content[0].records, responseText.content[0].fk);
-                    console.log(recs);
                     return recs;
+                } else {
+                    w2alert(responseText.message);
+                    return [];
                 }
             }.bind(this);
         }
@@ -1065,10 +1111,9 @@ export class Grid extends BasicGrid {
                                 w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
                                 w2ui[this.id].searchData = [];
                                 for (let searchInd in event.searchData) {
-                                    if (event.searchData[searchInd].operator !== 'between') {
+                                    if (/*event.searchData[searchInd].operator !== 'between'*/true) {
                                         w2ui[this.id].searchData.push(event.searchData[searchInd]);
                                     }
-
                                 }
                                 w2ui[this.id].localSearch();
                                 w2ui[this.id].refresh();

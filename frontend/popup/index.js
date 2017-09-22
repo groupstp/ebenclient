@@ -64,6 +64,7 @@ export class Popup extends Component {
     showNewModal() {
         this.getPlace().then(
             place => {
+                console.log(place.clientHeight)
                 let layoutLib = require('../layout/index.js');
                 let layout = new layoutLib.Layout({
                         box: place,
@@ -194,6 +195,8 @@ export class Popup extends Component {
                                 closeBtn.onclick = function () {
                                     stpui.currentPopup.close();
                                 };
+                                console.log(document.getElementById('popup0').clientHeight);
+                                console.log(document.getElementById('popupDiv').clientHeight);
                                 resolve(document.getElementById('popup0'));
                             }
 

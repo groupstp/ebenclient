@@ -138,7 +138,7 @@ export default class contentBuilder extends componentLib.Component {
         w2ui.navigatorToolbar.set('navigatorLabel', {html: '<b><h3>' + caption + '</h3></b>'});
         w2ui.navigatorToolbar.refresh();
         //подгоняем стили
-        this.pageContainer.style.height = document.documentElement.clientHeight - 115 + 'px';
+        this.pageContainer.style.height = document.documentElement.clientHeight - 120 + 'px';
         this.pageContainer.style.marginBottom = '15px';
         let uniq = true;
         this.current++;
