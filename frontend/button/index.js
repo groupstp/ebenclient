@@ -34,7 +34,6 @@ export class Button extends Component {
      * @private
      */
     _generateHTML() {
-
         if (!this.box) {
             this.box = document.createElement('div');
         }
@@ -79,6 +78,20 @@ export class Button extends Component {
 
     ///// Public methods /////
 
+    /**
+     * Скрыть элемент со страницы
+     */
+    hide() {
+        this.box.style.display = 'none';
+    }
+
+    /**
+     * Отобразить скрытый элемент на странице
+     */
+    show() {
+        this.box.style.display = 'inline-block';
+    }
+
     enable() {
         // при кастомном макете элемент может быть не орпеделен
         if (!this.controlEl) return;
@@ -99,6 +112,7 @@ export class Button extends Component {
     render() {
 
         this._generateHTML();
+        this.applyProperties();
 
         return this.box;
 
