@@ -115,7 +115,7 @@ export class SimpleField extends Field {
         let result;
 
         if (this.isItDateField()){
-            result = $(this.controlEl).datepicker('getDate');
+            result = $(this.controlEl).datepicker('getUTCDate');
             if (result instanceof Date){
                 result = result.toISOString();
             }
