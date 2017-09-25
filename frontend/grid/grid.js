@@ -547,17 +547,18 @@ export class Grid extends component.Component {
 
                 w2ui[this.id + '_toolbar'].render();
             }.bind(this),
-            onDblClick: function (event) {
-                if (this.handlers.onDblClick !== undefined) {
-                    try {
-                        w2ui[this.id].select(event.recid);
-                        this.handlers.onDblClick();
-                    } catch (err) {
-                        console.log('SERVER CODE ERROR:' + err);
-                        w2alert('Серевер вернул некорректное действие!');
-                    }
-                }
-            }.bind(this),
+            // TODO пока убираю чтобы не мешало редактированию в таблице
+            // onDblClick: function (event) {
+            //     if (this.handlers.onDblClick !== undefined) {
+            //         try {
+            //             w2ui[this.id].select(event.recid);
+            //             this.handlers.onDblClick();
+            //         } catch (err) {
+            //             console.log('SERVER CODE ERROR:' + err);
+            //             w2alert('Серевер вернул некорректное действие!');
+            //         }
+            //     }
+            // }.bind(this),
             onRequest: function (event) {
                 console.log(event, this.handlers.onRequest);
                 if (this.handlers.onRequest !== undefined) {
@@ -889,16 +890,38 @@ export class Grid extends component.Component {
             }
         }
         let columns = [];
+        // для сопоставления типов сервера и w2ui
+        let types = {
+            'string': 'text',
+            'date': 'date',
+            'float': 'float',
+            'integer': 'int'
+        };
         for (let i in this.columnsRaw) {
-            if (this.columnsRaw[i].field === this.PK) continue;
-            columns.push({
-                field: this.columnsRaw[i].field,
+            let rawColumn = this.columnsRaw[i];
+            if (rawColumn.field === this.PK) continue;
+
+            let options = {
+                field: rawColumn.field,
                 size: '10%',
-                caption: this.columnsRaw[i].caption,
-                sortable: this.columnsRaw[i].sortable,
-                hidden: this.columnsRaw[i].hidden,
-                render: renders[this.columnsRaw[i].type] || null
-            })
+                caption: rawColumn.caption,
+                sortable: rawColumn.sortable,
+                hidden: rawColumn.hidden,
+                render: renders[rawColumn.type] || null
+            };
+
+            // редактирование в таблице делаем только для ТЧ
+            if (this.refCol) {
+                // определим тип подставляемый в редактирование
+                let editableType = types[rawColumn.type];
+                if (editableType !== undefined) {
+                    options.editable = {
+                        type: editableType
+                    };
+                }
+            }
+
+            columns.push(options)
         }
         console.log(columns);
         return columns;
