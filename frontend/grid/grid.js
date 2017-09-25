@@ -18,7 +18,7 @@ import './grid.css';
  * @classdesc Класс представляет собой компонент таблицы
  * @extends module:component.Component
  */
-export class Grid extends component.Component {
+class BasicGrid extends component.Component {
     constructor(params) {
         super(params);
         /**
@@ -107,8 +107,10 @@ export class Grid extends component.Component {
         this.PK = '';
         this.selectedRecs = [];
         this.multiselect = false;
+        this.showSelectColumn = false;
         this.headID = '';
         this.refCol = '';
+        this.sortBy = [];
         this.saveInWindow();
         this.getAttributes(params.element);
         this.render();
@@ -135,8 +137,12 @@ export class Grid extends component.Component {
         this.fk = prepContent.fk;
         this.selectedRecs = attributes.properties.selectedRecords;
         this.multiselect = attributes.properties.multiselect || false;
+        this.showSelectColumn = attributes.properties.showSelectColumn || false;
         this.headID = attributes.properties.headID || '';
         this.refCol = attributes.properties.refCol || '';
+        this.sortBy = attributes.properties.sortBy || [];
+        this.groupedBy = attributes.properties.groupBy || null;
+        this.showGroupCol = attributes.properties.showGroupCol || null;
         this.setButtons();
         this.setHandlers();
 
@@ -156,6 +162,17 @@ export class Grid extends component.Component {
             $(this.box).w2grid(objForW2);
         } else {
             $(place).w2grid(objForW2);
+        }
+        if (this.showGroupCol && this.groupedBy) {
+            let groupedRecs = this.groupBy(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
+            w2ui[this.id].clear();
+            for (let i in this.groupedBy) {
+                w2ui[this.id].removeColumn(this.groupedBy[i]);
+            }
+            w2ui[this.id].records = groupedRecs;
+            for (let i in this.selectedRecs) {
+                w2ui[this.id].select(this.selectedRecs[i]);
+            }
         }
         w2ui[this.id].refresh();
         for (let i in this.selectedRecs) {
@@ -205,7 +222,11 @@ export class Grid extends component.Component {
             $.extend(true, this.fk, fk);
             //преобразуем запись
             let record = this.makeRecords(recordRaw, fk)[0];
-            w2ui[this.id].add(record);
+            w2ui[this.id].add(record, true);
+            if (!this.pagination) {
+                w2ui[this.id].localSort();
+                w2ui[this.id].refresh();
+            }
             //делаем выделение записи
             this.selectRecord(ID);
         }
@@ -309,8 +330,6 @@ export class Grid extends component.Component {
      * Преобразует формат в массив кнопок таблицы
      */
     setButtons() {
-        //преобразуем приходящий код
-        //this.code = this.prepareCode(this.code);
         for (let i in this.toolbar.elements) {
             this.btns[this.toolbar.elements[i].id] = this.toolbar.elements[i].properties;
             this.btns[this.toolbar.elements[i].id].id = this.toolbar.elements[i].id;
@@ -407,7 +426,6 @@ export class Grid extends component.Component {
                 items: menuItems
             });
         }
-        console.log(tlb);
         return tlb;
     }
 
@@ -436,7 +454,6 @@ export class Grid extends component.Component {
         let pkm = {
             items: [],
             onClick: function (event) {
-                console.log(event);
                 if (this.btns[event.menuItem.id] !== undefined)
                     try {
                         this.btns[event.menuItem.id].onClick.call(this, this);
@@ -474,7 +491,7 @@ export class Grid extends component.Component {
             show: {
                 toolbar: true,
                 footer: true,
-                selectColumn: (this.id.indexOf('chooseForm') >= 0 ? true : false)
+                selectColumn: this.showSelectColumn
             },
             columns: this.makeColumns(),
             records: this.makeRecords(),
@@ -677,15 +694,17 @@ export class Grid extends component.Component {
             }.bind(this),
             parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw)
+
         }
+        for (let i in this.sortBy) {
+            this.sortBy[i].direction = this.sortBy[i].sort;
+        }
+        obj.sortData = this.sortBy;
         if (this.handlers.onExpand !== undefined) {
             obj.onExpand = function (event) {
                 this.handlers.onExpand(event);
             }.bind(this)
         }
-        /*for (let event in this.handlers) {
-         obj[event] = this.handlers[event];
-         }*/
         return obj;
     }
 
@@ -698,13 +717,20 @@ export class Grid extends component.Component {
             'float': 'float',
             'integer': 'int'
         }
+        let operators = {
+            'string': ['is', 'contains'],
+            'date': ['is', 'between'],
+            'float': ['is', 'between', 'less than', 'more than'],
+            'integer': ['is', 'between', 'less than', 'more than']
+        }
         for (let i in columnsRaw) {
             if (columnsRaw[i].field === this.PK) continue;
             result.push({
                 field: columnsRaw[i].field,
                 caption: columnsRaw[i].caption,
                 type: types[columnsRaw[i].type] || 'text',
-                options: (types[columnsRaw[i].type] === 'date' ? /* {format: 'dd-mm-yyyy'}*/"" : "")
+                options: (types[columnsRaw[i].type] === 'date' ? /* {format: 'dd-mm-yyyy'}*/"" : ""),
+                operators: operators[columnsRaw[i].type] || ['contains']
             })
         }
         return result;
@@ -749,6 +775,7 @@ export class Grid extends component.Component {
                         }
                     } else if (this.columnsRaw[col].type === 'date') {
                         rec[col] = Date.parse(recordsRaw[recid][col]);
+
                     } else {
                         rec[col] = recordsRaw[recid][col];
                     }
@@ -814,45 +841,45 @@ export class Grid extends component.Component {
      * @returns {Array} - массив колонок
      */
     makeColumns() {
-            window.stpui.showFiles = function (recid, col, index, column_index, gridID) {
-                /*console.log(recid, col);
-                console.log(w2ui[this.id].getCellHTML(index, column_index));
-                console.log('gird_' + this.id + '_data_' + index + '_' + column_index);*/
-                // нужно для правильного контекста
-                let self = stpui[gridID];
-                let links = '';
-                for (let i in w2ui[self.id].get(recid)[col]) {
-                    links += '<p><a target="_blank" href="' + w2ui[self.id].get(recid)[col][i] + '">Файл ' + i + '</a></p>'
-                }
-                $('#' + 'grid_' + self.id + '_data_' + index + '_' + column_index).w2overlay({
-                    openAbove: false,
-                    align: 'none',
-                    html: '<div style="padding: 10px; line-height: 150%">'
-                    + '<p>Ссылки на файлы</p><br>'
-                    + links
-                    + '</div>'
-                });
-            };
-            window.stpui.showEditForm = function (recID, columnName, gridID) {
-                // нужно для правильного контекста
-                let self = stpui[gridID];
-                let link = self.columnsRaw[columnName].link;
-                let id = self.recordsRaw[recID][columnName][0];
-                let type = 'elementForm';
-                let path = 'ref-' + link;
-                let PK = self.getProperties().PK;
-                let url = twoBe.getDefaultParams().url;
-                let grid = self;
-                twoBe.createRequest().addUrl(url).addParam('action', 'get').addParam('path', path).addData('type', type).addFilterParam(PK, id).addBefore(function () {
-                    grid.lock('Идет загрузка..');
-                }).addSuccess(function (data) {
-                    twoBe.buildView(data, path + type);
-                    grid.unlock();
-                }).addError(function (msg) {
-                    twoBe.showMessage(0, msg);
-                    grid.unlock();
-                }).addCacheKey(path + type).send();
-            };
+        window.stpui.showFiles = function (recid, col, index, column_index, gridID) {
+            /*console.log(recid, col);
+             console.log(w2ui[this.id].getCellHTML(index, column_index));
+             console.log('gird_' + this.id + '_data_' + index + '_' + column_index);*/
+            // нужно для правильного контекста
+            let self = stpui[gridID];
+            let links = '';
+            for (let i in w2ui[self.id].get(recid)[col]) {
+                links += '<p><a target="_blank" href="' + w2ui[self.id].get(recid)[col][i] + '">Файл ' + i + '</a></p>'
+            }
+            $('#' + 'grid_' + self.id + '_data_' + index + '_' + column_index).w2overlay({
+                openAbove: false,
+                align: 'none',
+                html: '<div style="padding: 10px; line-height: 150%">'
+                + '<p>Ссылки на файлы</p><br>'
+                + links
+                + '</div>'
+            });
+        };
+        window.stpui.showEditForm = function (recID, columnName, gridID) {
+            // нужно для правильного контекста
+            let self = stpui[gridID];
+            let link = self.columnsRaw[columnName].link;
+            let id = self.recordsRaw[recID][columnName][0];
+            let type = 'elementForm';
+            let path = 'ref-' + link;
+            let PK = self.getProperties().PK;
+            let url = twoBe.getDefaultParams().url;
+            let grid = self;
+            twoBe.createRequest().addUrl(url).addParam('action', 'get').addParam('path', path).addData('type', type).addFilterParam(PK, id).addBefore(function () {
+                grid.lock('Идет загрузка..');
+            }).addSuccess(function (data) {
+                twoBe.buildView(data, path + type);
+                grid.unlock();
+            }).addError(function (msg) {
+                twoBe.showMessage(0, msg);
+                grid.unlock();
+            }).addCacheKey(path + type).send();
+        };
         let renders = {
             "files": function (record, index, column_index) {
                 if (record[this.columns[column_index].field] === undefined || record[this.columns[column_index].field] === null || record[this.columns[column_index].field].length === 0) {
@@ -860,10 +887,10 @@ export class Grid extends component.Component {
                 } else {
                     return ('<button onclick=stpui.showFiles("' + record.recid
                     + '","' + this.columns[column_index].field + '",' + index
-                    + ',' + column_index  + ',' + this.name + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
+                    + ',' + column_index + ',' + this.name + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
                 }
             },
-            "reference" : function (record, index, column_index) {
+            "reference": function (record, index, column_index) {
                 let columnName = this.columns[column_index].field;
                 let description = record[columnName] || '';
                 let cellContent = '<a class = "link-in-grid" onclick  = stpui.showEditForm("' + record.recid + '","' + columnName + '","' + this.name + '")>' + description + '</a>';
@@ -935,9 +962,9 @@ export class Grid extends component.Component {
         //преобразуем приходящий код
         for (let eventName in this.events) {
             this.handlers[eventName] = function (event) {
-                //в качестве параметра передаем текущий объект-таблицу
                 let param = this;
                 try {
+                    //если делаем экспанд нужно сделать предварительные действия, можно убрать в пользовательский код
                     if (eventName === 'onExpand') {
                         $("#" + event.box_id).css({
                             margin: "0px",
@@ -958,6 +985,7 @@ export class Grid extends component.Component {
                             grid: this
                         }
                     }
+                    //вызываем соответсвующий обработчик, передаем нужный параметр
                     this.code[this.events[eventName]].call(this, param);
                 } catch (err) {
                     console.log('SERVER CODE ERROR:' + err);
@@ -966,38 +994,6 @@ export class Grid extends component.Component {
 
             }.bind(this)
         }
-        if (this.pagination && !this.hierachy) {
-            //щит для пагинации
-            this.handlers.onRequest = function (event) {
-                console.log(event);
-                event.url = config.testUrl;
-                let limit = event.postData.limit;
-                let offset = event.postData.offset;
-                event.postData = {
-                    path: this.path,
-                    action: 'getContent',
-                    data: {
-                        type: 'gridRecords',
-                        limit: limit,
-                        offset: offset
-
-                    }
-                }
-
-            }.bind(this)
-            this.handlers.parser = function (responseText) {
-                responseText = responseText.toString();
-                responseText = JSON.parse(responseText);
-                responseText = new tools.Unzipper(responseText).unzippedData;
-                if (responseText.status === 'success') {
-                    responseText = responseText.message;
-                    let recs = this.makeRecords(responseText.content[0].records, responseText.content[0].fk);
-                    console.log(recs);
-                    return recs;
-                }
-            }.bind(this);
-        }
-
     }
 
     buildInExpand(id, data) {
@@ -1028,12 +1024,15 @@ export class Grid extends component.Component {
         for (let recid in records) {
             var disp = "";
             var val = "";
-            if (columns[params[d]].type !== 'reference') {
-                val = records[recid][params[d]];
-                disp = val;
-            } else {
+            if (columns[params[d]].type === 'reference') {
                 val = records[recid][params[d]][0];
                 disp = this.fk[params[d]][records[recid][params[d]][0]];
+            } else if (columns[params[d]].type === 'date') {
+                val = records[recid][params[d]];
+                disp = w2utils.date(val);
+            } else {
+                val = records[recid][params[d]];
+                disp = val;
             }
             if (res[val] === undefined) {
                 res[val] = [];
@@ -1056,7 +1055,7 @@ export class Grid extends component.Component {
                     "style": style[d]
                 }
             };
-            rec[col] = columns[params[d]].caption + ' : ' + keys[i];
+            rec[col] = columns[params[d]].caption + ' : ' + (keys[i] ? keys[i] : 'Не указано');
             resw2.push(rec);
         }
         d++;
@@ -1124,6 +1123,177 @@ export class Grid extends component.Component {
 
 }
 
+
+export class Grid extends BasicGrid {
+    setHandlers() {
+        super.setHandlers();
+        if (this.pagination && !this.hierachy) {
+            //щит для пагинации
+            this.handlers.onRequest = function (event) {
+                console.log(event.postData);
+                event.url = config.testUrl;
+                let limit = event.postData.limit;
+                let offset = event.postData.offset;
+                let sort = event.postData.sort;
+                let orderBy = [];
+                for (let i in sort) {
+                    orderBy.push({
+                        field: sort[i].field,
+                        sort: sort[i].direction.toUpperCase()
+                    })
+                }
+                event.postData = {
+                    path: this.path,
+                    action: 'getContent',
+                    data: {
+                        type: 'gridRecords',
+                        limit: limit,
+                        offset: offset,
+                        orderBy: orderBy
+                    }
+                }
+
+            }.bind(this)
+            this.handlers.parser = function (responseText) {
+                responseText = responseText.toString();
+                responseText = JSON.parse(responseText);
+                responseText = new tools.Unzipper(responseText).unzippedData;
+                if (responseText.status === 'success') {
+                    responseText = responseText.message;
+                    let recs = this.makeRecords(responseText.content[0].records, responseText.content[0].fk);
+                    return recs;
+                } else {
+                    w2alert(responseText.message);
+                    return [];
+                }
+            }.bind(this);
+        }
+        this.handlers.onSearch = function (event) {
+            if (/*this.pagination*/true) {
+                //был ли сброс поиска
+                if (!event.reset) {
+                    event.preventDefault();
+                    w2ui[this.id].searchClose();
+                    //нужен адрес и сообщение
+                    let filter = {};
+                    let relation = {
+                        or: [],
+                        and: []
+                    };
+                    let actions = {
+                        contains: 'consist',
+                        is: 'equal',
+                        between: 'between',
+                        less: 'less',
+                        more: 'greater'
+                    };
+                    for (let i in event.searchData) {
+                        let nameCol = event.searchData[i].field.split('*').join('.');
+                        if (this.fk[nameCol] !== undefined) {
+                            nameCol += '.description';
+                        }
+                        let value = event.searchData[i].value;
+                        if (event.searchData[i].type === 'date') {
+                            if (typeof(event.searchData[i].value) !== 'string') {
+                                value = [];
+                                for (let j in event.searchData[i].value) {
+                                    value[j] = event.searchData[i].value[j];
+                                }
+                            } else {
+                                value = event.searchData[i].value
+                            }
+                            if (typeof(value) === 'object') {
+                                for (let j in value) {
+                                    value[j] = tools.utils.getISODate(value[j], '/');
+                                }
+                            } else {
+                                value = tools.utils.getISODate(value, '/');
+                            }
+                        }
+                        filter[nameCol] = {
+                            value: value,
+                            sign: actions[event.searchData[i].operator] || 'consist'
+                        }
+                        relation.or.push(nameCol);
+                    }
+                    //для табличных частей
+                    if (this.headID !== '') {
+                        filter[this.refCol] = {
+                            value: this.headID,
+                            sign: 'equal'
+                        }
+                        relation.and.push(this.refCol);
+                    }
+                    //отсылаем запрос
+                    let searchQuery = new tools.AjaxSender({
+                        url: config.testUrl,
+                        msg: JSON.stringify({
+                            path: this.path,
+                            action: 'getContent',
+                            data: {
+                                type: 'gridRecords',
+                                filter: filter,
+                                relation: relation
+                            }
+                        }),
+                        before: function () {
+                            w2ui[this.id].lock('Поиск', true);
+                        }.bind(this)
+                    })
+                    //в случае успеха
+                    searchQuery.sendQuery()
+                        .then(
+                            response => {
+                                w2ui[this.id].unlock();
+                                if (this.recordsBS[0] === undefined) {
+                                    this.recordsBS = w2ui[this.id].records;
+                                }
+                                w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
+                                w2ui[this.id].searchData = [];
+                                for (let searchInd in event.searchData) {
+                                    if (/*event.searchData[searchInd].operator !== 'between'*/true) {
+                                        w2ui[this.id].searchData.push(event.searchData[searchInd]);
+                                    }
+                                }
+                                w2ui[this.id].localSearch();
+                                w2ui[this.id].refresh();
+                            },
+                            error => {
+                                w2ui[this.id].unlock();
+                                w2alert(error);
+                            });
+                }
+                else {
+                    if (w2ui[this.id].searchData.length === 0) return;
+                    if (this.pagination && !this.hierachy) {
+                        w2ui[this.id].reload();
+                    } else {
+                        w2ui[this.id].clear();
+                        w2ui[this.id].records = this.recordsBS;
+                    }
+                    w2ui[this.id].searchClose();
+                    w2ui[this.id].refresh();
+                }
+
+            }
+        }.bind(this);
+    }
+
+    makew2uiobject() {
+        let obj = super.makew2uiobject();
+        obj.onSearch = function (event) {
+            this.handlers.onSearch(event);
+        }.bind(this);
+        obj.onRequest = function (event) {
+            console.log(event, this.handlers.onRequest);
+            if (this.handlers.onRequest !== undefined) {
+                this.handlers.onRequest(event);
+            }
+        }.bind(this);
+        obj.parser = this.handlers.parser || "";
+        return obj;
+    }
+}
 /**
  * Класс для тестирования возможностей таблиц - скорее всего не работает((
  * @extends module:grid.Grid
