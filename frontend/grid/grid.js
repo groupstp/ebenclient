@@ -484,7 +484,6 @@ class BasicGrid extends component.Component {
     validateData(idsArr) {
         // получим объект w2ui по id Grid'a
         let w2grid = w2ui[this.id];
-        debugger;
         // для каждой записи
         for (let i = 0; i < idsArr.length; i++) {
             let id = idsArr[i];
@@ -495,7 +494,7 @@ class BasicGrid extends component.Component {
                 // булево значение не интересует так как по умолчанию оно всегда заполнено (не важно true или false)
                 if (columns[col].type === 'boolean') continue;
                 // если столбец обязательный тогда
-                if (this.isColumnRequired(col)){
+                if (this.isColumnRequired(col)) {
                     // получить значение в ячейке
                     let value = this.getCellValue(w2grid.get(id), col);
                     // если значение пустое тогда прерываем выполение и возвращаем ложь
@@ -617,17 +616,17 @@ class BasicGrid extends component.Component {
             }.bind(this),
             // событие нажатия на кнопку сохранить в тулбаре ТЧ
             onSave: function (event) {
-
                 // по нажатию на кнопку Сохранить в тулбаре ТЧ необходимо выполнить проверку заполненности данных и сформировать запрос на сервере
 
                 // отменить действие по умолчанию
                 event.preventDefault();
-                debugger;
+
                 // получить объект Grid по имени объекта w2ui
                 let grid = stpui[this.name];
+                let w2grid = this;
 
                 // получаем все измененные строки
-                let changesRecs = this.getChanges();
+                let changesRecs = w2grid.getChanges();
 
                 // образуем массив id для передачи в функцию validateData
                 let idsArr = changesRecs.map((item) => {
@@ -643,148 +642,43 @@ class BasicGrid extends component.Component {
                     return;
                 }
 
+                // определим массив запросов, для конечного callback'a
+                let requestsArr = [];
+
                 // если все обязательные данные заполнены то
+                // для каждой измененной строки формируем запрос к серверу на update
+                changesRecs.forEach((rec) => {
+                    let id = rec.recid;
+                    let request = twoBe.createRequest();
+                    // TODO Заменить get на update
+                    request.addParam('action', 'get').addParam('path', grid.path).addData('type', 'elementForm').addFilterParam(grid.PK, id)
+                        .addBefore(function () {
+                            grid.lock('Подождите...');
+                        })
+                        .addSuccess(function (data) {
+                            // убрать метки у изменнных ячеек
+                            w2grid.mergeRecordChanges(id);
+                            // TODO Обновить recordsRaw
+                        })
+                        .addError(function (msg) {
+                            // выделить запись которую не удалось обновить
+                            w2grid.set(id, {w2ui: {style: "color : red"}});
+                            // снять выделение через 5 секунд
+                            setTimeout(() => {
+                                w2grid.set(id, {w2ui: {style: ""}});
+                            }, 5000);
+                        });
+                    requestsArr.push(request.send());
+                });
 
-                // для каждой измененной строки
+                // итоговый callback
+                Promise.all(requestsArr).then((data) => {
+                    grid.unlock();
+                }).catch((err) => {
+                    twoBe.showMessage(0, 'Ошибка при обновлении записей табличной части!');
+                    grid.unlock();
+                });
 
-                // формируем запрос к серверу на update
-
-                // задаем обработчик успешного выполнения
-
-                // убрать метки у изменнных ячеек
-                // TODO как изменить у конкретной ячейки а не у всех сразу?
-                // добавить в w2ui свой метод mergeRecordChanges() который делает тоже самое что и mergeChanges() только для одной строки
-
-                // изменить свойство recordsRaw
-
-                // задаем обработчик ошибки
-
-                // подсветить строку
-                // TODO как подсветить строку?
-                // w2ui.grid.set('2',{w2ui: {style : "color : red"}})
-
-                // конец цикла
-
-                // отправляем все запросы одновременно, чтобы иметь один общий callback, при отправке блокируем таблицу
-                // TODO нужно переделать класс Request на работу c promise
-
-                // задаем обработчик выполнения
-
-                // заблокировать таблицу
-
-                // задаем обработчик успешного выполнения
-
-                // разблокировать таблицу
-
-                // задаем обработчик ошибки
-
-                // разблокировать таблицу
-
-
-                // event.preventDefault();
-                //
-                // let w2grid = w2ui[this.id];
-                //
-                // let changedRecords = w2grid.getChanges();
-                // debugger;
-                //
-                // if (!changedRecords) return;
-                //
-                // let dataToUpdate = {};
-                // let grid = this;
-                //
-                // changedRecords.forEach((record) => {
-                //     for (let col in record) {
-                //         if (col !== 'recid') {
-                //             dataToUpdate[col] = record[col];
-                //         }
-                //     }
-                //
-                //     let url = twoBe.getDefaultParams().url;
-                //     let request = twoBe.createRequest();
-                //
-                //     request.addUrl(url).addParam('action', 'update').addParam('path', grid.path).addData('record', dataToUpdate).addFilterParam(grid.PK, record.recid).addBefore(function () {
-                //         grid.lock('Жди');
-                //     }).addSuccess(function (data) {
-                //         grid.unlock();
-                //         // TODO Обновить recordsRaw
-                //         w2grid.mergeChanges();
-                //     }).addError(function (msg) {
-                //         grid.unlock();
-                //         twoBe.showMessage(0, msg);
-                //     }).send();
-                // });
-
-                // var path = button.getProperties().path;
-                // var popup = twoBe.getById('currentPopup');
-                // var form = twoBe.getById(path + '-form');
-                // var data = form.getData();
-                // if (data === null) return;
-                // var action = '';
-                // var PK = form.getProperties().PK;
-                // if (form.getField(PK).getValue() === '') {
-                //     action = 'add';
-                //     delete data[PK];
-                // } else {
-                //     action = 'update';
-                //     var id = data[PK];
-                //     delete data[PK];
-                // }
-                // for (let field in data) {
-                //     if (data[field] === "" || data[field] === null) {
-                //         delete data[field];
-                //     }
-                // }
-                //
-                // if (data != null) {
-                //     var url = twoBe.getDefaultParams().url;
-                //     var request = twoBe.createRequest();
-                //     if (action === 'update') {
-                //         request.addFilterParam(PK, id);
-                //     }
-                //     request.addUrl(url).addParam('action', action).addParam('path', path).addData('record', data).addBefore(function () {
-                //         popup.lock('Жди')
-                //     }).addSuccess(function (data) {
-                //         var param = button.getProperties().param;
-                //         if (param && param === 'close') {
-                //             popup.close();
-                //             popup.unlock();
-                //         }
-                //         else {
-                //             // для завки показываем кнопку активировать
-                //             var btns = popup.children;
-                //             for (var i = 0; i < btns.length; i++) {
-                //                 var btn = btns[i];
-                //                 if (btn.id === 'ref-query-button-elementForm-activate') {
-                //                     btn.show();
-                //                     break;
-                //                 }
-                //             }
-                //             popup.unlock();
-                //         }
-                //         var table = twoBe.getById(path + '-grid-listForm');
-                //         if (table === undefined) table = twoBe.getById(path + '-grid-chooseForm');
-                //         form.getField('ID').setValue(data.content[0].records[0].ID);
-                //         if (action === 'add') {
-                //             table.addRecord(data);
-                //             var refGrids = twoBe.getGridRefs(path);
-                //             for (var ref in refGrids) {
-                //                 refGrids[ref].getProperties().headID = data.content[0].records[0].ID;
-                //             }
-                //         }
-                //         if (action === 'update') {
-                //             table.updateRecord(data);
-                //         }
-                //     }).addError(function (msg) {
-                //         twoBe.showMessage(0, msg)
-                //     }).send();
-                // }
-
-            },
-            // события при редактировании в таблице
-            onChange: function (event) {
-            },
-            onRestore: function (event) {
             },
             onSearch: function (event) {
                 if (/*this.pagination*/true) {

@@ -5678,6 +5678,31 @@ w2utils.event = {
             this.refresh();
         },
 
+        // Дюков 26.09.2017 STP аналог функции mergeChanges для обновления одной записи с указанным id
+        mergeRecordChanges: function(id){
+            var changes = this.getChanges();
+            for (var c = 0; c < changes.length; c++) {
+                // пропускаем все другие записи
+                if (changes[c].recid !== id) continue;
+                var record = this.get(changes[c].recid);
+                for (var s in changes[c]) {
+                    if (s == 'recid') continue; // do not allow to change recid
+                    if (typeof changes[c][s] === "object") changes[c][s] = changes[c][s].text;
+                    try {
+                        if (s.indexOf('.') != -1) {
+                            eval("record['" + s.replace(/\./g, "']['") + "'] = changes[c][s]")
+                        } else {
+                            record[s] = changes[c][s];
+                        }
+                    } catch (e) {
+                        console.log('ERROR: Cannot merge. ', e.message || '', e);
+                    }
+                    if (record.w2ui) delete record.w2ui.changes;
+                }
+            }
+            this.refresh();
+        },
+
         // ===================================================
         // --  Action Handlers
 

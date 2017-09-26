@@ -190,7 +190,7 @@ class Request {
          * @member
          * @type {string}
          */
-        this.url = '';
+        this.url = twoBe.getDefaultParams().url || '';
         /**
          * Тело запроса
          * @member
@@ -389,14 +389,16 @@ class Request {
             before: function () {
                 this.before();
             }.bind(this)
-        })
-        request.sendQuery()
+        });
+        return request.sendQuery()
             .then(
                 response => {
                     this.success(response);
+                    return Promise.resolve();
                 },
                 errorResponse => {
                     this.error(errorResponse);
+                    return Promise.reject();
                 }
             )
     }
