@@ -478,6 +478,37 @@ class BasicGrid extends component.Component {
     }
 
     /**
+     * Функция получает на вход массив id записей, возвращает true если все обязательные поля заполнены и false если есть пустые обязательные поля
+     * @param idsArr - входящий массив id
+     */
+    validateData(idsArr) {
+        // получим объект w2ui по id Grid'a
+        let w2grid = w2ui[this.id];
+        debugger;
+        // для каждой записи
+        for (let i = 0; i < idsArr.length; i++) {
+            let id = idsArr[i];
+            //let record = this.recordsRaw[id];
+            let columns = this.columnsRaw;
+            // для каждого столбца
+            for (let col in columns) {
+                // булево значение не интересует так как по умолчанию оно всегда заполнено (не важно true или false)
+                if (columns[col].type === 'boolean') continue;
+                // если столбец обязательный тогда
+                if (this.isColumnRequired(col)){
+                    // получить значение в ячейке
+                    let value = this.getCellValue(w2grid.get(id), col);
+                    // если значение пустое тогда прерываем выполение и возвращаем ложь
+                    if (this.isCellEmpty(value)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
      * Делаем объект для в2уи
      * @returns {{name: *, show: {toolbar: boolean, footer: boolean}, recid: string, columns: Array, records: Array, toolbar: {items: Array, onClick: (function(this:grid))}, onMenuClick: (function()), menu: Array}}
      * @private
@@ -586,39 +617,103 @@ class BasicGrid extends component.Component {
             }.bind(this),
             // событие нажатия на кнопку сохранить в тулбаре ТЧ
             onSave: function (event) {
+
+                // по нажатию на кнопку Сохранить в тулбаре ТЧ необходимо выполнить проверку заполненности данных и сформировать запрос на сервере
+
+                // отменить действие по умолчанию
                 event.preventDefault();
-
-                let w2grid = w2ui[this.id];
-
-                let changedRecords = w2grid.getChanges();
                 debugger;
+                // получить объект Grid по имени объекта w2ui
+                let grid = stpui[this.name];
 
-                if (!changedRecords) return;
+                // получаем все измененные строки
+                let changesRecs = this.getChanges();
 
-                let dataToUpdate = {};
-                let grid = this;
-
-                changedRecords.forEach((record) => {
-                    for (let col in record) {
-                        if (col !== 'recid') {
-                            dataToUpdate[col] = record[col];
-                        }
-                    }
-
-                    let url = twoBe.getDefaultParams().url;
-                    let request = twoBe.createRequest();
-
-                    request.addUrl(url).addParam('action', 'update').addParam('path', grid.path).addData('record', dataToUpdate).addFilterParam(grid.PK, record.recid).addBefore(function () {
-                        grid.lock('Жди');
-                    }).addSuccess(function (data) {
-                        grid.unlock();
-                        // TODO Обновить recordsRaw
-                        w2grid.mergeChanges();
-                    }).addError(function (msg) {
-                        grid.unlock();
-                        twoBe.showMessage(0, msg);
-                    }).send();
+                // образуем массив id для передачи в функцию validateData
+                let idsArr = changesRecs.map((item) => {
+                    return item.recid;
                 });
+
+                // проверяем на заполненность
+                let dataIsValid = grid.validateData(idsArr);
+
+                // если какие-то данные не заполнены уведомляем пользователя и прекращаем выполнение
+                if (!dataIsValid) {
+                    twoBe.showMessage(0, 'Не все обязательные поля заполнены! Данные не могут быть сохранены!');
+                    return;
+                }
+
+                // если все обязательные данные заполнены то
+
+                // для каждой измененной строки
+
+                // формируем запрос к серверу на update
+
+                // задаем обработчик успешного выполнения
+
+                // убрать метки у изменнных ячеек
+                // TODO как изменить у конкретной ячейки а не у всех сразу?
+                // добавить в w2ui свой метод mergeRecordChanges() который делает тоже самое что и mergeChanges() только для одной строки
+
+                // изменить свойство recordsRaw
+
+                // задаем обработчик ошибки
+
+                // подсветить строку
+                // TODO как подсветить строку?
+                // w2ui.grid.set('2',{w2ui: {style : "color : red"}})
+
+                // конец цикла
+
+                // отправляем все запросы одновременно, чтобы иметь один общий callback, при отправке блокируем таблицу
+                // TODO нужно переделать класс Request на работу c promise
+
+                // задаем обработчик выполнения
+
+                // заблокировать таблицу
+
+                // задаем обработчик успешного выполнения
+
+                // разблокировать таблицу
+
+                // задаем обработчик ошибки
+
+                // разблокировать таблицу
+
+
+                // event.preventDefault();
+                //
+                // let w2grid = w2ui[this.id];
+                //
+                // let changedRecords = w2grid.getChanges();
+                // debugger;
+                //
+                // if (!changedRecords) return;
+                //
+                // let dataToUpdate = {};
+                // let grid = this;
+                //
+                // changedRecords.forEach((record) => {
+                //     for (let col in record) {
+                //         if (col !== 'recid') {
+                //             dataToUpdate[col] = record[col];
+                //         }
+                //     }
+                //
+                //     let url = twoBe.getDefaultParams().url;
+                //     let request = twoBe.createRequest();
+                //
+                //     request.addUrl(url).addParam('action', 'update').addParam('path', grid.path).addData('record', dataToUpdate).addFilterParam(grid.PK, record.recid).addBefore(function () {
+                //         grid.lock('Жди');
+                //     }).addSuccess(function (data) {
+                //         grid.unlock();
+                //         // TODO Обновить recordsRaw
+                //         w2grid.mergeChanges();
+                //     }).addError(function (msg) {
+                //         grid.unlock();
+                //         twoBe.showMessage(0, msg);
+                //     }).send();
+                // });
 
                 // var path = button.getProperties().path;
                 // var popup = twoBe.getById('currentPopup');
@@ -685,7 +780,7 @@ class BasicGrid extends component.Component {
                 //     }).send();
                 // }
 
-            }.bind(this),
+            },
             // события при редактировании в таблице
             onChange: function (event) {
             },
@@ -965,13 +1060,13 @@ class BasicGrid extends component.Component {
     }
 
     getCellValue(record, columnName) {
-        let description;
+        let value;
         if (record.w2ui && record.w2ui.changes) {
-            description = (record.w2ui.changes[columnName] !== undefined) ? record.w2ui.changes[columnName] : record[columnName] || '';
+            value = (record.w2ui.changes[columnName] !== undefined) ? record.w2ui.changes[columnName] : record[columnName] || '';
         } else {
-            description = record[columnName] || '';
+            value = record[columnName] || '';
         }
-        return description;
+        return value;
     }
 
     /**
@@ -1090,7 +1185,10 @@ class BasicGrid extends component.Component {
             },
             'date': function (record, index, column_index) {
                 let fData = '';
-                let ufData = record[this.columns[column_index].field];
+                let stpGrid = stpui[this.name];
+                //let ufData = record[this.columns[column_index].field];
+                let columnName = this.columns[column_index].field;
+                let ufData = stpGrid.getCellValue(record, columnName);
                 fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
                 return fData;
             }
