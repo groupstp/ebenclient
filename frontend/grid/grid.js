@@ -983,11 +983,42 @@ class BasicGrid extends component.Component {
         return '<div class = "required-cell"></div>';
     }
 
+    // функция изменяет стиль ячейки(добавляет красное подчеркивние) значение в которой обязательное но пустое, если значение не пустое
+    // отрабатывает функция customRenderFunction, в качестве customRenderFunction можно передать строку форматирования для w2ui
+    _renderRecordCell(record, index, column_index, customRenderFunction) {
+
+        let columnName = this.columns[column_index].field;
+        let stpObject = stpui[this.name];
+        let cellValue = stpObject.getCellValue(record, columnName);
+
+        // если поле обязательное и пустое то стандартно его подсветим
+        if (stpObject.isColumnRequired(columnName) && stpObject.isCellEmpty(cellValue)) {
+            return stpObject._highlightEmtyRequiredCell();
+        }
+
+        // если поле необязательное и для его типа определена кастомная функция, то вызовем ее
+        if (customRenderFunction) {
+            //if (typeof customRenderFunction === 'function') {
+            //return customRenderFunction.apply(this, [record, index, column_index]);
+            //} else if (typeof customRenderFunction === 'string') {
+            // ВНИМАНИЕ!!! Грязное вторжение в работу w2ui!!! Не знаю как сделать по другому, чтобы форматировалось как надо!
+            //this.columns[column_index].render = customRenderFunction;
+            //}
+            return customRenderFunction.apply(this, [record, index, column_index]);
+        } else {
+            return cellValue;
+        }
+
+    }
+
     /**
      * Делаем колонки
      * @returns {Array} - массив колонок
      */
     makeColumns() {
+
+        let grid = this;
+
         window.stpui.showFiles = function (recid, col, index, column_index, gridID) {
             /*console.log(recid, col);
              console.log(w2ui[this.id].getCellHTML(index, column_index));
@@ -1027,34 +1058,6 @@ class BasicGrid extends component.Component {
                 grid.unlock();
             }).addCacheKey(path + type).send();
         };
-
-        // функция изменяет стиль ячейки(добавляет красное подчеркивние) значение в которой обязательное но пустое, если значение не пустое
-        // отрабатывает функция customRenderFunction, в качестве customRenderFunction можно передать строку форматирования для w2ui
-        function renderRecordCell(record, index, column_index, customRenderFunction) {
-
-            let columnName = this.columns[column_index].field;
-            let stpObject = stpui[this.name];
-            let cellValue = stpObject.getCellValue(record, columnName);
-
-            // если поле обязательное и пустое то стандартно его подсветим
-            if (stpObject.isColumnRequired(columnName) && stpObject.isCellEmpty(cellValue)) {
-                return stpObject._highlightEmtyRequiredCell();
-            }
-
-            // если поле необязательное и для его типа определена кастомная функция, то вызовем ее
-            if (customRenderFunction) {
-                //if (typeof customRenderFunction === 'function') {
-                //return customRenderFunction.apply(this, [record, index, column_index]);
-                //} else if (typeof customRenderFunction === 'string') {
-                // ВНИМАНИЕ!!! Грязное вторжение в работу w2ui!!! Не знаю как сделать по другому, чтобы форматировалось как надо!
-                //this.columns[column_index].render = customRenderFunction;
-                //}
-                return customRenderFunction.apply(this, [record, index, column_index]);
-            } else {
-                return cellValue;
-            }
-
-        }
 
         // массив кастомных рендер функций
         let renders = {
@@ -1145,7 +1148,7 @@ class BasicGrid extends component.Component {
                 // функция рендера есть для каждой ячейки(кроме булева значения так как для них всегда должны показываться чекбоксы), это нужно для того чтобы подсвечивать незаполненные обязательные ячейки при
                 // редактировании строк в ТЧ
                 options.render = function (record, index, column_index) {
-                    let renderedValue = renderRecordCell.apply(this, [record, index, column_index, customRenderFunction]);
+                    let renderedValue = grid._renderRecordCell.apply(this, [record, index, column_index, customRenderFunction]);
                     return renderedValue;
                 };
             }
