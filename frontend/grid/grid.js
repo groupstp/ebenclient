@@ -14,6 +14,7 @@ import {config} from '../config/config.js';
 
 //подключаем стили
 import './grid.css';
+
 /**
  * @classdesc Класс представляет собой компонент таблицы
  * @extends module:component.Component
@@ -491,7 +492,8 @@ class BasicGrid extends component.Component {
             show: {
                 toolbar: true,
                 footer: true,
-                selectColumn: this.showSelectColumn
+                selectColumn: this.showSelectColumn,
+                toolbarSave: true
             },
             columns: this.makeColumns(),
             records: this.makeRecords(),
@@ -582,6 +584,113 @@ class BasicGrid extends component.Component {
                     this.handlers.onRequest(event);
                 }
             }.bind(this),
+            // событие нажатия на кнопку сохранить в тулбаре ТЧ
+            onSave: function (event) {
+                event.preventDefault();
+
+                let w2grid = w2ui[this.id];
+
+                let changedRecords = w2grid.getChanges();
+                debugger;
+
+                if (!changedRecords) return;
+
+                let dataToUpdate = {};
+                let grid = this;
+
+                changedRecords.forEach((record) => {
+                    for (let col in record) {
+                        if (col !== 'recid') {
+                            dataToUpdate[col] = record[col];
+                        }
+                    }
+
+                    let url = twoBe.getDefaultParams().url;
+                    let request = twoBe.createRequest();
+
+                    request.addUrl(url).addParam('action', 'update').addParam('path', grid.path).addData('record', dataToUpdate).addFilterParam(grid.PK, record.recid).addBefore(function () {
+                        grid.lock('Жди');
+                    }).addSuccess(function (data) {
+                        grid.unlock();
+                        // TODO Обновить recordsRaw
+                        w2grid.mergeChanges();
+                    }).addError(function (msg) {
+                        grid.unlock();
+                        twoBe.showMessage(0, msg);
+                    }).send();
+                });
+
+                // var path = button.getProperties().path;
+                // var popup = twoBe.getById('currentPopup');
+                // var form = twoBe.getById(path + '-form');
+                // var data = form.getData();
+                // if (data === null) return;
+                // var action = '';
+                // var PK = form.getProperties().PK;
+                // if (form.getField(PK).getValue() === '') {
+                //     action = 'add';
+                //     delete data[PK];
+                // } else {
+                //     action = 'update';
+                //     var id = data[PK];
+                //     delete data[PK];
+                // }
+                // for (let field in data) {
+                //     if (data[field] === "" || data[field] === null) {
+                //         delete data[field];
+                //     }
+                // }
+                //
+                // if (data != null) {
+                //     var url = twoBe.getDefaultParams().url;
+                //     var request = twoBe.createRequest();
+                //     if (action === 'update') {
+                //         request.addFilterParam(PK, id);
+                //     }
+                //     request.addUrl(url).addParam('action', action).addParam('path', path).addData('record', data).addBefore(function () {
+                //         popup.lock('Жди')
+                //     }).addSuccess(function (data) {
+                //         var param = button.getProperties().param;
+                //         if (param && param === 'close') {
+                //             popup.close();
+                //             popup.unlock();
+                //         }
+                //         else {
+                //             // для завки показываем кнопку активировать
+                //             var btns = popup.children;
+                //             for (var i = 0; i < btns.length; i++) {
+                //                 var btn = btns[i];
+                //                 if (btn.id === 'ref-query-button-elementForm-activate') {
+                //                     btn.show();
+                //                     break;
+                //                 }
+                //             }
+                //             popup.unlock();
+                //         }
+                //         var table = twoBe.getById(path + '-grid-listForm');
+                //         if (table === undefined) table = twoBe.getById(path + '-grid-chooseForm');
+                //         form.getField('ID').setValue(data.content[0].records[0].ID);
+                //         if (action === 'add') {
+                //             table.addRecord(data);
+                //             var refGrids = twoBe.getGridRefs(path);
+                //             for (var ref in refGrids) {
+                //                 refGrids[ref].getProperties().headID = data.content[0].records[0].ID;
+                //             }
+                //         }
+                //         if (action === 'update') {
+                //             table.updateRecord(data);
+                //         }
+                //     }).addError(function (msg) {
+                //         twoBe.showMessage(0, msg)
+                //     }).send();
+                // }
+
+            }.bind(this),
+            // события при редактировании в таблице
+            onChange: function (event) {
+            },
+            onRestore: function (event) {
+            },
             onSearch: function (event) {
                 if (/*this.pagination*/true) {
                     //был ли сброс поиска
@@ -837,6 +946,44 @@ class BasicGrid extends component.Component {
     }
 
     /**
+     * Проверяет является ли колонка обязательной
+     * @param columnName
+     * @returns {boolean|*}
+     */
+    isColumnRequired(columnName) {
+        return this.columnsRaw[columnName].required || false;
+    }
+
+    /**
+     * Проверяет является ли колонка пустой
+     * @param record
+     * @param columnName
+     * @returns {boolean}
+     */
+    isCellEmpty(description) {
+        return !description;
+    }
+
+    getCellValue(record, columnName) {
+        let description;
+        if (record.w2ui && record.w2ui.changes) {
+            description = (record.w2ui.changes[columnName] !== undefined) ? record.w2ui.changes[columnName] : record[columnName] || '';
+        } else {
+            description = record[columnName] || '';
+        }
+        return description;
+    }
+
+    /**
+     * Возвращает HTML для подсветки пустой обязательной колонки
+     * @returns {string}
+     * @private
+     */
+    _highlightEmtyRequiredCell() {
+        return '<div class = "required-cell"></div>';
+    }
+
+    /**
      * Делаем колонки
      * @returns {Array} - массив колонок
      */
@@ -880,14 +1027,44 @@ class BasicGrid extends component.Component {
                 grid.unlock();
             }).addCacheKey(path + type).send();
         };
+
+        // функция изменяет стиль ячейки(добавляет красное подчеркивние) значение в которой обязательное но пустое, если значение не пустое
+        // отрабатывает функция customRenderFunction, в качестве customRenderFunction можно передать строку форматирования для w2ui
+        function renderRecordCell(record, index, column_index, customRenderFunction) {
+
+            let columnName = this.columns[column_index].field;
+            let stpObject = stpui[this.name];
+            let cellValue = stpObject.getCellValue(record, columnName);
+
+            // если поле обязательное и пустое то стандартно его подсветим
+            if (stpObject.isColumnRequired(columnName) && stpObject.isCellEmpty(cellValue)) {
+                return stpObject._highlightEmtyRequiredCell();
+            }
+
+            // если поле необязательное и для его типа определена кастомная функция, то вызовем ее
+            if (customRenderFunction) {
+                //if (typeof customRenderFunction === 'function') {
+                //return customRenderFunction.apply(this, [record, index, column_index]);
+                //} else if (typeof customRenderFunction === 'string') {
+                // ВНИМАНИЕ!!! Грязное вторжение в работу w2ui!!! Не знаю как сделать по другому, чтобы форматировалось как надо!
+                //this.columns[column_index].render = customRenderFunction;
+                //}
+                return customRenderFunction.apply(this, [record, index, column_index]);
+            } else {
+                return cellValue;
+            }
+
+        }
+
+        // массив кастомных рендер функций
         let renders = {
             "files": function (record, index, column_index) {
                 if (record[this.columns[column_index].field] === undefined || record[this.columns[column_index].field] === null || record[this.columns[column_index].field].length === 0) {
                     return ('Нет файлов');
                 } else {
                     return ('<button onclick=stpui.showFiles("' + record.recid
-                    + '","' + this.columns[column_index].field + '",' + index
-                    + ',' + column_index + ',' + this.name + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
+                        + '","' + this.columns[column_index].field + '",' + index
+                        + ',' + column_index + ',' + this.name + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
                 }
             },
             "reference": function (record, index, column_index) {
@@ -902,31 +1079,46 @@ class BasicGrid extends component.Component {
                 fData = w2utils.formatDateTime(ufData, 'dd-mm-yyyy|h:m');
                 return fData;
             },
-            'float': 'float:2',
-            'date': /*function (record, index, column_index) {
-             let fData = '';
-             let ufData = record[this.columns[column_index].field];
-             fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
-             return fData;
-             },*/ 'date:dd-mm-yyyy',
             'boolean': function (record, index, column_index) {
                 let fData = '';
                 let ufData = record[this.columns[column_index].field];
                 fData = (ufData ? 'да' : 'нет');
                 return fData;
+            },
+            'date': function (record, index, column_index) {
+                let fData = '';
+                let ufData = record[this.columns[column_index].field];
+                fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
+                return fData;
             }
-        }
+            /*'float': 'float:2',
+            , 'date:dd-mm-yyyy',
+
+            /*,'date:dd-mm-yyyy'*/
+            // TODO для редактирования в строке
+            // 'boolean': function (record, index, column_index) {
+            //     let fData = '';
+            //     let ufData = record[this.columns[column_index].field];
+            //     fData = (ufData ? 'да' : 'нет');
+            //     return fData;
+            // }
+        };
         let columns = [];
-        // для сопоставления типов сервера и w2ui
+
+        // объект для сопоставления типов сервера и w2ui
         let types = {
             'string': 'text',
             'date': 'date',
             'float': 'float',
-            'integer': 'int'
+            'integer': 'int',
+            'boolean': 'checkbox'
         };
         for (let i in this.columnsRaw) {
             let rawColumn = this.columnsRaw[i];
             if (rawColumn.field === this.PK) continue;
+
+            // Определим функцию которая рендерит значение ячейки в зависимости от типа ячейки
+            let customRenderFunction = renders[rawColumn.type];
 
             let options = {
                 field: rawColumn.field,
@@ -934,19 +1126,30 @@ class BasicGrid extends component.Component {
                 caption: rawColumn.caption,
                 sortable: rawColumn.sortable,
                 hidden: rawColumn.hidden,
-                render: renders[rawColumn.type] || null
+
             };
 
+            let serverType = rawColumn.type;
+
             // редактирование в таблице делаем только для ТЧ
-            if (this.refCol) {
-                // определим тип подставляемый в редактирование
-                let editableType = types[rawColumn.type];
-                if (editableType !== undefined) {
-                    options.editable = {
-                        type: editableType
-                    };
-                }
+            //if (this.refCol) {
+            // определим тип подставляемый в редактирование
+            let editableType = types[serverType];
+            if (editableType !== undefined) {
+                options.editable = {
+                    type: editableType
+                };
             }
+            // TODO по разному определять render функции для ТЧ или просто таблиц
+            if (serverType !== 'boolean') {
+                // функция рендера есть для каждой ячейки(кроме булева значения так как для них всегда должны показываться чекбоксы), это нужно для того чтобы подсвечивать незаполненные обязательные ячейки при
+                // редактировании строк в ТЧ
+                options.render = function (record, index, column_index) {
+                    let renderedValue = renderRecordCell.apply(this, [record, index, column_index, customRenderFunction]);
+                    return renderedValue;
+                };
+            }
+            //}
 
             columns.push(options)
         }
@@ -1294,6 +1497,7 @@ export class Grid extends BasicGrid {
         return obj;
     }
 }
+
 /**
  * Класс для тестирования возможностей таблиц - скорее всего не работает((
  * @extends module:grid.Grid

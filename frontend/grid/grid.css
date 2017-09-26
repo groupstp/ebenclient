@@ -2,3 +2,8 @@
 .link-in-grid{
     cursor : pointer;
 }
+
+.required-cell{
+    border-bottom: 1px dotted red;
+    padding : 10px !important;
+}

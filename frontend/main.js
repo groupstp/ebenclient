@@ -74,7 +74,7 @@ menu.on('menuItemSelected', event => {
     let detail = event.detail;
     if (detail.obj === 'ref' || detail.obj === 'doc' || detail.obj === 'st') {
         //let path = detail.obj + '-' + detail.name;
-        let path = 'ref-map';
+        let path = 'ref-inlineEditing4';
         if (detail.name === 'qu') {
             path = 'ref-query';
         } else if (detail.name === 'qs') {
