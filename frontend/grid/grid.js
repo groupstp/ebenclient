@@ -165,9 +165,9 @@ class BasicGrid extends component.Component {
             $(place).w2grid(objForW2);
         }
         // Для ТЧ загрузим значения ссылочных полей
-        // TODO сделать условия вызова только для ТЧ
-        this._getValuesFromServer();
-
+        if (this.refCol){
+            this._getValuesFromServer();
+        }
         if (this.showGroupCol && this.groupedBy) {
             let groupedRecs = this.groupBy(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
             w2ui[this.id].clear();
@@ -660,7 +660,6 @@ class BasicGrid extends component.Component {
                     delete data.recid;
                     debugger;
                     let request = twoBe.createRequest();
-                    // TODO Заменить get на update
                     request.addParam('action', 'update').addParam('path', grid.path).addData('record', data).addFilterParam(grid.PK, id)
                         .addBefore(function () {
                             grid.lock('Подождите...');
@@ -1039,7 +1038,6 @@ class BasicGrid extends component.Component {
         let columns = this.columnsRaw;
 
         for (let colName in columns) {
-            // TODO передавать свойство static c сервера
             let column = columns[colName];
             // если в колонке содержатся значения ссылочного типа и поле является перечислением (свойство static === true)
             debugger;
@@ -1236,17 +1234,9 @@ class BasicGrid extends component.Component {
                 fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
                 return fData;
             }
+        }
             /*'float': 'float:2',
-            , 'date:dd-mm-yyyy',
 
-            /*,'date:dd-mm-yyyy'*/
-            // TODO для редактирования в строке
-            // 'boolean': function (record, index, column_index) {
-            //     let fData = '';
-            //     let ufData = record[this.columns[column_index].field];
-            //     fData = (ufData ? 'да' : 'нет');
-            //     return fData;
-            // }
         };
         let columns = [];
 
@@ -1276,30 +1266,30 @@ class BasicGrid extends component.Component {
             };
             let serverType = rawColumn.type;
 
+            options.render = function (record, index, column_index) {
+                let renderedValue = grid._renderRecordCell.apply(this, [record, index, column_index, customRenderFunction]);
+                return renderedValue;
+            };
+
             // редактирование в таблице делаем только для ТЧ
-            //if (this.refCol) {
-            // определим тип подставляемый в редактирование
-            let editableType = types[serverType];
-            if (editableType !== undefined) {
-                options.editable = {
-                    type: editableType
-                };
-                // пока не редактируем поля ссылочного типа которые не являются перечислениями (static === true)
-                debugger;
-                if (serverType === 'reference' && !rawColumn.static){
-                    delete options.editable;
+            if (this.refCol) {
+                // определим тип подставляемый в редактирование
+                let editableType = types[serverType];
+                if (editableType !== undefined) {
+                    options.editable = {
+                        type: editableType
+                    };
+                    // пока не редактируем поля ссылочного типа которые не являются перечислениями (static === true)
+                    if (serverType === 'reference' && !rawColumn.static){
+                        delete options.editable;
+                    }
+                }
+                if (serverType === 'boolean') {
+                    // функция рендера есть для каждой ячейки(кроме булева значения так как для них всегда должны показываться чекбоксы), это нужно для того чтобы подсвечивать незаполненные обязательные ячейки при
+                    // редактировании строк в ТЧ
+                    delete options.render;
                 }
             }
-            // TODO по разному определять render функции для ТЧ или просто таблиц
-            if (serverType !== 'boolean') {
-                // функция рендера есть для каждой ячейки(кроме булева значения так как для них всегда должны показываться чекбоксы), это нужно для того чтобы подсвечивать незаполненные обязательные ячейки при
-                // редактировании строк в ТЧ
-                options.render = function (record, index, column_index) {
-                    let renderedValue = grid._renderRecordCell.apply(this, [record, index, column_index, customRenderFunction]);
-                    return renderedValue;
-                };
-            }
-            //}
 
             columns.push(options)
         }
