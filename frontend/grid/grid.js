@@ -1234,9 +1234,6 @@ class BasicGrid extends component.Component {
                 fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
                 return fData;
             }
-        }
-            /*'float': 'float:2',
-
         };
         let columns = [];
 
