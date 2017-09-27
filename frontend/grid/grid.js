@@ -164,6 +164,10 @@ class BasicGrid extends component.Component {
         } else {
             $(place).w2grid(objForW2);
         }
+        // Для ТЧ загрузим значения ссылочных полей
+        // TODO сделать условия вызова только для ТЧ
+        this._getValuesFromServer();
+
         if (this.showGroupCol && this.groupedBy) {
             let groupedRecs = this.groupBy(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
             w2ui[this.id].clear();
@@ -649,16 +653,32 @@ class BasicGrid extends component.Component {
                 // для каждой измененной строки формируем запрос к серверу на update
                 changesRecs.forEach((rec) => {
                     let id = rec.recid;
+
+                    // посылаем на сервер данные без id
+                    let data = {};
+                    $.extend(data, rec);
+                    delete data.recid;
+                    debugger;
                     let request = twoBe.createRequest();
                     // TODO Заменить get на update
-                    request.addParam('action', 'get').addParam('path', grid.path).addData('type', 'elementForm').addFilterParam(grid.PK, id)
+                    request.addParam('action', 'update').addParam('path', grid.path).addData('record', data).addFilterParam(grid.PK, id)
                         .addBefore(function () {
                             grid.lock('Подождите...');
                         })
                         .addSuccess(function (data) {
                             // убрать метки у изменнных ячеек
                             w2grid.mergeRecordChanges(id);
-                            // TODO Обновить recordsRaw
+                            // обновляем recordsRaw
+                            let updatedRecord = {};
+                            updatedRecord[id] = data.content[0].records[0];
+                            $.extend(grid.recordsRaw, updatedRecord);
+                            // выделить успешно обновленную запись
+                            w2grid.set(id, {w2ui: {style: "background-color : rgba(54, 191, 61, 0.65)"}});
+                            // снять выделение через 5 секунд
+                            setTimeout(() => {
+                                w2grid.set(id, {w2ui: {style: ""}});
+                            }, 5000);
+
                         })
                         .addError(function (msg) {
                             // выделить запись которую не удалось обновить
@@ -935,6 +955,126 @@ class BasicGrid extends component.Component {
     }
 
     /**
+     * Формирует ключ для кэша
+     * @returns {string}
+     * @private
+     */
+    _getCacheKey(link) {
+        return 'dropList-' + link;
+    }
+
+
+    /**
+     * Функция устанавливает список выбора для ссылочного типа в колонке ТЧ
+     * @param columnName - имя колонки
+     * @param valuesArr  - массив со значениями {id : ''; text : ''}
+     * @private
+     */
+    _setListData(columnName, valuesArr) {
+        let w2grid = w2ui[this.id];
+        if (w2grid) {
+            let w2col = w2grid.getColumn(columnName);
+            if (w2col.editable) {
+                w2col.editable.items = valuesArr;
+            }
+        }
+    }
+
+    /**
+     * Функция подготавливает данные пришедшие с сервера в формат, который понимает w2ui
+     * @param data - данные с сервера
+     * @returns {Array} - массив со значениями {id : ''; text : ''}
+     * @private
+     */
+    _prepareDataForList(columnName, data) {
+        let result = [];
+        let link = this.columnsRaw[columnName].link;
+        // делаем в попытке, потому что мало ли что нам придет в data
+        try {
+            let values = data.content[0].fk[link];
+            if (values) {
+                let ids = Object.keys(values);
+                ids.forEach((id) => {
+                    result.push({
+                        "id": id,
+                        "text": values[id]
+                    });
+                });
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
+
+        return result;
+
+    }
+
+    /**
+     * Дополняет свойство fk данными пришедшими с сервера для конкретной колонки
+     * @param columnName - имя колонки
+     * @param data - массив со значениями {id : ''; name : ''}
+     * @private
+     */
+    _extendsFKWithDataForList(columnName, data) {
+        let link = this.columnsRaw[columnName].link;
+        let values = data.content[0].fk[link];
+
+        if (!this.fk[columnName]) {
+            this.fk[columnName] = {};
+        }
+
+        for (let id in values) {
+            this.fk[columnName][id] = values[id];
+        }
+    }
+
+    /**
+     * Подгружает все данные для колонок типа reference со свойствам static === true, если их нет в кэше
+     * @private
+     */
+    _getValuesFromServer() {
+
+        // для каждой колоки
+        let columns = this.columnsRaw;
+
+        for (let colName in columns) {
+            // TODO передавать свойство static c сервера
+            let column = columns[colName];
+            // если в колонке содержатся значения ссылочного типа и поле является перечислением (свойство static === true)
+            if (column.type === 'reference') {
+                let link = column.link;
+                // создать запрос
+                let request = twoBe.createRequest();
+                let grid = this;
+                let cacheKey = this._getCacheKey(link);
+
+                request.addParam('action', 'getContent');
+                request.addParam('path', 'ref-' + link);
+                request.addData('type', 'getFieldValues');
+                request.addCacheKey(cacheKey);
+                request.addBefore(function () {
+                }).addSuccess(function (data) {
+                    // закэшировать данные
+                    twoBe.cacheData(data, cacheKey);
+                    grid._extendsFKWithDataForList(colName,data);
+                    // проверить существует ли еще объект w2ui
+                    let w2grid = w2ui[grid.id];
+                    if (w2grid) {
+                        // подготовить данные для подстановки в качестве значений выбора
+                        let suggestion = grid._prepareDataForList.call(grid, colName,data);
+                        // загрузить значения в колонку w2ui
+                        grid._setListData(colName,suggestion);
+                    }
+                }).addError(function (msg) {
+                    twoBe.showMessage(0, msg);
+                }).send();
+            }
+        }
+    }
+
+
+    /**
      * Проверяет является ли колонка обязательной
      * @param columnName
      * @returns {boolean|*}
@@ -1061,8 +1201,17 @@ class BasicGrid extends component.Component {
             },
             "reference": function (record, index, column_index) {
                 let columnName = this.columns[column_index].field;
-                let description = record[columnName] || '';
-                let cellContent = '<a class = "link-in-grid" onclick  = stpui.showEditForm("' + record.recid + '","' + columnName + '","' + this.name + '")>' + description + '</a>';
+                let stpGrid = stpui[this.name];
+                let value = stpGrid.getCellValue(record, columnName);
+                // нам может вернуться как текст который был в ячейке на момент редактирования, так и id выбранного элемента, чтобы определить поищем в fk
+                let valueFromFK = stpGrid.fk[columnName][value];
+                if (valueFromFK !== undefined) {
+                    // еще надо изменить recordsRaw, хотя не очень конечно выглядит менять их здесь
+                    stpGrid.recordsRaw[record.recid][columnName][0] = [value];
+                    // и изменим id на наименование
+                    value = valueFromFK;
+                }
+                let cellContent = '<a class = "link-in-grid" onclick  = stpui.showEditForm("' + record.recid + '","' + columnName + '","' + this.name + '")>' + value + '</a>';
                 return cellContent;
             },
             'timestamp': function (record, index, column_index) {
@@ -1106,7 +1255,8 @@ class BasicGrid extends component.Component {
             'date': 'date',
             'float': 'float',
             'integer': 'int',
-            'boolean': 'checkbox'
+            'boolean': 'checkbox',
+            'reference': 'select'
         };
         for (let i in this.columnsRaw) {
             let rawColumn = this.columnsRaw[i];
@@ -1123,7 +1273,6 @@ class BasicGrid extends component.Component {
                 hidden: rawColumn.hidden,
 
             };
-
             let serverType = rawColumn.type;
 
             // редактирование в таблице делаем только для ТЧ
