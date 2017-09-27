@@ -1042,7 +1042,8 @@ class BasicGrid extends component.Component {
             // TODO передавать свойство static c сервера
             let column = columns[colName];
             // если в колонке содержатся значения ссылочного типа и поле является перечислением (свойство static === true)
-            if (column.type === 'reference') {
+            debugger;
+            if (column.type === 'reference' && column.static) {
                 let link = column.link;
                 // создать запрос
                 let request = twoBe.createRequest();
@@ -1283,6 +1284,11 @@ class BasicGrid extends component.Component {
                 options.editable = {
                     type: editableType
                 };
+                // пока не редактируем поля ссылочного типа которые не являются перечислениями (static === true)
+                debugger;
+                if (serverType === 'reference' && !rawColumn.static){
+                    delete options.editable;
+                }
             }
             // TODO по разному определять render функции для ТЧ или просто таблиц
             if (serverType !== 'boolean') {
