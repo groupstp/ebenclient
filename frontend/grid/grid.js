@@ -1226,11 +1226,13 @@ class BasicGrid extends component.Component {
                 return fData;
             },
             'date': function (record, index, column_index) {
+                debugger;
                 let fData = '';
                 let stpGrid = stpui[this.name];
                 //let ufData = record[this.columns[column_index].field];
                 let columnName = this.columns[column_index].field;
                 let ufData = stpGrid.getCellValue(record, columnName);
+                ufData = stpGrid._preformatDate(ufData);
                 fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
                 return fData;
             }
@@ -1269,13 +1271,14 @@ class BasicGrid extends component.Component {
             };
 
             // редактирование в таблице делаем только для ТЧ
-            if (this.refCol) {
+            //if (this.refCol) {
                 // определим тип подставляемый в редактирование
                 let editableType = types[serverType];
                 if (editableType !== undefined) {
                     options.editable = {
                         type: editableType
                     };
+
                     // пока не редактируем поля ссылочного типа которые не являются перечислениями (static === true)
                     if (serverType === 'reference' && !rawColumn.static){
                         delete options.editable;
@@ -1286,14 +1289,37 @@ class BasicGrid extends component.Component {
                     // редактировании строк в ТЧ
                     delete options.render;
                 }
-            }
+            //}
 
             columns.push(options)
         }
-        console.log(columns);
+        //console.log(columns);
         return columns;
     }
 
+    /**
+     * Функция должны корректно обрабатывать дату формата dd-mm-yyyy и возвращать объект Date. Используется для передачи результата в w2ui.formatDate
+     * @param data - строковая дата в формате dd-mm-yyyy
+     * @private
+     */
+    _preformatDate(dateStr){
+        // проверить что переданный параметр это именно не пустая строка
+        if (typeof dateStr !== 'string' || dateStr === '') return dateStr;
+
+        // проверить что в переданной строке есть ровно 2 знака "-"
+        let arr = dateStr.split('-');
+        if (arr.length !== 3) return '';
+        // выделить день, месяц и год
+        let day = arr[0];
+        let month = arr[1] - 1;
+        let year = arr[2];
+
+        // сформировать дату
+        let date = new Date(year,month,day);
+        if (String(date) === 'Invalid Date') return '';
+
+        return date;
+    }
 
     /**
      * Формирование массива событий таблицы
