@@ -653,12 +653,9 @@ class BasicGrid extends component.Component {
                 // для каждой измененной строки формируем запрос к серверу на update
                 changesRecs.forEach((rec) => {
                     let id = rec.recid;
-
-                    // посылаем на сервер данные без id
-                    let data = {};
-                    $.extend(data, rec);
-                    delete data.recid;
+                    // подготовим данные для отправки на сервер
                     debugger;
+                    let data = grid._prepareRecordsForSaving(rec);
                     let request = twoBe.createRequest();
                     request.addParam('action', 'update').addParam('path', grid.path).addData('record', data).addFilterParam(grid.PK, id)
                         .addBefore(function () {
@@ -1072,6 +1069,30 @@ class BasicGrid extends component.Component {
         }
     }
 
+    /**
+     * Функция получает на вход объект, полученный вызовом w2ui getChanges() и изменяет значения на корректные для сервера. Возвращает новый объект.
+     * @param rec
+     * @private
+     */
+    _prepareRecordsForSaving(rec){
+        let columns = this.columnsRaw;
+        for (let colName in rec){
+            let colRaw = columns[colName];
+            if (!colRaw) continue;
+            // дату в формате dd-mm-yyyy пропустим через специальный форматер
+            if (colRaw.type === 'date'){
+                rec[colName] = this._preformatDate(rec[colName]);
+            }
+        }
+
+        // посылаем на сервер данные без id
+        let data = {};
+        $.extend(data, rec);
+        delete data.recid;
+
+        return data;
+    }
+
 
     /**
      * Проверяет является ли колонка обязательной
@@ -1226,7 +1247,6 @@ class BasicGrid extends component.Component {
                 return fData;
             },
             'date': function (record, index, column_index) {
-                debugger;
                 let fData = '';
                 let stpGrid = stpui[this.name];
                 //let ufData = record[this.columns[column_index].field];
