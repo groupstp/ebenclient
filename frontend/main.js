@@ -97,7 +97,6 @@ function buildMenu(menuData){
 
     //подписка на клик, роутер системы
     menu.on('menuItemSelected', event => {
-        debugger;
         let detail = event.detail;
         if (detail.obj === 'references' || detail.obj === 'stages') {
             let path = 'ref-' + detail.name;
