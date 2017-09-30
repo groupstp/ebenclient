@@ -32,7 +32,8 @@ export default class menuTopFixed {
         document.getElementById(this._place).innerHTML = tempalate({
             name: this._name,
             user: this._user,
-            routes: this._permissions
+            /*routes: this._permissions*/
+            routes: this.objInfo
         });
         //навешиваем обработчики событий
         document.getElementById(this._place).addEventListener('click', this._onMenuItemClick.bind(this));

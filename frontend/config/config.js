@@ -9,9 +9,9 @@
  */
 export let config = {
     name: 'test',
-    caption: 'ИС Того сего',
+    caption: 'Тестовая ИС',
     defaultUrl: 'https://gag.groupstp.ru:8809',
-    version: 'not your busy',
+    version: '0.0.1',
     authGoogle: true,
     mainPage: 'main.html',
     testUrl: "http://localhost:12345"

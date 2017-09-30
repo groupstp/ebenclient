@@ -60,45 +60,70 @@ if (localStorage[config.name + '_ObjInfo'] === undefined) {
     document.location.href = 'index.html';
 }
 let info = JSON.parse(localStorage[config.name + '_ObjInfo']);
-var menu = new menuTopFixed({
-    name: config.caption,
-    place: 'topMenu',
-    objInfo: info
-});
+
+// получает и строит верхнее навигационное меню
+getMenuInfoFromServer();
+
 let containerDiv = document.getElementById('container');
 //строим менеджер страниц
 let builder = new contentBuilder({box: containerDiv, onHome: buildMain});
 buildMain(builder);
-//подписка на клик, роутер системы
-menu.on('menuItemSelected', event => {
-    let detail = event.detail;
-    if (detail.obj === 'ref' || detail.obj === 'doc' || detail.obj === 'st') {
-        //let path = detail.obj + '-' + detail.name;
-        let path = 'ref-map';
-        if (detail.name === 'qu') {
-            path = 'ref-query';
-        } else if (detail.name === 'qs') {
-            path = 'ref-product';
-        } else if (detail.name === 'bg') {
-            path = 'ref-position'
-        } else if (detail.name === 'suu') {
-            path = 'ref-stages'
-        }
-        let page = builder.showPage(path, detail.caption);
-        //загружаем содержимое страницы с сервера
-        page.load();
-        //выделить пункт меню
-        menu.selectItem(path);
-    }
-    /*кнопка выход*/
-    if (detail.obj === 'exit') {
-        new tools.TokenAuth(config.name).exit('index.html');
-    }
-})
+
 
 function buildMain(builder) {
     let place = builder.showPage('main', 'Главная страница').generatedBox;
     place.innerHTML = '<div style = "text-align: center"><img src="mainPage.gif" alt=""></div><p><h1 align="center">Вы находитесь на главной странице</h1></p>';
+}
+
+// функция отправляет запрос к серверу на получение описания меню
+function getMenuInfoFromServer(){
+    twoBe.createRequest().addParam('action', 'getMenu').addBefore(function(){
+
+    }).addSuccess(function (data) {
+        buildMenu(data);
+    }).addError(function (msg) {
+        twoBe.showMessage(0,"Не удалось получить навигационное меню с сервера!");
+    }).send();
+
+}
+
+function buildMenu(menuData){
+
+    var menu = new menuTopFixed({
+        name: config.caption,
+        place: 'topMenu',
+        objInfo: menuData
+    });
+
+    //подписка на клик, роутер системы
+    menu.on('menuItemSelected', event => {
+        debugger;
+        let detail = event.detail;
+        if (detail.obj === 'references' || detail.obj === 'stages') {
+            let path = 'ref-' + detail.name;
+            //let path = detail.obj + '-' + detail.name;
+            // let path = 'ref-map';
+            // if (detail.name === 'qu') {
+            //     path = 'ref-query';
+            // } else if (detail.name === 'qs') {
+            //     path = 'ref-product';
+            // } else if (detail.name === 'bg') {
+            //     path = 'ref-position'
+            // } else if (detail.name === 'suu') {
+            //     path = 'ref-stages'
+            // }
+            let page = builder.showPage(path, detail.caption);
+            //загружаем содержимое страницы с сервера
+            page.load();
+            //выделить пункт меню
+            menu.selectItem(path);
+        }
+        /*кнопка выход*/
+        if (detail.obj === 'exit') {
+            new tools.TokenAuth(config.name).exit('index.html');
+        }
+    })
+
 }
 
 

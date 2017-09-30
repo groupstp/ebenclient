@@ -190,7 +190,7 @@ class Request {
          * @member
          * @type {string}
          */
-        this.url = '';
+        this.url = twoBe.getDefaultParams().url || '';
         /**
          * Тело запроса
          * @member
