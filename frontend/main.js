@@ -98,19 +98,15 @@ function buildMenu(menuData){
     //подписка на клик, роутер системы
     menu.on('menuItemSelected', event => {
         let detail = event.detail;
-        if (detail.obj === 'references' || detail.obj === 'stages') {
-            let path = 'ref-' + detail.name;
-            //let path = detail.obj + '-' + detail.name;
-            // let path = 'ref-map';
-            // if (detail.name === 'qu') {
-            //     path = 'ref-query';
-            // } else if (detail.name === 'qs') {
-            //     path = 'ref-product';
-            // } else if (detail.name === 'bg') {
-            //     path = 'ref-position'
-            // } else if (detail.name === 'suu') {
-            //     path = 'ref-stages'
-            // }
+        if (detail.obj === 'references' || detail.obj === 'stages' || detail.obj === 'scheme') {
+            let path;
+            if (detail.obj === 'scheme') {
+                path = 'ref-scheme';
+            } else {
+                path = 'ref-' + detail.name;
+            }
+
+
             let page = builder.showPage(path, detail.caption);
             //загружаем содержимое страницы с сервера
             page.load();

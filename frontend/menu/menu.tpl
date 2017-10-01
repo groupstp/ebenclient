@@ -26,7 +26,7 @@
                             </ul>
                         </li>
                     {{else}}
-                        <li id="topMenu_{{key}}" style="cursor: pointer" data-obj="{{key}} "data-sel=true data-cl=true><a>{{value.display}}</a>
+                        <li id="topMenu_{{key}}" style="cursor: pointer" data-obj="{{key}}" data-caption="{{value.display}}" data-sel=true data-cl=true><a>{{value.display}}</a>
                         </li>
                     {{/if}}
                 {{/each}}
