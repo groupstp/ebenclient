@@ -141,7 +141,7 @@ class BasicGrid extends component.Component {
         this.headID = attributes.properties.headID || '';
         this.refCol = attributes.properties.refCol || '';
         this.sortBy = attributes.properties.sortBy || [];
-        this.groupedBy = attributes.properties.groupBy || null;
+        this.groupedBy = attributes.properties.groupBy || [];
         this.showGroupCol = attributes.properties.showGroupCol || null;
         this.setButtons();
         this.setHandlers();

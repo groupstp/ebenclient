@@ -61,6 +61,7 @@ export class Form extends Component {
         this.PK = attributes.properties.PK || 'ID';
         this.refID = attributes.properties.refID || '';
         this.headID = attributes.properties.headID || '';
+        this.parentTableID = attributes.properties.parentTableID || '';
     }
 
     ////////// Private methods //////////
