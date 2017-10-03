@@ -12,8 +12,11 @@ import * as layout from '../layout'
 //подключаем конфиг
 import {config} from '../config/config.js';
 
+let isEqual = require('lodash').isEqual;
+
 //подключаем стили
 import './grid.css';
+
 /**
  * @classdesc Класс представляет собой компонент таблицы
  * @extends module:component.Component
@@ -143,6 +146,8 @@ class BasicGrid extends component.Component {
         this.sortBy = attributes.properties.sortBy || [];
         this.groupedBy = attributes.properties.groupBy || [];
         this.showGroupCol = attributes.properties.showGroupCol || null;
+        // объект который отвечает за сохранение пагинации при поиске
+        this.gridSearchParams = new GridSearchStructure();
         this.setButtons();
         this.setHandlers();
 
@@ -768,8 +773,8 @@ class BasicGrid extends component.Component {
                     return ('Нет файлов');
                 } else {
                     return ('<button onclick=stpui.showFiles("' + record.recid
-                    + '","' + this.columns[column_index].field + '",' + index
-                    + ',' + column_index + ',' + this.name + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
+                        + '","' + this.columns[column_index].field + '",' + index
+                        + ',' + column_index + ',' + this.name + ')><i class="fa fa-link" aria-hidden="true"></i> Файлы</button>');
                 }
             },
             "reference": function (record, index, column_index) {
@@ -990,8 +995,15 @@ export class Grid extends BasicGrid {
         if (this.pagination && !this.hierachy) {
             //щит для пагинации
             this.handlers.onRequest = function (event) {
-                console.log(event.postData);
+                debugger;
                 event.url = config.testUrl;
+                let requestParams = {
+                    path: this.path,
+                    action: 'getContent',
+                    data: {
+                        type: 'gridRecords'
+                    }
+                };
                 let limit = event.postData.limit;
                 let offset = event.postData.offset;
                 let sort = event.postData.sort;
@@ -1002,16 +1014,29 @@ export class Grid extends BasicGrid {
                         sort: sort[i].direction.toUpperCase()
                     })
                 }
-                event.postData = {
-                    path: this.path,
-                    action: 'getContent',
-                    data: {
-                        type: 'gridRecords',
-                        limit: limit,
-                        offset: offset,
-                        orderBy: orderBy
-                    }
+                if (this.gridSearchParams.isActive()) {
+                    let newOffset = this.gridSearchParams.getOffset() + this.limit;
+                    this.gridSearchParams.setOffset(newOffset);
+                    offset = newOffset;
+                    // при поиске сортировку не передаем, используем стандартную, которую нам предоставляет сервер
+                    orderBy = [];
                 }
+
+                // берем текущие данные поиска из таблицы
+                let w2grid = w2ui[this.id];
+                let searchData = {};
+                if (w2grid) {
+                    searchData = w2grid.searchData;
+                }
+                // преобразуем параметры поиска w2ui в формат, который понимает сервер
+                let paramsForServer = this._parseSearchData(searchData);
+
+                requestParams.data.limit = limit;
+                requestParams.data.offset = offset;
+                requestParams.data.orderBy = orderBy;
+                requestParams.data.filter = paramsForServer.filter;
+                requestParams.data.relation = paramsForServer.relation;
+                event.postData = requestParams;
 
             }.bind(this)
             this.handlers.parser = function (responseText) {
@@ -1029,114 +1054,148 @@ export class Grid extends BasicGrid {
             }.bind(this);
         }
         this.handlers.onSearch = function (event) {
-            if (/*this.pagination*/true) {
-                //был ли сброс поиска
-                if (!event.reset) {
-                    event.preventDefault();
-                    w2ui[this.id].searchClose();
-                    //нужен адрес и сообщение
-                    let filter = {};
-                    let relation = {
-                        or: [],
-                        and: []
-                    };
-                    let actions = {
-                        contains: 'consist',
-                        is: 'equal',
-                        between: 'between',
-                        less: 'less',
-                        more: 'greater'
-                    };
-                    for (let i in event.searchData) {
-                        let nameCol = event.searchData[i].field.split('*').join('.');
-                        if (this.fk[nameCol] !== undefined) {
-                            nameCol += '.description';
-                        }
-                        let value = event.searchData[i].value;
-                        if (event.searchData[i].type === 'date') {
-                            if (typeof(event.searchData[i].value) !== 'string') {
-                                value = [];
-                                for (let j in event.searchData[i].value) {
-                                    value[j] = event.searchData[i].value[j];
-                                }
-                            } else {
-                                value = event.searchData[i].value
-                            }
-                            if (typeof(value) === 'object') {
-                                for (let j in value) {
-                                    value[j] = tools.utils.getISODate(value[j], '/');
-                                }
-                            } else {
-                                value = tools.utils.getISODate(value, '/');
-                            }
-                        }
-                        filter[nameCol] = {
-                            value: value,
-                            sign: actions[event.searchData[i].operator] || 'consist'
-                        }
-                        relation.or.push(nameCol);
+            debugger;
+            //был ли сброс поиска
+            if (!event.reset) {
+                event.preventDefault();
+                w2ui[this.id].searchClose();
+                // преобразуем параметры поиска w2ui в формат, который понимает сервер
+                let paramsForServer = this._parseSearchData(event.searchData);
+
+                let queryOptions = {
+                    path: this.path,
+                    action: 'getContent',
+                    data: {
+                        type: 'gridRecords',
+                        filter: paramsForServer.filter,
+                        relation: paramsForServer.relation
                     }
-                    //для табличных частей
-                    if (this.headID !== '') {
-                        filter[this.refCol] = {
-                            value: this.headID,
-                            sign: 'equal'
-                        }
-                        relation.and.push(this.refCol);
+                };
+
+                if (this.pagination) {
+                    // если поиск изменился тогда нужно обнулить offset
+                    if (this.gridSearchParams.isSearchChanged(event.searchData)) {
+                        this.gridSearchParams.setOffset(0);
                     }
-                    //отсылаем запрос
-                    let searchQuery = new tools.AjaxSender({
-                        url: config.testUrl,
-                        msg: JSON.stringify({
-                            path: this.path,
-                            action: 'getContent',
-                            data: {
-                                type: 'gridRecords',
-                                filter: filter,
-                                relation: relation
-                            }
-                        }),
-                        before: function () {
-                            w2ui[this.id].lock('Поиск', true);
-                        }.bind(this)
-                    })
-                    //в случае успеха
-                    searchQuery.sendQuery()
-                        .then(
-                            response => {
-                                w2ui[this.id].unlock();
-                                if (this.recordsBS[0] === undefined) {
-                                    this.recordsBS = w2ui[this.id].records;
-                                }
-                                w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
-                                w2ui[this.id].searchData = [];
-                                for (let searchInd in event.searchData) {
-                                    if (/*event.searchData[searchInd].operator !== 'between'*/true) {
-                                        w2ui[this.id].searchData.push(event.searchData[searchInd]);
-                                    }
-                                }
-                                w2ui[this.id].localSearch();
-                                w2ui[this.id].refresh();
-                            },
-                            error => {
-                                w2ui[this.id].unlock();
-                                w2alert(error);
-                            });
-                }
-                else {
-                    if (w2ui[this.id].searchData.length === 0) return;
-                    if (this.pagination && !this.hierachy) {
-                        w2ui[this.id].reload();
-                    } else {
-                        w2ui[this.id].clear();
-                        w2ui[this.id].records = this.recordsBS;
-                    }
-                    w2ui[this.id].searchClose();
-                    w2ui[this.id].refresh();
+                    queryOptions.data.offset = this.gridSearchParams.getOffset();
+                    queryOptions.data.limit = this.limit;
+                    // отмечаем что поиск теперь активен
+                    this.gridSearchParams.setActive(true);
+                    this.gridSearchParams.setCurrentSearch(event.searchData);
                 }
 
+                //отсылаем запрос
+                let searchQuery = new tools.AjaxSender({
+                    url: config.testUrl,
+                    msg: JSON.stringify(queryOptions),
+                    before: function () {
+                        w2ui[this.id].lock('Поиск', true);
+                    }.bind(this)
+                })
+                //в случае успеха
+                searchQuery.sendQuery()
+                    .then(
+                        response => {
+                            w2ui[this.id].unlock();
+                            if (this.recordsBS[0] === undefined) {
+                                this.recordsBS = w2ui[this.id].records;
+                            }
+                            w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
+                            w2ui[this.id].searchData = [];
+                            for (let searchInd in event.searchData) {
+                                if (/*event.searchData[searchInd].operator !== 'between'*/true) {
+                                    w2ui[this.id].searchData.push(event.searchData[searchInd]);
+                                }
+                            }
+                            w2ui[this.id].localSearch();
+                            w2ui[this.id].refresh();
+                        },
+                        error => {
+                            w2ui[this.id].unlock();
+                            w2alert(error);
+                        });
+            }
+            else {
+                this.gridSearchParams.setDefaults();
+                if (w2ui[this.id].searchData.length === 0) return;
+                if (this.pagination && !this.hierachy) {
+                    w2ui[this.id].reload();
+                } else {
+                    w2ui[this.id].clear();
+                    w2ui[this.id].records = this.recordsBS;
+                }
+                w2ui[this.id].searchClose();
+                w2ui[this.id].refresh();
             }
         }.bind(this);
+    }
+
+    /**
+     * По объекту searchData функция формирует объект со свойствами filter и relation, которые понимает сервер
+     * @param searchData - свойство searchData из объекта w2ui.grid
+     * @returns {{filter: {}, relation: {and: Array, or: Array}}}
+     * @private
+     */
+    _parseSearchData(searchData) {
+
+        let result = {
+            filter: {},
+            relation: {
+                and: [],
+                or: []
+            }
+        };
+
+        let filter = result.filter;
+        let relation = result.relation;
+
+        let actions = {
+            contains: 'consist',
+            is: 'equal',
+            between: 'between',
+            less: 'less',
+            more: 'greater'
+        };
+        for (let i in searchData) {
+            let nameCol = searchData[i].field.split('*').join('.');
+            if (this.fk[nameCol] !== undefined) {
+                nameCol += '.description';
+            }
+            let value = searchData[i].value;
+            if (searchData[i].type === 'date') {
+                if (typeof(searchData[i].value) !== 'string') {
+                    value = [];
+                    for (let j in searchData[i].value) {
+                        value[j] = searchData[i].value[j];
+                    }
+                } else {
+                    value = searchData[i].value
+                }
+                if (typeof(value) === 'object') {
+                    for (let j in value) {
+                        value[j] = tools.utils.getISODate(value[j], '/');
+                    }
+                } else {
+                    value = tools.utils.getISODate(value, '/');
+                }
+            }
+            filter[nameCol] = {
+                value: value,
+                sign: actions[searchData[i].operator] || 'consist'
+            };
+            relation.or.push(nameCol);
+        }
+        //для табличных частей
+        if (this.headID !== '') {
+            filter[this.refCol] = {
+                value: this.headID,
+                sign: 'equal'
+            };
+            relation.and.push(this.refCol);
+        }
+
+        return result;
+
     }
 
     makew2uiobject() {
@@ -1154,6 +1213,7 @@ export class Grid extends BasicGrid {
         return obj;
     }
 }
+
 /**
  * Класс для тестирования возможностей таблиц - скорее всего не работает((
  * @extends module:grid.Grid
@@ -1328,4 +1388,57 @@ export class GridNew
             }.bind(this)
         }
     }
+}
+
+// класс для добавления в Grid и согласования работы пагинации при поиске
+class GridSearchStructure {
+    constructor() {
+        // отступ который надо делать при нажатии пагинации при активном поиске
+        this._offset = 0;
+        // признак того что поиск используется
+        this._active = false;
+        // информация о текущем поисковом отборе
+        this._currentSearch = {};
+    }
+
+    getOffset() {
+        return this._offset;
+    }
+
+    setOffset(value) {
+        this._offset = value;
+    }
+
+    getActive() {
+        return this._active;
+    }
+
+    setActive(value) {
+        this._active = value;
+    }
+
+    getCurrentSearch() {
+        return this._currentSearch;
+    }
+
+    setCurrentSearch(value) {
+        this._currentSearch = value;
+    }
+
+    isActive() {
+        return this.getActive();
+    }
+
+    isSearchChanged(searchStructure) {
+        // используем lodash
+        return !isEqual(this.getCurrentSearch(), searchStructure);
+    }
+
+    // Инициализирует внутрение структуры по поиску значениями по умолчанию
+    setDefaults() {
+        this.setOffset(0);
+        this.setActive(false);
+        this.setCurrentSearch({});
+    }
+
 }
