@@ -148,6 +148,8 @@ class BasicGrid extends component.Component {
         this.showGroupCol = attributes.properties.showGroupCol || null;
         // объект который отвечает за сохранение пагинации при поиске
         this.gridSearchParams = new GridSearchStructure();
+        // имя табличной части которую нужно разворачивать в форме списка
+        this.refToExpand = attributes.properties.refToExpand;
         this.setButtons();
         this.setHandlers();
 
@@ -854,7 +856,7 @@ class BasicGrid extends component.Component {
                     this.code[this.events[eventName]].call(this, param);
                 } catch (err) {
                     console.log('SERVER CODE ERROR:' + err);
-                    w2alert('Серевер вернул некорректное действие!');
+                    w2alert('Сервер вернул некорректное действие!');
                 }
 
             }.bind(this)
@@ -995,7 +997,6 @@ export class Grid extends BasicGrid {
         if (this.pagination && !this.hierachy) {
             //щит для пагинации
             this.handlers.onRequest = function (event) {
-                debugger;
                 event.url = config.testUrl;
                 let requestParams = {
                     path: this.path,
@@ -1054,7 +1055,6 @@ export class Grid extends BasicGrid {
             }.bind(this);
         }
         this.handlers.onSearch = function (event) {
-            debugger;
             //был ли сброс поиска
             if (!event.reset) {
                 event.preventDefault();
