@@ -36,7 +36,7 @@ export class Popup extends Component {
                 if (properties.elements[i].properties !== undefined) {
                     this.header = properties.elements[i].properties.caption || '';
                 } else {
-                    this.header = ''
+                    this.header = '';
                 }
 
             }
@@ -64,7 +64,6 @@ export class Popup extends Component {
     showNewModal() {
         this.getPlace().then(
             place => {
-                console.log(place.clientHeight)
                 let layoutLib = require('../layout/index.js');
                 let layout = new layoutLib.Layout({
                         box: place,

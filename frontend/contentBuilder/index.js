@@ -10,6 +10,7 @@ import * as componentLib from '../component';
 import * as tools from '../tools/index.js';
 //подключаем конфиг
 import {config} from '../config/config.js';
+import twoBe from "../twoBe/index";
 let layout = require('../layout/index.js');
 /**
  * @classdesc Данный класс представляет собой реализацию скелета одностраничного приложения
@@ -288,15 +289,23 @@ class Page {
             place: this.generatedBox,
             message: 'Загрузка'
         });
+
+        let options = {
+            action: 'get',
+            path: this.id,
+            data: {
+                type: 'listForm'
+            }
+        };
+        // Проверим кэш на наличие дополнительных полей которые надо вернуть с запросом
+        let cacheKey = 'customFieldsFor-' + this.id + '-grid-listForm';
+        let additionalFields = twoBe.getCache(cacheKey);
+        // И добавим их в данные запроса
+        if (additionalFields) options.data.additionalFields = additionalFields;
+
         let mainQuery = new tools.AjaxSender({
             url: config.testUrl,
-            msg: JSON.stringify({
-                action: 'get',
-                path: this.id,
-                data: {
-                    type: 'listForm'
-                }
-            }),
+            msg: JSON.stringify(options),
             before: function () {
                 locker.lock();
             }.bind(this)

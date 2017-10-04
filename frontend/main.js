@@ -61,6 +61,8 @@ w2utils.locale(ruLocale);
 // }
 // let info = JSON.parse(localStorage[config.name + '_ObjInfo']);
 
+localStorage.clear();
+
 // получает и строит верхнее навигационное меню
 getMenuInfoFromServer();
 
