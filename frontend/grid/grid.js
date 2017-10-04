@@ -860,7 +860,9 @@ class BasicGrid extends component.Component {
      * @param data - данные с сервера
      */
     reloadRecords(data) {
-        this.recordsRaw = data.content[0].records;
+        //this.recordsRaw = data.content[0].records;
+        let prepContent = this.prepareData(this.content);
+        this.recordsRaw = this.makeAsos(prepContent.records, this.PK);
         this.fk = data.content[0].fk;
         let recs = this.makeRecords(data.content[0].records, data.content[0].fk);
         w2ui[this.id].clear();
@@ -1228,12 +1230,14 @@ class BasicGrid extends component.Component {
                 let stpGrid = stpui[this.name];
                 let value = stpGrid.getCellValue(record, columnName);
                 // нам может вернуться как текст который был в ячейке на момент редактирования, так и id выбранного элемента, чтобы определить поищем в fk
-                let valueFromFK = stpGrid.fk[columnName][value];
-                if (valueFromFK !== undefined) {
-                    // еще надо изменить recordsRaw, хотя не очень конечно выглядит менять их здесь
-                    stpGrid.recordsRaw[record.recid][columnName][0] = [value];
-                    // и изменим id на наименование
-                    value = valueFromFK;
+                if (stpGrid.fk[columnName] !== undefined){
+                    let valueFromFK = stpGrid.fk[columnName][value];
+                    if (valueFromFK !== undefined) {
+                        // еще надо изменить recordsRaw, хотя не очень конечно выглядит менять их здесь
+                        stpGrid.recordsRaw[record.recid][columnName][0] = [value];
+                        // и изменим id на наименование
+                        value = valueFromFK;
+                    }
                 }
                 let cellContent = '<a class = "link-in-grid" onclick  = stpui.showEditForm("' + record.recid + '","' + columnName + '","' + this.name + '")>' + value + '</a>';
                 return cellContent;
