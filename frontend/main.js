@@ -49,17 +49,17 @@ window.jQuery = jQuery;
 //     w2alert(incomingMessage);
 // };
 //проверка токена
-let token = new tools.TokenAuth(config.name).checkToken();
-if (token === undefined) {
-    document.location.href = 'index.html';
-}
+// let token = new tools.TokenAuth(config.name).checkToken();
+// if (token === undefined) {
+//     document.location.href = 'index.html';
+// }
 let ruLocale = require('./libraries/w2ui/ru-ru.json')
 w2utils.locale(ruLocale);
 //строим меню или не строим
-if (localStorage[config.name + '_ObjInfo'] === undefined) {
-    document.location.href = 'index.html';
-}
-let info = JSON.parse(localStorage[config.name + '_ObjInfo']);
+// if (localStorage[config.name + '_ObjInfo'] === undefined) {
+//     document.location.href = 'index.html';
+// }
+// let info = JSON.parse(localStorage[config.name + '_ObjInfo']);
 
 // получает и строит верхнее навигационное меню
 getMenuInfoFromServer();
