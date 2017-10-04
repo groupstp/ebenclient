@@ -4,3 +4,4 @@ public/js
 public/css
 public/pics
 node_modules
+package-lock.json
