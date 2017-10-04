@@ -170,6 +170,10 @@ class BasicGrid extends component.Component {
         } else {
             $(place).w2grid(objForW2);
         }
+        // Для ТЧ загрузим значения ссылочных полей
+        if (this.refCol){
+            this._getValuesFromServer();
+        }
         if (this.showGroupCol && this.groupedBy) {
             let groupedRecs = this.groupBy(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
             w2ui[this.id].clear();
@@ -484,6 +488,36 @@ class BasicGrid extends component.Component {
     }
 
     /**
+     * Функция получает на вход массив id записей, возвращает true если все обязательные поля заполнены и false если есть пустые обязательные поля
+     * @param idsArr - входящий массив id
+     */
+    validateData(idsArr) {
+        // получим объект w2ui по id Grid'a
+        let w2grid = w2ui[this.id];
+        // для каждой записи
+        for (let i = 0; i < idsArr.length; i++) {
+            let id = idsArr[i];
+            //let record = this.recordsRaw[id];
+            let columns = this.columnsRaw;
+            // для каждого столбца
+            for (let col in columns) {
+                // булево значение не интересует так как по умолчанию оно всегда заполнено (не важно true или false)
+                if (columns[col].type === 'boolean') continue;
+                // если столбец обязательный тогда
+                if (this.isColumnRequired(col)) {
+                    // получить значение в ячейке
+                    let value = this.getCellValue(w2grid.get(id), col);
+                    // если значение пустое тогда прерываем выполение и возвращаем ложь
+                    if (this.isCellEmpty(value)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
      * Делаем объект для в2уи
      * @returns {{name: *, show: {toolbar: boolean, footer: boolean}, recid: string, columns: Array, records: Array, toolbar: {items: Array, onClick: (function(this:grid))}, onMenuClick: (function()), menu: Array}}
      * @private
@@ -498,7 +532,8 @@ class BasicGrid extends component.Component {
             show: {
                 toolbar: true,
                 footer: true,
-                selectColumn: this.showSelectColumn
+                selectColumn: this.showSelectColumn,
+                toolbarSave: true
             },
             columns: this.makeColumns(),
             records: this.makeRecords(),
@@ -571,17 +606,212 @@ class BasicGrid extends component.Component {
 
                 w2ui[this.id + '_toolbar'].render();
             }.bind(this),
-            onDblClick: function (event) {
-                if (this.handlers.onDblClick !== undefined) {
-                    try {
-                        w2ui[this.id].select(event.recid);
-                        this.handlers.onDblClick();
-                    } catch (err) {
-                        console.log('SERVER CODE ERROR:' + err);
-                        w2alert('Серевер вернул некорректное действие!');
-                    }
+            // TODO пока убираю чтобы не мешало редактированию в таблице
+            // onDblClick: function (event) {
+            //     if (this.handlers.onDblClick !== undefined) {
+            //         try {
+            //             w2ui[this.id].select(event.recid);
+            //             this.handlers.onDblClick();
+            //         } catch (err) {
+            //             console.log('SERVER CODE ERROR:' + err);
+            //             w2alert('Серевер вернул некорректное действие!');
+            //         }
+            //     }
+            // }.bind(this),
+            onRequest: function (event) {
+                console.log(event, this.handlers.onRequest);
+                if (this.handlers.onRequest !== undefined) {
+                    this.handlers.onRequest(event);
                 }
             }.bind(this),
+            // событие нажатия на кнопку сохранить в тулбаре ТЧ
+            onSave: function (event) {
+                // по нажатию на кнопку Сохранить в тулбаре ТЧ необходимо выполнить проверку заполненности данных и сформировать запрос на сервере
+
+                // отменить действие по умолчанию
+                event.preventDefault();
+
+                // получить объект Grid по имени объекта w2ui
+                let grid = stpui[this.name];
+                let w2grid = this;
+
+                // получаем все измененные строки
+                let changesRecs = w2grid.getChanges();
+
+                // образуем массив id для передачи в функцию validateData
+                let idsArr = changesRecs.map((item) => {
+                    return item.recid;
+                });
+
+                // проверяем на заполненность
+                let dataIsValid = grid.validateData(idsArr);
+
+                // если какие-то данные не заполнены уведомляем пользователя и прекращаем выполнение
+                if (!dataIsValid) {
+                    twoBe.showMessage(0, 'Не все обязательные поля заполнены! Данные не могут быть сохранены!');
+                    return;
+                }
+
+                // определим массив запросов, для конечного callback'a
+                let requestsArr = [];
+
+                // если все обязательные данные заполнены то
+                // для каждой измененной строки формируем запрос к серверу на update
+                changesRecs.forEach((rec) => {
+                    let id = rec.recid;
+                    // подготовим данные для отправки на сервер
+                    let data = grid._prepareRecordsForSaving(rec);
+                    let request = twoBe.createRequest();
+                    request.addParam('action', 'update').addParam('path', grid.path).addData('record', data).addFilterParam(grid.PK, id)
+                        .addBefore(function () {
+                            grid.lock('Подождите...');
+                        })
+                        .addSuccess(function (data) {
+                            // убрать метки у изменнных ячеек
+                            w2grid.mergeRecordChanges(id);
+                            // обновляем recordsRaw
+                            let updatedRecord = {};
+                            updatedRecord[id] = data.content[0].records[0];
+                            $.extend(grid.recordsRaw, updatedRecord);
+                            // выделить успешно обновленную запись
+                            w2grid.set(id, {w2ui: {style: "background-color : rgba(54, 191, 61, 0.65)"}});
+                            // снять выделение через 5 секунд
+                            setTimeout(() => {
+                                w2grid.set(id, {w2ui: {style: ""}});
+                            }, 5000);
+
+                        })
+                        .addError(function (msg) {
+                            // выделить запись которую не удалось обновить
+                            w2grid.set(id, {w2ui: {style: "color : red"}});
+                            // снять выделение через 5 секунд
+                            setTimeout(() => {
+                                w2grid.set(id, {w2ui: {style: ""}});
+                            }, 5000);
+                        });
+                    requestsArr.push(request.send());
+                });
+
+                // итоговый callback
+                Promise.all(requestsArr).then((data) => {
+                    grid.unlock();
+                }).catch((err) => {
+                    twoBe.showMessage(0, 'Ошибка при обновлении записей табличной части!');
+                    grid.unlock();
+                });
+
+            },
+            onSearch: function (event) {
+                if (/*this.pagination*/true) {
+                    //был ли сброс поиска
+                    if (!event.reset) {
+                        event.preventDefault();
+                        w2ui[this.id].searchClose();
+                        //нужен адрес и сообщение
+                        let filter = {};
+                        let relation = {
+                            or: [],
+                            and: []
+                        };
+                        let actions = {
+                            contains: 'consist',
+                            is: 'equal',
+                            between: 'between',
+                            less: 'less',
+                            more: 'greater'
+                        };
+                        for (let i in event.searchData) {
+                            let nameCol = event.searchData[i].field.split('*').join('.');
+                            if (this.fk[nameCol] !== undefined) {
+                                nameCol += '.description';
+                            }
+                            let value = event.searchData[i].value;
+                            if (event.searchData[i].type === 'date') {
+                                if (typeof(event.searchData[i].value) !== 'string') {
+                                    value = [];
+                                    for (let j in event.searchData[i].value) {
+                                        value[j] = event.searchData[i].value[j];
+                                    }
+                                } else {
+                                    value = event.searchData[i].value
+                                }
+                                if (typeof(value) === 'object') {
+                                    for (let j in value) {
+                                        value[j] = tools.utils.getISODate(value[j], '/');
+                                    }
+                                } else {
+                                    value = tools.utils.getISODate(value, '/');
+                                }
+                            }
+                            filter[nameCol] = {
+                                value: value,
+                                sign: actions[event.searchData[i].operator] || 'consist'
+                            }
+                            relation.or.push(nameCol);
+                        }
+                        //для табличных частей
+                        if (this.headID !== '') {
+                            filter[this.refCol] = {
+                                value: this.headID,
+                                sign: 'equal'
+                            }
+                            relation.and.push(this.refCol);
+                        }
+                        //шлем запрос
+                        let searchQuery = new tools.AjaxSender({
+                            url: config.testUrl,
+                            msg: JSON.stringify({
+                                path: this.path,
+                                action: 'getContent',
+                                data: {
+                                    type: 'gridRecords',
+                                    filter: filter,
+                                    relation: relation
+                                }
+                            }),
+                            before: function () {
+                                w2ui[this.id].lock('Поиск', true);
+                            }.bind(this)
+                        })
+                        //в случае успеха
+                        searchQuery.sendQuery()
+                            .then(
+                                response => {
+                                    w2ui[this.id].unlock();
+                                    if (this.recordsBS[0] === undefined) {
+                                        this.recordsBS = w2ui[this.id].records;
+                                    }
+                                    w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
+                                    w2ui[this.id].searchData = [];
+                                    for (let searchInd in event.searchData) {
+                                        if (event.searchData[searchInd].operator !== 'between') {
+                                            w2ui[this.id].searchData.push(event.searchData[searchInd]);
+                                        }
+
+                                    }
+                                    w2ui[this.id].localSearch();
+                                    w2ui[this.id].refresh();
+                                },
+                                error => {
+                                    w2ui[this.id].unlock();
+                                    w2alert(error);
+                                });
+                    }
+                    else {
+                        if (w2ui[this.id].searchData.length === 0) return;
+                        if (this.pagination && !this.hierachy) {
+                            w2ui[this.id].reload();
+                        } else {
+                            w2ui[this.id].clear();
+                            w2ui[this.id].records = this.recordsBS;
+                        }
+                        w2ui[this.id].searchClose();
+                        w2ui[this.id].refresh();
+                    }
+
+                }
+            }.bind(this),
+            parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw)
 
         }
@@ -726,10 +956,222 @@ class BasicGrid extends component.Component {
     }
 
     /**
+     * Формирует ключ для кэша
+     * @returns {string}
+     * @private
+     */
+    _getCacheKey(link) {
+        return 'dropList-' + link;
+    }
+
+
+    /**
+     * Функция устанавливает список выбора для ссылочного типа в колонке ТЧ
+     * @param columnName - имя колонки
+     * @param valuesArr  - массив со значениями {id : ''; text : ''}
+     * @private
+     */
+    _setListData(columnName, valuesArr) {
+        let w2grid = w2ui[this.id];
+        if (w2grid) {
+            let w2col = w2grid.getColumn(columnName);
+            if (w2col.editable) {
+                w2col.editable.items = valuesArr;
+            }
+        }
+    }
+
+    /**
+     * Функция подготавливает данные пришедшие с сервера в формат, который понимает w2ui
+     * @param data - данные с сервера
+     * @returns {Array} - массив со значениями {id : ''; text : ''}
+     * @private
+     */
+    _prepareDataForList(columnName, data) {
+        let result = [];
+        let link = this.columnsRaw[columnName].link;
+        // делаем в попытке, потому что мало ли что нам придет в data
+        try {
+            let values = data.content[0].fk[link];
+            if (values) {
+                let ids = Object.keys(values);
+                ids.forEach((id) => {
+                    result.push({
+                        "id": id,
+                        "text": values[id]
+                    });
+                });
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
+
+        return result;
+
+    }
+
+    /**
+     * Дополняет свойство fk данными пришедшими с сервера для конкретной колонки
+     * @param columnName - имя колонки
+     * @param data - массив со значениями {id : ''; name : ''}
+     * @private
+     */
+    _extendsFKWithDataForList(columnName, data) {
+        let link = this.columnsRaw[columnName].link;
+        let values = data.content[0].fk[link];
+
+        if (!this.fk[columnName]) {
+            this.fk[columnName] = {};
+        }
+
+        for (let id in values) {
+            this.fk[columnName][id] = values[id];
+        }
+    }
+
+    /**
+     * Подгружает все данные для колонок типа reference со свойствам static === true, если их нет в кэше
+     * @private
+     */
+    _getValuesFromServer() {
+
+        // для каждой колоки
+        let columns = this.columnsRaw;
+
+        for (let colName in columns) {
+            let column = columns[colName];
+            // если в колонке содержатся значения ссылочного типа и поле является перечислением (свойство static === true)
+            if (column.type === 'reference' && column.static) {
+                let link = column.link;
+                // создать запрос
+                let request = twoBe.createRequest();
+                let grid = this;
+                let cacheKey = this._getCacheKey(link);
+
+                request.addParam('action', 'getContent');
+                request.addParam('path', 'ref-' + link);
+                request.addData('type', 'getFieldValues');
+                request.addCacheKey(cacheKey);
+                request.addBefore(function () {
+                }).addSuccess(function (data) {
+                    // закэшировать данные
+                    twoBe.cacheData(data, cacheKey);
+                    grid._extendsFKWithDataForList(colName,data);
+                    // проверить существует ли еще объект w2ui
+                    let w2grid = w2ui[grid.id];
+                    if (w2grid) {
+                        // подготовить данные для подстановки в качестве значений выбора
+                        let suggestion = grid._prepareDataForList.call(grid, colName,data);
+                        // загрузить значения в колонку w2ui
+                        grid._setListData(colName,suggestion);
+                    }
+                }).addError(function (msg) {
+                    twoBe.showMessage(0, msg);
+                }).send();
+            }
+        }
+    }
+
+    /**
+     * Функция получает на вход объект, полученный вызовом w2ui getChanges() и изменяет значения на корректные для сервера. Возвращает новый объект.
+     * @param rec
+     * @private
+     */
+    _prepareRecordsForSaving(rec){
+        let columns = this.columnsRaw;
+        for (let colName in rec){
+            let colRaw = columns[colName];
+            if (!colRaw) continue;
+            // дату в формате dd-mm-yyyy пропустим через специальный форматер
+            if (colRaw.type === 'date'){
+                rec[colName] = this._preformatDate(rec[colName]);
+            }
+        }
+
+        // посылаем на сервер данные без id
+        let data = {};
+        $.extend(data, rec);
+        delete data.recid;
+
+        return data;
+    }
+
+
+    /**
+     * Проверяет является ли колонка обязательной
+     * @param columnName
+     * @returns {boolean|*}
+     */
+    isColumnRequired(columnName) {
+        return this.columnsRaw[columnName].required || false;
+    }
+
+    /**
+     * Проверяет является ли колонка пустой
+     * @param record
+     * @param columnName
+     * @returns {boolean}
+     */
+    isCellEmpty(description) {
+        return !description;
+    }
+
+    getCellValue(record, columnName) {
+        let value;
+        if (record.w2ui && record.w2ui.changes) {
+            value = (record.w2ui.changes[columnName] !== undefined) ? record.w2ui.changes[columnName] : record[columnName] || '';
+        } else {
+            value = record[columnName] || '';
+        }
+        return value;
+    }
+
+    /**
+     * Возвращает HTML для подсветки пустой обязательной колонки
+     * @returns {string}
+     * @private
+     */
+    _highlightEmtyRequiredCell() {
+        return '<div class = "required-cell"></div>';
+    }
+
+    // функция изменяет стиль ячейки(добавляет красное подчеркивние) значение в которой обязательное но пустое, если значение не пустое
+    // отрабатывает функция customRenderFunction, в качестве customRenderFunction можно передать строку форматирования для w2ui
+    _renderRecordCell(record, index, column_index, customRenderFunction) {
+
+        let columnName = this.columns[column_index].field;
+        let stpObject = stpui[this.name];
+        let cellValue = stpObject.getCellValue(record, columnName);
+
+        // если поле обязательное и пустое то стандартно его подсветим
+        if (stpObject.isColumnRequired(columnName) && stpObject.isCellEmpty(cellValue)) {
+            return stpObject._highlightEmtyRequiredCell();
+        }
+
+        // если поле необязательное и для его типа определена кастомная функция, то вызовем ее
+        if (customRenderFunction) {
+            //if (typeof customRenderFunction === 'function') {
+            //return customRenderFunction.apply(this, [record, index, column_index]);
+            //} else if (typeof customRenderFunction === 'string') {
+            // ВНИМАНИЕ!!! Грязное вторжение в работу w2ui!!! Не знаю как сделать по другому, чтобы форматировалось как надо!
+            //this.columns[column_index].render = customRenderFunction;
+            //}
+            return customRenderFunction.apply(this, [record, index, column_index]);
+        } else {
+            return cellValue;
+        }
+
+    }
+
+    /**
      * Делаем колонки
      * @returns {Array} - массив колонок
      */
     makeColumns() {
+
+        let grid = this;
+
         window.stpui.showFiles = function (recid, col, index, column_index, gridID) {
             /*console.log(recid, col);
              console.log(w2ui[this.id].getCellHTML(index, column_index));
@@ -769,6 +1211,8 @@ class BasicGrid extends component.Component {
                 grid.unlock();
             }).addCacheKey(path + type).send();
         };
+
+        // массив кастомных рендер функций
         let renders = {
             "files": function (record, index, column_index) {
                 if (record[this.columns[column_index].field] === undefined || record[this.columns[column_index].field] === null || record[this.columns[column_index].field].length === 0) {
@@ -781,8 +1225,17 @@ class BasicGrid extends component.Component {
             },
             "reference": function (record, index, column_index) {
                 let columnName = this.columns[column_index].field;
-                let description = record[columnName] || '';
-                let cellContent = '<a class = "link-in-grid" onclick  = stpui.showEditForm("' + record.recid + '","' + columnName + '","' + this.name + '")>' + description + '</a>';
+                let stpGrid = stpui[this.name];
+                let value = stpGrid.getCellValue(record, columnName);
+                // нам может вернуться как текст который был в ячейке на момент редактирования, так и id выбранного элемента, чтобы определить поищем в fk
+                let valueFromFK = stpGrid.fk[columnName][value];
+                if (valueFromFK !== undefined) {
+                    // еще надо изменить recordsRaw, хотя не очень конечно выглядит менять их здесь
+                    stpGrid.recordsRaw[record.recid][columnName][0] = [value];
+                    // и изменим id на наименование
+                    value = valueFromFK;
+                }
+                let cellContent = '<a class = "link-in-grid" onclick  = stpui.showEditForm("' + record.recid + '","' + columnName + '","' + this.name + '")>' + value + '</a>';
                 return cellContent;
             },
             'timestamp': function (record, index, column_index) {
@@ -791,36 +1244,106 @@ class BasicGrid extends component.Component {
                 fData = w2utils.formatDateTime(ufData, 'dd-mm-yyyy|h:m');
                 return fData;
             },
-            'float': 'float:2',
-            'date': /*function (record, index, column_index) {
-             let fData = '';
-             let ufData = record[this.columns[column_index].field];
-             fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
-             return fData;
-             },*/ 'date:dd-mm-yyyy',
             'boolean': function (record, index, column_index) {
                 let fData = '';
                 let ufData = record[this.columns[column_index].field];
                 fData = (ufData ? 'да' : 'нет');
                 return fData;
+            },
+            'date': function (record, index, column_index) {
+                let fData = '';
+                let stpGrid = stpui[this.name];
+                //let ufData = record[this.columns[column_index].field];
+                let columnName = this.columns[column_index].field;
+                let ufData = stpGrid.getCellValue(record, columnName);
+                ufData = stpGrid._preformatDate(ufData);
+                fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
+                return fData;
             }
-        }
+        };
         let columns = [];
+
+        // объект для сопоставления типов сервера и w2ui
+        let types = {
+            'string': 'text',
+            'date': 'date',
+            'float': 'float',
+            'integer': 'int',
+            'boolean': 'checkbox',
+            'reference': 'select'
+        };
         for (let i in this.columnsRaw) {
-            if (this.columnsRaw[i].field === this.PK) continue;
-            columns.push({
-                field: this.columnsRaw[i].field,
+            let rawColumn = this.columnsRaw[i];
+            if (rawColumn.field === this.PK) continue;
+
+            // Определим функцию которая рендерит значение ячейки в зависимости от типа ячейки
+            let customRenderFunction = renders[rawColumn.type];
+
+            let options = {
+                field: rawColumn.field,
                 size: '10%',
-                caption: this.columnsRaw[i].caption,
-                sortable: this.columnsRaw[i].sortable,
-                hidden: this.columnsRaw[i].hidden,
-                render: renders[this.columnsRaw[i].type] || null
-            })
+                caption: rawColumn.caption,
+                sortable: rawColumn.sortable,
+                hidden: rawColumn.hidden,
+
+            };
+            let serverType = rawColumn.type;
+
+            options.render = function (record, index, column_index) {
+                let renderedValue = grid._renderRecordCell.apply(this, [record, index, column_index, customRenderFunction]);
+                return renderedValue;
+            };
+
+            // редактирование в таблице делаем только для ТЧ
+            if (this.refCol) {
+                // определим тип подставляемый в редактирование
+                let editableType = types[serverType];
+                if (editableType !== undefined) {
+                    options.editable = {
+                        type: editableType
+                    };
+
+                    // пока не редактируем поля ссылочного типа которые не являются перечислениями (static === true)
+                    if (serverType === 'reference' && !rawColumn.static){
+                        delete options.editable;
+                    }
+                }
+                if (serverType === 'boolean') {
+                    // функция рендера есть для каждой ячейки(кроме булева значения так как для них всегда должны показываться чекбоксы), это нужно для того чтобы подсвечивать незаполненные обязательные ячейки при
+                    // редактировании строк в ТЧ
+                    delete options.render;
+                }
+            }
+
+            columns.push(options)
         }
-        console.log(columns);
+        //console.log(columns);
         return columns;
     }
 
+    /**
+     * Функция должны корректно обрабатывать дату формата dd-mm-yyyy и возвращать объект Date. Используется для передачи результата в w2ui.formatDate
+     * @param data - строковая дата в формате dd-mm-yyyy
+     * @private
+     */
+    _preformatDate(dateStr){
+        // проверить что переданный параметр это именно не пустая строка
+        if (typeof dateStr !== 'string' || dateStr === '') return dateStr;
+
+        // проверить что в переданной строке есть ровно 2 знака "-"
+        let arr = dateStr.split('-');
+        if (arr.length !== 3) return '';
+        // выделить день, месяц и год
+        let day = arr[0];
+        let month = arr[1] - 1;
+        let year = arr[2];
+
+        // сформировать дату
+        let date = new Date(year,month,day);
+        if (String(date) === 'Invalid Date') return '';
+
+        return date;
+    }
 
     /**
      * Формирование массива событий таблицы

@@ -189,8 +189,7 @@ export class DropdownField extends Field {
                 });
             }
         }
-        catch
-            (err) {
+        catch (err) {
             console.log(err);
         }
 
