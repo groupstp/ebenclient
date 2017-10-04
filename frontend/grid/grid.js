@@ -654,7 +654,6 @@ class BasicGrid extends component.Component {
                 changesRecs.forEach((rec) => {
                     let id = rec.recid;
                     // подготовим данные для отправки на сервер
-                    debugger;
                     let data = grid._prepareRecordsForSaving(rec);
                     let request = twoBe.createRequest();
                     request.addParam('action', 'update').addParam('path', grid.path).addData('record', data).addFilterParam(grid.PK, id)
@@ -1037,7 +1036,6 @@ class BasicGrid extends component.Component {
         for (let colName in columns) {
             let column = columns[colName];
             // если в колонке содержатся значения ссылочного типа и поле является перечислением (свойство static === true)
-            debugger;
             if (column.type === 'reference' && column.static) {
                 let link = column.link;
                 // создать запрос
@@ -1291,7 +1289,7 @@ class BasicGrid extends component.Component {
             };
 
             // редактирование в таблице делаем только для ТЧ
-            //if (this.refCol) {
+            if (this.refCol) {
                 // определим тип подставляемый в редактирование
                 let editableType = types[serverType];
                 if (editableType !== undefined) {
@@ -1309,7 +1307,7 @@ class BasicGrid extends component.Component {
                     // редактировании строк в ТЧ
                     delete options.render;
                 }
-            //}
+            }
 
             columns.push(options)
         }
