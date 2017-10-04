@@ -988,6 +988,39 @@ class BasicGrid extends component.Component {
         return null;//path doesn't exist
     }
 
+
+    /**
+     * Отправляет запрос за записями и обновляет таблицу при успешном выполнении
+     */
+    reloadGrid(){
+        let path = this.getProperties().path;
+        let headID = this.getProperties().headID;
+        let refCol = this.getProperties().refCol;
+        let grid = this;
+        let selectedID = this.getSelectedID();
+        let request = twoBe.createRequest().addParam('action', 'getContent').addParam('path', path).addData('type', 'gridRecords').addBefore(function () {
+            grid.lock('Идет загрузка..');
+        }).addSuccess(function (data) {
+            grid.reloadRecords(data);
+            if (selectedID) {
+                grid.selectRecord(selectedID);
+            }
+            grid.unlock();
+        }).addError(function (msg) {
+            twoBe.showMessage(0, msg);
+            grid.unlock();
+        });
+        if (headID !== "" && refCol !== "") {
+            let filter = {};
+            filter[refCol] = {
+                value: headID,
+                sign: 'equal'
+            };
+            request.addData('filter', filter);
+        }
+        request.send();
+    }
+
 }
 
 
