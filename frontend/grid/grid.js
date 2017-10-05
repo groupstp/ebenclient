@@ -1548,7 +1548,7 @@ class BasicGrid extends component.Component {
             request.addData('filter', filter);
         }
         // Проверим кэш на наличие дополнительных полей которые надо вернуть с запросом
-        let cacheKey = 'customFieldsFor-' + this.id;
+        let cacheKey = 'customFieldsFor-' + this.path + '-grid-listForm';
         let additionalFields = twoBe.getCache(cacheKey);
         // И добавим их в данные запроса
         if (additionalFields) request.addData('additionalFields', additionalFields);
