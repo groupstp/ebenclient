@@ -1525,7 +1525,9 @@ class BasicGrid extends component.Component {
         let refCol = this.getProperties().refCol;
         let grid = this;
         let selectedID = this.getSelectedID();
-        let request = twoBe.createRequest().addParam('action', 'getContent').addParam('path', path).addData('type', 'gridRecords').addBefore(function () {
+
+        let request = twoBe.createRequest();
+        request.addParam('action', 'getContent').addParam('path', path).addData('type', 'gridRecords').addBefore(function () {
             grid.lock('Идет загрузка..');
         }).addSuccess(function (data) {
             grid.reloadRecords(data);
@@ -1545,6 +1547,12 @@ class BasicGrid extends component.Component {
             };
             request.addData('filter', filter);
         }
+        // Проверим кэш на наличие дополнительных полей которые надо вернуть с запросом
+        let cacheKey = 'customFieldsFor-' + this.id;
+        let additionalFields = twoBe.getCache(cacheKey);
+        // И добавим их в данные запроса
+        if (additionalFields) request.addData('additionalFields', additionalFields);
+
         request.send();
     }
 
