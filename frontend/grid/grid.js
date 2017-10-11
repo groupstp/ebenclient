@@ -171,7 +171,7 @@ class BasicGrid extends component.Component {
             $(place).w2grid(objForW2);
         }
         // Для ТЧ загрузим значения ссылочных полей
-        if (this.refCol){
+        if (this.refCol) {
             this._getValuesFromServer();
         }
         if (this.showGroupCol && this.groupedBy) {
@@ -1059,14 +1059,14 @@ class BasicGrid extends component.Component {
                 }).addSuccess(function (data) {
                     // закэшировать данные
                     twoBe.cacheData(data, cacheKey);
-                    grid._extendsFKWithDataForList(colName,data);
+                    grid._extendsFKWithDataForList(colName, data);
                     // проверить существует ли еще объект w2ui
                     let w2grid = w2ui[grid.id];
                     if (w2grid) {
                         // подготовить данные для подстановки в качестве значений выбора
-                        let suggestion = grid._prepareDataForList.call(grid, colName,data);
+                        let suggestion = grid._prepareDataForList.call(grid, colName, data);
                         // загрузить значения в колонку w2ui
-                        grid._setListData(colName,suggestion);
+                        grid._setListData(colName, suggestion);
                     }
                 }).addError(function (msg) {
                     twoBe.showMessage(0, msg);
@@ -1080,13 +1080,13 @@ class BasicGrid extends component.Component {
      * @param rec
      * @private
      */
-    _prepareRecordsForSaving(rec){
+    _prepareRecordsForSaving(rec) {
         let columns = this.columnsRaw;
-        for (let colName in rec){
+        for (let colName in rec) {
             let colRaw = columns[colName];
             if (!colRaw) continue;
             // дату в формате dd-mm-yyyy пропустим через специальный форматер
-            if (colRaw.type === 'date'){
+            if (colRaw.type === 'date') {
                 rec[colName] = this._preformatDate(rec[colName]);
             }
         }
@@ -1230,7 +1230,11 @@ class BasicGrid extends component.Component {
                 let stpGrid = stpui[this.name];
                 let value = stpGrid.getCellValue(record, columnName);
                 // нам может вернуться как текст который был в ячейке на момент редактирования, так и id выбранного элемента, чтобы определить поищем в fk
-                if (stpGrid.fk[columnName] !== undefined){
+                // TODO костыльное условие потому что сервер теперь присылает null
+                if (typeof value === 'string' && value.indexOf('null') !== -1) {
+                    value = "";
+                }
+                if (stpGrid.fk[columnName] !== undefined) {
                     let valueFromFK = stpGrid.fk[columnName][value];
                     if (valueFromFK !== undefined) {
                         // еще надо изменить recordsRaw, хотя не очень конечно выглядит менять их здесь
@@ -1308,7 +1312,7 @@ class BasicGrid extends component.Component {
                     };
 
                     // пока не редактируем поля ссылочного типа которые не являются перечислениями (static === true)
-                    if (serverType === 'reference' && !rawColumn.static){
+                    if (serverType === 'reference' && !rawColumn.static) {
                         delete options.editable;
                     }
                 }
@@ -1330,7 +1334,7 @@ class BasicGrid extends component.Component {
      * @param data - строковая дата в формате dd-mm-yyyy
      * @private
      */
-    _preformatDate(dateStr){
+    _preformatDate(dateStr) {
         // проверить что переданный параметр это именно не пустая строка
         if (typeof dateStr !== 'string' || dateStr === '') return dateStr;
 
@@ -1343,7 +1347,7 @@ class BasicGrid extends component.Component {
         let year = arr[2];
 
         // сформировать дату
-        let date = new Date(year,month,day);
+        let date = new Date(year, month, day);
         if (String(date) === 'Invalid Date') return '';
 
         return date;
@@ -1519,7 +1523,7 @@ class BasicGrid extends component.Component {
     /**
      * Отправляет запрос за записями и обновляет таблицу при успешном выполнении
      */
-    reloadGrid(){
+    reloadGrid() {
         let path = this.getProperties().path;
         let headID = this.getProperties().headID;
         let refCol = this.getProperties().refCol;
