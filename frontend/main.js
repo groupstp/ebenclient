@@ -9,7 +9,7 @@
  * @requires contentBuilder
  */
 
-'use strict'
+'use strict';
 //подключаем стили - можно создать несколько точек входа для каждого файла стилей
 import './libraries/bootstrap/css/bootstrap.css';
 import './libraries/fontawesome/css/font-awesome.css';
@@ -20,7 +20,7 @@ import menuTopFixed from './menu/index.js';
 //подключаем менеджер страниц
 import contentBuilder from './contentBuilder/index.js';
 //подключаем конфиг
-import {config} from './config/config.js';
+import config from './config/config.js';
 //подключаем тулзы
 import * as tools from './tools/index.js';
 //подключаем библиотеку w2ui и экспортируем переменные из нее
@@ -43,23 +43,14 @@ window.w2confirm = w2lib.w2confirm;
 window.jQuery = jQuery;
 //проба сокетов
 
-// var socket = new WebSocket("ws://localhost:8081");
-// socket.onmessage = function (event) {
-//     let incomingMessage = event.data;
-//     w2alert(incomingMessage);
-// };
 //проверка токена
-// let token = new tools.TokenAuth(config.name).checkToken();
-// if (token === undefined) {
-//     document.location.href = 'index.html';
-// }
-let ruLocale = require('./libraries/w2ui/ru-ru.json')
+let token = new tools.TokenAuth(config.name).checkToken();
+if (token === undefined) {
+    document.location.href = 'index.html';
+}
+
+let ruLocale = require('./libraries/w2ui/ru-ru.json');
 w2utils.locale(ruLocale);
-//строим меню или не строим
-// if (localStorage[config.name + '_ObjInfo'] === undefined) {
-//     document.location.href = 'index.html';
-// }
-// let info = JSON.parse(localStorage[config.name + '_ObjInfo']);
 
 localStorage.clear();
 
@@ -79,7 +70,7 @@ function buildMain(builder) {
 
 // функция отправляет запрос к серверу на получение описания меню
 function getMenuInfoFromServer(){
-    twoBe.createRequest().addParam('action', 'getMenu').addBefore(function(){
+    twoBe.createRequest().addParam('action', 'getMenu').addParam('token', token).addBefore(function(){
 
     }).addSuccess(function (data) {
         buildMenu(data);

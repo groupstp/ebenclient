@@ -11,6 +11,7 @@ import tempalate from './auth.tpl';
 import * as tools from '../tools/index.js'
 //подключаем стили
 import './auth.css';
+
 /**
  * @classdesc Класс для построения формы авторизации и создания соответсвующих обработчиков
  */
@@ -85,7 +86,7 @@ export default class stpAuth {
         let msg = this._getAuthData();
         let query = new tools.AjaxSender({
             url: this.urlAuth,
-            msg: msg,
+            msg: JSON.stringify(msg),
             before: function () {
                 $('#' + this.name + this._freezePostfix).block({
                     css: {
@@ -102,10 +103,9 @@ export default class stpAuth {
         });
         query.sendQuery()
             .then(
-                response => {
+                token => {
                     $('#' + this.name + this._freezePostfix).unblock();
-                    this._saveToken(response.token);
-                    this._saveObjInfo(response.info);
+                    this._saveToken(token);
                     document.location.href = this.redirectUrl;
                 },
                 error => {
@@ -129,8 +129,11 @@ export default class stpAuth {
      */
     _getAuthData() {
         let arrForm = $('#' + this.name + this._formPostfix).serializeArray();
-        let formMsg = $.param(arrForm, true);
-        return (formMsg);
+        let formMsg = {};
+        arrForm.forEach((item) => {
+            formMsg[item.name] = item.value;
+        });
+        return formMsg;
     }
 
     /**

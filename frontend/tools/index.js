@@ -6,7 +6,11 @@
  */
 
 import pako from '../libraries/pakojs/pako.js';
+//подключаем конфиг
+import config from '../config/config.js';
+
 require('imports-loader?jQuery=jquery!../libraries/blockUI/jquery.blockUI.js');
+
 /**
  * @classdesc Класс для разжатия данных с сервера
  */
@@ -55,6 +59,7 @@ export class Unzipper {
     }
 
 }
+
 /**
  * @classdesc Класс для разжатия данных с сервера
  */
@@ -102,10 +107,11 @@ export class AjaxSender {
         let self = this;//передача контекста через замыкание
         return new Promise(function (resolve, reject) {
             let xhr = new XMLHttpRequest();
+            xhr.open('POST', self.url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
             if (self.headerAccept !== undefined) {
                 xhr.setRequestHeader('headerAccept', self.headerAccept);
             }
-            xhr.open('POST', self.url, true);
             xhr.onload = function () {
                 if (this.status === 200) {
                     let serverAns = this.response;
@@ -137,6 +143,7 @@ export class AjaxSender {
         })
     }
 }
+
 /**
  * Класс для работы с токеном авторизации в куках
  */
@@ -159,7 +166,7 @@ export class TokenAuth {
      * @returns {string}
      */
     checkToken() {
-        return (this._getCookie(this.name));
+        return this._getCookie(this.name);
     }
 
     /**
@@ -233,11 +240,23 @@ export class TokenAuth {
      * @param page - куда уходить
      */
     exit(page) {
-        this._deleteCookie();
-        document.location.href = page;
+        let url = twoBe.getDefaultParams().url + '/logout';
+        let token = this.checkToken();
+        let self = this;
+        if (token) {
+            twoBe.createRequest().addUrl(url).addParam('token', token).addBefore(function () {
 
+            }).addSuccess(function (data) {
+                self._deleteCookie();
+                document.location.href = page;
+            }).addError(function (msg) {
+            }).send();
+        } else {
+            document.location.href = page;
+        }
     }
 }
+
 /**
  * Класс для работы с браузерными уведомлениями {@link https://developer.mozilla.org/ru/docs/Web/API/notification}
  */
@@ -281,6 +300,7 @@ export class BrowserNotification {
         }
     }
 }
+
 /**
  * Замораживатель, использует {@link http://malsup.com/jquery/block/}
  */

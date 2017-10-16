@@ -7,12 +7,14 @@
  * Объект конфига
  * @type {{name: string, caption: string, defaultUrl: string, version: string, authGoogle: boolean, mainPage: string, testUrl: string}}
  */
-export let config = {
+let config = {
     name: 'test',
     caption: 'Тестовая ИС',
-    defaultUrl: 'https://gag.groupstp.ru:8809',
+    defaultUrl: 'http://localhost:12345/login',
     version: '0.0.1',
-    authGoogle: true,
+    authGoogle: false,
     mainPage: 'main.html',
     testUrl: "http://localhost:12345"
-}
+};
+
+export default config;

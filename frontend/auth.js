@@ -5,7 +5,7 @@
  * @requires auth
  */
 //импортируем конфиги и библиотеку авторизации
-import {config} from './config/config.js';
+import config from './config/config.js';
 import stpAuth from './auth/index.js';
 //всякие библиотеки
 import './libraries/bootstrap/css/bootstrap.css';

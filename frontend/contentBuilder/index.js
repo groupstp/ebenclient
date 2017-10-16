@@ -9,8 +9,9 @@
 import * as componentLib from '../component';
 import * as tools from '../tools/index.js';
 //подключаем конфиг
-import {config} from '../config/config.js';
+import config from '../config/config.js';
 import twoBe from "../twoBe/index";
+
 let layout = require('../layout/index.js');
 /**
  * @classdesc Данный класс представляет собой реализацию скелета одностраничного приложения
@@ -175,7 +176,11 @@ export default class contentBuilder extends componentLib.Component {
 class Page {
     /**
      * @constructor
-     * @param path - идентификатор страницы
+     * @param path - идентификdebuggerатоif (token) {
+        sendResponse(res, 'success', token);
+    } else {
+        sendResponse(res, 'error', 'Login error!');
+    }р страницы
      * @param caption - подпись к странице
      * @param box - куда поместить
      */
@@ -289,10 +294,11 @@ class Page {
             place: this.generatedBox,
             message: 'Загрузка'
         });
-
+        let token = new tools.TokenAuth(config.name).checkToken();
         let options = {
             action: 'get',
             path: this.id,
+            token: token,
             data: {
                 type: 'listForm'
             }

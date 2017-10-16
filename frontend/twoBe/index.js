@@ -9,7 +9,7 @@
  */
 
 //подключаем конфиг
-import {config} from '../config/config.js';
+import config from '../config/config.js';
 import * as tools from '../tools/index.js';
 /**
  * @classdesc Класс пользовательских функций
@@ -28,9 +28,15 @@ export default class twoBe {
      * @returns {{url: string}} Объект с конфигами
      */
     static getDefaultParams() {
-        return ({url: config.testUrl});
+        return {
+            url: config.testUrl,
+            name: config.name
+        }
     }
-
+    static getToken(configName){
+        let token = new tools.TokenAuth(configName).checkToken();
+        return token;
+    }
     /**
      * Получает объект по идентификатору
      * @param {string} id - идентификатор
@@ -221,6 +227,13 @@ class Request {
          * @type {string}
          */
         this.cacheKey = null;
+
+        this._init();
+    }
+
+    _init(){
+        let token = new tools.TokenAuth(config.name).checkToken();
+        this.addParam('token',token);
     }
 
     /**
