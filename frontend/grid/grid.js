@@ -10,7 +10,7 @@ import * as component from '../component'
 import * as layout from '../layout'
 
 //подключаем конфиг
-import {config} from '../config/config.js';
+import config from '../config/config.js';
 
 let isEqual = require('lodash').isEqual;
 
