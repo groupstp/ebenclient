@@ -4,6 +4,7 @@
  * @requires field
  */
 import {Field} from '../field';
+
 /**
  * @extends module:field.Field
  */
@@ -32,14 +33,14 @@ export class SimpleField extends Field {
 
     _applyLogic() {
         // для даты и время используем bootstrap-datepicker для всего остального w2ui
-        if (this.isItDateField()){
+        if (this.isItDateField()) {
             this._applyDatepicker();
         } else {
             this._applyW2ui();
         }
     }
 
-    _applyW2ui(){
+    _applyW2ui() {
         if (!this.controlEl) return;
 
         let config = {};
@@ -51,7 +52,7 @@ export class SimpleField extends Field {
         this.controlEl.classList.remove('w2ui-input');
     }
 
-    _applyDatepicker(){
+    _applyDatepicker() {
         let config = {
             format: 'dd/mm/yyyy',
             language: 'ru'
@@ -70,7 +71,7 @@ export class SimpleField extends Field {
             // Если float то надо заменять запятую на точку
         } else if (this.type === 'float') {
             if (typeof event.target.value == "string") {
-                this.value = event.target.value.replace(/,/,".");
+                this.value = event.target.value.replace(/,/, ".");
             }
         } else {
             this.value = event.target.value;
@@ -87,6 +88,15 @@ export class SimpleField extends Field {
     _addListeners() {
         // в w2ui при работе с датой и временем не срабатывает событие change, поэтому ориентируемся на потерю фокуса
         this.controlEl.addEventListener('blur', this._saveChanges.bind(this));
+    }
+
+    _getValueForFileField(){
+        let result = '';
+        let selectedFile = $(this.controlEl).data().selected[0];
+        if (selectedFile) {
+            result = selectedFile.content;
+        }
+        return result;
     }
 
     ///// Public methods /////
@@ -114,20 +124,31 @@ export class SimpleField extends Field {
     getValue() {
         let result;
 
-        if (this.isItDateField()){
+        if (this.isItDateField()) {
             result = $(this.controlEl).datepicker('getUTCDate');
-            if (result instanceof Date){
+            if (result instanceof Date) {
                 result = result.toISOString();
             }
+        } else if (this.isItFileField()) {
+            result = this._getValueForFileField();
         } else {
             result = this.value;
+        }
+
+        return result;
+    }
+
+    isItDateField() {
+        let result = false;
+        if (this.type === "date" || this.type === "time" || this.type === "timestamp") {
+            result = true;
         }
         return result;
     }
 
-    isItDateField(){
+    isItFileField() {
         let result = false;
-        if (this.type === "date" || this.type === "time" || this.type === "timestamp"){
+        if (this.type === "file") {
             result = true;
         }
         return result;
@@ -135,11 +156,11 @@ export class SimpleField extends Field {
 
     setValue(newValue) {
         this.value = newValue;
-        if (this.isItDateField()){
-            if (typeof newValue === "string"){
-                $(this.controlEl).datepicker('setDate',new Date(newValue));
-            } else if (newValue instanceof Date){
-                $(this.controlEl).datepicker('setDate',newValue);
+        if (this.isItDateField()) {
+            if (typeof newValue === "string") {
+                $(this.controlEl).datepicker('setDate', new Date(newValue));
+            } else if (newValue instanceof Date) {
+                $(this.controlEl).datepicker('setDate', newValue);
             }
         } else {
             this.controlEl.value = newValue;
@@ -152,7 +173,7 @@ export class SimpleField extends Field {
             this.controlEl.checked = false;
         }
         // Это непотребство нужно для того чтобы w2ui отреагировал на изменение и применил форматирование к данным
-        if (!this.isItDateField()){
+        if (!this.isItDateField()) {
             $(this.controlEl).data('w2field').change(new Event('change'));
         }
     }
