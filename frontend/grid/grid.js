@@ -885,6 +885,10 @@ class BasicGrid extends component.Component {
         }
         let records = [];
         for (let recid in recordsRaw) {
+            // TODO костыль потому что с сервера приходит null
+            if (recid === 'null') {
+                continue;
+            }
             let rec = {};
             rec.recid = recordsRaw[recid][this.PK];
             for (let col in recordsRaw[recid]) {
@@ -1410,64 +1414,144 @@ class BasicGrid extends component.Component {
      * Группирует записи
      * @param records - записи
      * @param columns - колонки
-     * @param params - уровни
-     * @param col - куда поместить
-     * @param d - уровень
+     * @param groupedColumns - массив колонок по которым происходит группировка
+     * @param summaryColumn - колонка в которую помещается представление сгруппированого значения
+     * @param grpLevel - уровень группировки
      * @returns {Array} - массив сгруппированных записей
      */
-    groupBy(records, columns, params, col, d = 0) {
+    groupBy(records, columns, groupedColumns = [], summaryColumn = "", grpLevel = 0) {
+        // если summaryColumn не задано - выводим в первое поле по которому группируем
+        if (!summaryColumn && groupedColumns.length) {
+            summaryColumn = groupedColumns[0];
+        }
+        // стили для уровней группировки, пока для 2-ух
         let style = ['background-color: #F9FBBB', 'background-color: #DDFBBB'];
-        let res = {};
+        // объект для хранения сгруппированых записей, ключ - значения поля группировки, значение массив записей
+        let groupedRecords = {};
+        // ключ - значение группировочного поля, значение - представление группировочного поля. Для ссылочных полей может быть что-то вроде {123-456-789 : "Стол"}
         let keys = {};
+        // колонка, по которой проводится группировка
+        let currentGrouppingCol = groupedColumns[grpLevel];
         for (let recid in records) {
-            var disp = "";
-            var val = "";
-            if (columns[params[d]].type === 'reference') {
-                val = records[recid][params[d]][0];
-                disp = this.fk[params[d]][records[recid][params[d]][0]];
-            } else if (columns[params[d]].type === 'date') {
-                val = records[recid][params[d]];
-                disp = w2utils.date(val);
-            } else {
-                val = records[recid][params[d]];
-                disp = val;
+
+            let recordInfo = this._getRecordValueAndDisplay(records[recid], currentGrouppingCol);
+            let value = recordInfo.value;
+            let display = recordInfo.display;
+
+            if (groupedRecords[value] === undefined) {
+                groupedRecords[value] = [];
             }
-            if (res[val] === undefined) {
-                res[val] = [];
+
+            keys[value] = display;
+            // формируем запись но уже без колонки по которой группируем
+            let rec = {};
+            for (let colName in records[recid]) {
+                // if (currentGrouppingCol !== colName) {
+                     rec[colName] = records[recid][colName];
+                // }
             }
-            keys[val] = disp;
-            var rec = {};
-            for (var c in records[recid]) {
-                if (params[d] !== c) {
-                    rec[c] = records[recid][c];
-                }
-            }
-            res[val].push(rec);
+            // и добавляем в объект для хранения сгруппированных записей
+            groupedRecords[value].push(rec);
         }
-        var resw2 = [];
-        for (var i in res) {
-            var rec = {
-                "recid": 'group&' + i + Math.random(),
-                "w2ui": {
-                    "children": res[i],
-                    "style": style[d]
+
+        // массив сгруппированных записей в формате w2ui
+        let w2uiGroupedRecords = [];
+        for (let nodeRecName in groupedRecords) {
+            let childrenRecords = groupedRecords[nodeRecName];
+            // преобразуем сгруппированные записи в формат w2ui
+            // let rec = {
+            //     "recid": 'group&' + nodeRecName + Math.random(),
+            //     "w2ui": {
+            //         "children": childrenRecords,
+            //         "style": style[grpLevel]
+            //     }
+            // };
+
+            let rec = {};
+
+            // выведем в группировочную строку значение, если оно одинаково для все группируемых строк
+            for (let col in columns) {
+                if (col === currentGrouppingCol) {
+                    continue;
                 }
+
+                // считаем что изначально все значения одинаковы
+                let valueEquals = true;
+                let recordInfo = this._getRecordValueAndDisplay(childrenRecords[0], col);
+                // значение для сравнения
+                let valueForCheck = recordInfo.value;
+                let displayForGrouping = recordInfo.display;
+
+                // цикл по записям
+                for (let i = 1; i < childrenRecords.length; i++) {
+                    let recordInfo = this._getRecordValueAndDisplay(childrenRecords[i], col);
+                    let recordValue = recordInfo.value;
+                    // если значения не одинаковы - прекращаем цикл
+                    if (recordValue !== valueForCheck){
+                        valueEquals = false;
+                        break;
+                    }
+                }
+                // Функция makeRecords работает с ссылочным типом как с массивом
+                if (this.columnsRaw[col].type === 'reference') {
+                    valueForCheck = [valueForCheck];
+                }
+
+                // если все значения одиннаковы выыведем его в группировочную строку
+                if (valueEquals) {
+                    rec[col] = valueForCheck;
+                }
+
+            }
+
+            // в summaryColumn добавляем представление для сгруппированых записей
+            rec[summaryColumn] = columns[currentGrouppingCol].caption + ' : ' + (keys[nodeRecName] ? keys[nodeRecName] : 'Пустое значение');
+
+            let w2uiRec = this.makeRecords([rec])[0];
+            w2uiRec.recid = 'group&' + nodeRecName + Math.random();
+            w2uiRec.w2ui = {
+                "children": childrenRecords,
+                "style": style[grpLevel]
             };
-            rec[col] = columns[params[d]].caption + ' : ' + (keys[i] ? keys[i] : 'Не указано');
-            resw2.push(rec);
+
+            w2uiGroupedRecords.push(w2uiRec);
         }
-        d++;
-        if (d >= params.length) {
-            for (var i in resw2) {
-                resw2[i].w2ui.children = this.makeRecords(resw2[i].w2ui.children, this.fk);
+        // изменяем счетчик пройденных группировок
+        grpLevel++;
+        // если закончили группировки по всем колонкам, то все дочерние записи преобразуем в формат w2ui
+        if (grpLevel >= groupedColumns.length) {
+            for (let nodeRecName in w2uiGroupedRecords) {
+                w2uiGroupedRecords[nodeRecName].w2ui.children = this.makeRecords(w2uiGroupedRecords[nodeRecName].w2ui.children, this.fk);
             }
-            return (resw2);
+            return w2uiGroupedRecords;
+            // если есть еще колонки для группировки, то для записей в каждой сгруппированной секции проведем еще одну группировку
         } else {
-            for (var i in resw2) {
-                resw2[i].w2ui.children = this.groupBy(resw2[i].w2ui.children, columns, params, col, d);
+            for (let nodeRecName in w2uiGroupedRecords) {
+                w2uiGroupedRecords[nodeRecName].w2ui.children = this.groupBy(w2uiGroupedRecords[nodeRecName].w2ui.children, columns, groupedColumns, summaryColumn, grpLevel);
             }
         }
-        return (resw2);
+        return w2uiGroupedRecords;
+
+    }
+
+    // Функция получает на вход объект записи и название колонки. Возвращает значение поля и его представление.
+    _getRecordValueAndDisplay(record, col){
+        let value = '';
+        let display = '';
+        if (this.columnsRaw[col].type === 'reference') {
+            value = record[col][0];
+            display = this.fk[col][record[col][0]];
+        } else if (this.columnsRaw[col].type === 'date') {
+            value = record[col];
+            display = w2utils.date(value);
+        } else {
+            value = record[col];
+            display = value;
+        }
+        return {
+            value : value,
+            display : display
+        }
     }
 
     /**
