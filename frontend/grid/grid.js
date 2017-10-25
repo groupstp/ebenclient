@@ -1541,8 +1541,8 @@ class BasicGrid extends component.Component {
     }
 
 
-    group(records, columns, groupedColumns = [], summaryColumn = "", grpLevel = 0) {
-        let groupedRecs = this.getGroupedRecords(records, columns, groupedColumns, summaryColumn, grpLevel);
+    group() {
+        let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, '', 0);
         w2ui[this.id].records = groupedRecs;
         w2ui[this.id].refresh();
     }
