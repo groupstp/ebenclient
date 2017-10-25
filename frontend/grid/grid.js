@@ -13,6 +13,7 @@ import * as layout from '../layout'
 import config from '../config/config.js';
 
 let isEqual = require('lodash').isEqual;
+let values = require('lodash').values;
 
 //подключаем стили
 import './grid.css';
@@ -175,7 +176,7 @@ class BasicGrid extends component.Component {
             this._getValuesFromServer();
         }
         if (this.showGroupCol && this.groupedBy) {
-            let groupedRecs = this.groupBy(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
+            let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
             w2ui[this.id].clear();
             for (let i in this.groupedBy) {
                 w2ui[this.id].removeColumn(this.groupedBy[i]);
@@ -223,6 +224,7 @@ class BasicGrid extends component.Component {
      * @param data - данные с сервера при добавлении
      */
     addRecord(data) {
+        debugger;
         let ID = data.content[0].records[0][this.PK];
         let recordRaw = this.makeAsos(data.content[0].records, this.PK);
         let fk = data.content[0].fk;
@@ -247,7 +249,7 @@ class BasicGrid extends component.Component {
             $.extend(this.recordsRaw, recordRaw);
             $.extend(true, this.fk, fk);
             //групируем по-новой
-            let groupedRecs = this.groupBy(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
+            let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
             w2ui[this.id].clear();
             w2ui[this.id].records = groupedRecs;
             w2ui[this.id].refresh();
@@ -1150,9 +1152,13 @@ class BasicGrid extends component.Component {
         let stpObject = stpui[this.name];
         let cellValue = stpObject.getCellValue(record, columnName);
 
-        // если поле обязательное и пустое то стандартно его подсветим
-        if (stpObject.isColumnRequired(columnName) && stpObject.isCellEmpty(cellValue)) {
-            return stpObject._highlightEmtyRequiredCell();
+        // пока считаем что группировочные поля искуственные и их подсвечивать не надо
+        let chidrenExist = record.w2ui && record.w2ui.children && record.w2ui.children.length;
+        if (!chidrenExist) {
+            // если поле обязательное и пустое то стандартно его подсветим
+            if (stpObject.isColumnRequired(columnName) && stpObject.isCellEmpty(cellValue)) {
+                return stpObject._highlightEmtyRequiredCell();
+            }
         }
 
         // если поле необязательное и для его типа определена кастомная функция, то вызовем ее
@@ -1419,7 +1425,7 @@ class BasicGrid extends component.Component {
      * @param grpLevel - уровень группировки
      * @returns {Array} - массив сгруппированных записей
      */
-    groupBy(records, columns, groupedColumns = [], summaryColumn = "", grpLevel = 0) {
+    getGroupedRecords(records, columns, groupedColumns = [], summaryColumn = "", grpLevel = 0) {
         // если summaryColumn не задано - выводим в первое поле по которому группируем
         if (!summaryColumn && groupedColumns.length) {
             summaryColumn = groupedColumns[0];
@@ -1447,7 +1453,7 @@ class BasicGrid extends component.Component {
             let rec = {};
             for (let colName in records[recid]) {
                 // if (currentGrouppingCol !== colName) {
-                     rec[colName] = records[recid][colName];
+                rec[colName] = records[recid][colName];
                 // }
             }
             // и добавляем в объект для хранения сгруппированных записей
@@ -1472,7 +1478,7 @@ class BasicGrid extends component.Component {
             // выведем в группировочную строку значение, если оно одинаково для все группируемых строк
             for (let col in columns) {
                 if (col === currentGrouppingCol) {
-                    continue;
+                    //continue;
                 }
 
                 // считаем что изначально все значения одинаковы
@@ -1487,7 +1493,7 @@ class BasicGrid extends component.Component {
                     let recordInfo = this._getRecordValueAndDisplay(childrenRecords[i], col);
                     let recordValue = recordInfo.value;
                     // если значения не одинаковы - прекращаем цикл
-                    if (recordValue !== valueForCheck){
+                    if (recordValue !== valueForCheck) {
                         valueEquals = false;
                         break;
                     }
@@ -1505,7 +1511,7 @@ class BasicGrid extends component.Component {
             }
 
             // в summaryColumn добавляем представление для сгруппированых записей
-            rec[summaryColumn] = columns[currentGrouppingCol].caption + ' : ' + (keys[nodeRecName] ? keys[nodeRecName] : 'Пустое значение');
+            //rec[summaryColumn] = columns[currentGrouppingCol].caption + ' : ' + (keys[nodeRecName] ? keys[nodeRecName] : 'Пустое значение');
 
             let w2uiRec = this.makeRecords([rec])[0];
             w2uiRec.recid = 'group&' + nodeRecName + Math.random();
@@ -1527,15 +1533,51 @@ class BasicGrid extends component.Component {
             // если есть еще колонки для группировки, то для записей в каждой сгруппированной секции проведем еще одну группировку
         } else {
             for (let nodeRecName in w2uiGroupedRecords) {
-                w2uiGroupedRecords[nodeRecName].w2ui.children = this.groupBy(w2uiGroupedRecords[nodeRecName].w2ui.children, columns, groupedColumns, summaryColumn, grpLevel);
+                w2uiGroupedRecords[nodeRecName].w2ui.children = this.getGroupedRecords(w2uiGroupedRecords[nodeRecName].w2ui.children, columns, groupedColumns, summaryColumn, grpLevel);
             }
         }
         return w2uiGroupedRecords;
 
     }
 
+
+    group(records, columns, groupedColumns = [], summaryColumn = "", grpLevel = 0) {
+        let groupedRecs = this.getGroupedRecords(records, columns, groupedColumns, summaryColumn, grpLevel);
+        w2ui[this.id].records = groupedRecs;
+        w2ui[this.id].refresh();
+    }
+
+    ungroup() {
+        let w2Grid = w2ui[this.id];
+        if (!w2Grid) return;
+        let records = w2Grid.records;
+        let chidlrenRecords = {};
+
+        getChildrenRecords(records);
+        // объект в массив
+        chidlrenRecords = _.values(chidlrenRecords);
+        // и удаляем упоминания о иерархии, которые могли остаться
+        chidlrenRecords.forEach((rec) => {
+            delete rec.w2ui;
+        });
+        w2ui[this.id].records = chidlrenRecords;
+        w2ui[this.id].refresh();
+
+        // функция получает на вхлд массив записей w2ui и заполняет массив chidlrenRecords(берется из замыкания) только конечными записями(не группировками)
+        function getChildrenRecords(records) {
+            records.forEach((rec) => {
+                let chidrenExist = rec.w2ui && rec.w2ui.children && rec.w2ui.children.length;
+                if (chidrenExist) {
+                    getChildrenRecords(rec.w2ui.children);
+                } else {
+                    chidlrenRecords[rec.recid] = rec;
+                }
+            });
+        }
+    }
+
     // Функция получает на вход объект записи и название колонки. Возвращает значение поля и его представление.
-    _getRecordValueAndDisplay(record, col){
+    _getRecordValueAndDisplay(record, col) {
         let value = '';
         let display = '';
         if (this.columnsRaw[col].type === 'reference') {
@@ -1549,8 +1591,8 @@ class BasicGrid extends component.Component {
             display = value;
         }
         return {
-            value : value,
-            display : display
+            value: value,
+            display: display
         }
     }
 
@@ -2025,7 +2067,7 @@ export class GridNew
                 this.groupedBy = groupies;
                 let showGroupCol = 'name';
                 this.showGroupCol = showGroupCol;
-                let groupedRecs = this.groupBy(this.recordsRaw, this.columnsRaw, groupies, showGroupCol);
+                let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, groupies, showGroupCol);
                 w2ui[this.id].clear();
                 for (let i in groupies) {
                     w2ui[this.id].removeColumn(groupies[i]);
