@@ -224,7 +224,6 @@ class BasicGrid extends component.Component {
      * @param data - данные с сервера при добавлении
      */
     addRecord(data) {
-        debugger;
         let ID = data.content[0].records[0][this.PK];
         let recordRaw = this.makeAsos(data.content[0].records, this.PK);
         let fk = data.content[0].fk;
@@ -1514,7 +1513,7 @@ class BasicGrid extends component.Component {
             //rec[summaryColumn] = columns[currentGrouppingCol].caption + ' : ' + (keys[nodeRecName] ? keys[nodeRecName] : 'Пустое значение');
 
             let w2uiRec = this.makeRecords([rec])[0];
-            w2uiRec.recid = 'group&' + nodeRecName + Math.random();
+            w2uiRec.recid = 'group-' + nodeRecName + Math.random();
             w2uiRec.w2ui = {
                 "children": childrenRecords,
                 "style": style[grpLevel]

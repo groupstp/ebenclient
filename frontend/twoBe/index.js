@@ -11,6 +11,7 @@
 //подключаем конфиг
 import config from '../config/config.js';
 import * as tools from '../tools/index.js';
+
 /**
  * @classdesc Класс пользовательских функций
  */
@@ -33,10 +34,12 @@ export default class twoBe {
             name: config.name
         }
     }
-    static getToken(configName){
+
+    static getToken(configName) {
         let token = new tools.TokenAuth(configName).checkToken();
         return token;
     }
+
     /**
      * Получает объект по идентификатору
      * @param {string} id - идентификатор
@@ -101,8 +104,29 @@ export default class twoBe {
      * @param {string} type - тип
      * @param {string} msg - сообщение
      */
-    static showMessage(type, msg) {
-        w2alert(msg);
+    static showMessage(type, msg, options = {}) {
+        //w2alert(msg);
+
+        w2popup.open({
+            showMax: false,
+            showClose: false,
+            title: options.title || 'Уведомление',
+            body: '<div class="w2ui-centered w2ui-alert-msg" style="font-size: 13px;">' + msg + '</div>',
+            buttons: '<button onclick="w2popup.close();" class="w2ui-popup-btn w2ui-btn">' + w2utils.lang('Ok') + '</button>',
+            onOpen: function (event) {
+                // do not use onComplete as it is slower
+                setTimeout(function () {
+                    $('#w2ui-popup .w2ui-popup-btn').focus();
+                }, 1);
+            },
+            onKeydown: function (event) {
+                $('#w2ui-popup .w2ui-popup-btn').focus().addClass('clicked');
+            },
+            onClose: function () {
+                if (typeof callBack == 'function') callBack();
+            }
+        });
+
     }
 
     /**
@@ -182,7 +206,43 @@ export default class twoBe {
         return formID;
 
     }
+
+    static saveFile(content, description = '', extension = '') {
+
+        function base64ToArrayBuffer(base64) {
+            let binaryString = window.atob(base64);
+            let binaryLen = binaryString.length;
+            let bytes = new Uint8Array(binaryLen);
+            for (let i = 0; i < binaryLen; i++) {
+                let ascii = binaryString.charCodeAt(i);
+                bytes[i] = ascii;
+            }
+            return bytes;
+        }
+
+        let saveByteArray = (function () {
+            let a = document.createElement("a");
+            document.body.appendChild(a);
+            a.style = "display: none";
+            return function (data, name) {
+                let blob = new Blob(data, {type: "octet/,stream"});
+                let url = window.URL.createObjectURL(blob);
+                a.href = url;
+                a.download = name;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            };
+        }());
+
+        let sampleBytes = base64ToArrayBuffer(content);
+        let fileName = description + "." + (!extension ? 'file' : extension);
+        saveByteArray([sampleBytes], fileName);
+
+    }
+
 }
+
 /**
  * @classdesc Класс запроса
  */
@@ -231,9 +291,9 @@ class Request {
         this._init();
     }
 
-    _init(){
+    _init() {
         let token = new tools.TokenAuth(config.name).checkToken();
-        this.addParam('token',token);
+        this.addParam('token', token);
     }
 
     /**
@@ -332,8 +392,8 @@ class Request {
         }
 
         this.param.data.orderBy.push({
-            field : field,
-            sort : sortDirection
+            field: field,
+            sort: sortDirection
         })
     }
 
