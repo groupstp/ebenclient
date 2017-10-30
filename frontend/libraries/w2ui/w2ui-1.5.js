@@ -7018,9 +7018,11 @@ w2utils.event = {
             rec.w2ui = rec.w2ui || {};
             var id = w2utils.escapeId(recid);
             var children = rec.w2ui.children;
-            if (Array.isArray(children)) {
+            // Дюков ветку дерева открываем только если в ней есть элементы
+            if (Array.isArray(children) && children.length) {
                 if (rec.w2ui.expanded === true || children.length === 0) return false; // already shown
-                var edata = this.trigger({phase: 'before', type: 'expand', target: this.name, recid: recid});
+                // Дюков меняем событие с expand на treeExpand, так как это разворот группы дерева
+                var edata = this.trigger({phase: 'before', type: 'treeExpand', target: this.name, recid: recid});
                 if (edata.isCancelled === true) return false;
                 rec.w2ui.expanded = true;
                 children.forEach(function (child) {
@@ -7103,9 +7105,10 @@ w2utils.event = {
             rec.w2ui = rec.w2ui || {};
             var id = w2utils.escapeId(recid);
             var children = rec.w2ui.children;
-            if (Array.isArray(children)) {
+            // Дюков ветку дерева закрываем только если в ней есть элементы
+            if (Array.isArray(children) && children.length) {
                 if (rec.w2ui.expanded !== true) return false; // already hidden
-                var edata = this.trigger({phase: 'before', type: 'collapse', target: this.name, recid: recid});
+                var edata = this.trigger({phase: 'before', type: 'treeСollapse', target: this.name, recid: recid});
                 if (edata.isCancelled === true) return false;
                 clearExpanded(rec);
                 var stops = [];
