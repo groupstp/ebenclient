@@ -26,13 +26,11 @@ export default class menuTopFixed {
         //пользователь
         this._user = options.objInfo.description + (options.objInfo.login !== undefined ? ' (' + options.objInfo.login + ')' : "");
         //возможные перемещения
-        this.objInfo = options.objInfo;
-        this._permissions = options.objInfo.permissions;
+        this.objInfo = options.objInfo || {};
         //строим шаблон и размещаем его
         document.getElementById(this._place).innerHTML = tempalate({
             name: this._name,
             user: this._user,
-            /*routes: this._permissions*/
             routes: this.objInfo
         });
         //навешиваем обработчики событий

@@ -268,19 +268,19 @@ class Request {
          * @member
          * @type {}
          */
-        this.before = '';
+        this.before = function(){};
         /**
          * Что делать при успехе
          * @member
          * @type {}
          */
-        this.success = '';
+        this.success = function(){};
         /**
          * Что делать при неудаче
          * @member
          * @type {}
          */
-        this.error = '';
+        this.error = function(){};
         /**
          * Ключ для поисков в кэшэ
          * @member
@@ -467,7 +467,7 @@ class Request {
             .then(
                 response => {
                     this.success(response);
-                    return Promise.resolve();
+                    return Promise.resolve(response);
                 },
                 errorResponse => {
                     this.error(errorResponse);
