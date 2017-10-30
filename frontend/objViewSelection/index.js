@@ -1,11 +1,12 @@
 import tempalate from './template.tpl';
 import './style.css';
+import CookieService from '../services/cookie-service';
 
 export default class ObjViewSelection{
     constructor(options){
         this._el = options.el;
         this._possibleObjViews = options.possibleObjViews || [];
-        this._el.addEventListener('click',this._onObjViewCardClick);
+        this._el.addEventListener('click',this._onObjViewCardClick.bind(this));
         this.render();
     }
 
@@ -15,13 +16,21 @@ export default class ObjViewSelection{
         });
     }
 
+    show(){
+        this._el.style.display = '';
+    }
+
+    hide(){
+        this._el.style.display = 'none';
+    }
+
     _onObjViewCardClick(event) {
         const target = event.target;
         const element = target.closest('.objViewElement');
 
         if (!element) return;
 
-        localStorage['currentObjectView'] = element.dataset.objview;
-        document.location.href = 'main.html';
+        CookieService.setCookie('currentObjectView',element.dataset.objview);
+        this.hide();
     }
 }

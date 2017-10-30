@@ -8,6 +8,7 @@
 import pako from '../libraries/pakojs/pako.js';
 //подключаем конфиг
 import config from '../config/config.js';
+import CookieService from '../services/cookie-service';
 
 require('imports-loader?jQuery=jquery!../libraries/blockUI/jquery.blockUI.js');
 
@@ -185,32 +186,7 @@ export class TokenAuth {
      * @private
      */
     _setCookie(name, value, options) {
-        options = options || {};
-
-        var expires = options.expires;
-
-        if (typeof expires === "number" && expires) {
-            var d = new Date();
-            d.setTime(d.getTime() + expires * 1000);
-            expires = options.expires = d;
-        }
-        if (expires && expires.toUTCString) {
-            options.expires = expires.toUTCString();
-        }
-
-        value = encodeURIComponent(value);
-
-        var updatedCookie = name + "=" + value;
-
-        for (var propName in options) {
-            updatedCookie += "; " + propName;
-            var propValue = options[propName];
-            if (propValue !== true) {
-                updatedCookie += "=" + propValue;
-            }
-        }
-
-        document.cookie = updatedCookie;
+        CookieService.setCookie(name, value, options);
     }
 
     /**
@@ -221,10 +197,7 @@ export class TokenAuth {
      * @private
      */
     _getCookie(name) {
-        var matches = document.cookie.match(new RegExp(
-            "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-        ));
-        return matches ? decodeURIComponent(matches[1]) : undefined;
+        return CookieService.getCookie(name);
     }
 
     /**
@@ -232,7 +205,7 @@ export class TokenAuth {
      * @private
      */
     _deleteCookie() {
-        this._setCookie(this.name, "", {expires: -1});
+        CookieService.deleteCookie(this.name);
     }
 
     /**
