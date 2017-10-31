@@ -1,0 +1,11 @@
+.objViewsElement {
+    display: inline-block;
+    border: 2px solid black;
+    font-size: 26px;
+    padding: 80px;
+}
+
+.objViewsElement:hover {
+    border-color : green;
+    color : green;
+}

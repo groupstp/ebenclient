@@ -15,12 +15,17 @@
 
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li data-obj='user' data-sel=false data-cl=true>
+                <li style="cursor: pointer" data-action = "toObjViewSelection">
+                    <a>
+                        Выбор предметной области
+                    </a>
+                </li>
+                <li style="cursor: pointer" data-obj='user' data-sel=false data-cl=true>
                     <a>
                         <span class="glyphicon glyphicon-user" style="color: #43a047"></span> {{user}}
                     </a>
                 </li>
-                <li style="cursor: pointer" data-obj='exit' data-sel=false data-cl=true>
+                <li style="cursor: pointer" data-obj='exit' data-sel=false data-action = "exit">
                     <a>Выход
                         <span class="glyphicon glyphicon-log-out"
                               style="color: #43a047;"></span>
