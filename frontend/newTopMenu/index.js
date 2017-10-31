@@ -19,11 +19,11 @@ export default class TopMenu {
     renderDDMenus() {
         const divForMenus = this._el.querySelector('#dropdown-menus');
         if (divForMenus && this._dropDownMenus.length) {
+            let DDMenuHTML = '';
             this._dropDownMenus.forEach((menuItem) => {
-                const DDMenu = menuItem.render();
-                divForMenus.appendChild(DDMenu);
+                DDMenuHTML += menuItem.render();
             });
-
+            divForMenus.innerHTML = DDMenuHTML;
         }
     }
 

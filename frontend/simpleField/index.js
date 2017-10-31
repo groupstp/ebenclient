@@ -35,7 +35,7 @@ export class SimpleField extends Field {
         // для даты и время используем bootstrap-datepicker для всего остального w2ui
         if (this.isItDateField()) {
             this._applyDatepicker();
-        } else {
+        } else /*if (!this.isItFileField()) */{
             this._applyW2ui();
         }
     }
@@ -80,6 +80,11 @@ export class SimpleField extends Field {
         this.trigger('changeValue');
     }
 
+    _changeFileNameAndExtension(event) {
+        if (this.type === 'file') {
+
+        }
+    }
 
     /**
      *  Добавляем наблюдение за событиями controlEl
@@ -88,9 +93,10 @@ export class SimpleField extends Field {
     _addListeners() {
         // в w2ui при работе с датой и временем не срабатывает событие change, поэтому ориентируемся на потерю фокуса
         this.controlEl.addEventListener('blur', this._saveChanges.bind(this));
+        //this.controlEl.addEventListener('change', this._changeFileNameAndExtension.bind(this));
     }
 
-    _getValueForFileField(){
+    _getValueForFileField() {
         let result = '';
         let selectedFile = $(this.controlEl).data().selected[0];
         if (selectedFile) {
@@ -138,22 +144,6 @@ export class SimpleField extends Field {
         return result;
     }
 
-    isItDateField() {
-        let result = false;
-        if (this.type === "date" || this.type === "time" || this.type === "timestamp") {
-            result = true;
-        }
-        return result;
-    }
-
-    isItFileField() {
-        let result = false;
-        if (this.type === "file") {
-            result = true;
-        }
-        return result;
-    }
-
     setValue(newValue) {
         this.value = newValue;
         if (this.isItDateField()) {
@@ -176,6 +166,22 @@ export class SimpleField extends Field {
         if (!this.isItDateField()) {
             $(this.controlEl).data('w2field').change(new Event('change'));
         }
+    }
+
+    isItDateField() {
+        let result = false;
+        if (this.type === "date" || this.type === "time" || this.type === "timestamp") {
+            result = true;
+        }
+        return result;
+    }
+
+    isItFileField() {
+        let result = false;
+        if (this.type === "file") {
+            result = true;
+        }
+        return result;
     }
 
 }

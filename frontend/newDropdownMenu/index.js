@@ -9,16 +9,12 @@ export default class DropDownMenu{
     }
 
     render(){
-        let liElem = document.createElement('li');
-        liElem.classList.add('dropdown');
-        liElem.style.cursor = 'pointer';
+        const HTML = template({
+                 menuKey : this._key,
+                 title : this._title,
+                 items : this._items
+             });
 
-        liElem.innerHTML = template({
-            menuKey : this._key,
-            title : this._title,
-            items : this._items
-        });
-
-        return liElem;
+        return HTML;
     }
 }

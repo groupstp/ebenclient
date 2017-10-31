@@ -89,7 +89,8 @@ export class Field extends Component {
             "id": this.id,
             "name": this.name,
             "multiline": this.multiline,
-            "checkbox": (this.type === 'checkbox') ? true : false
+            "checkbox": (this.type === 'checkbox') ? true : false,
+            "file": (this.type === 'file') ? true : false,
         });
 
         if (this.multiline) {

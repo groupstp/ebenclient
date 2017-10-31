@@ -17,6 +17,10 @@ export default class Controller {
             title : 'Справочники',
             items : [{key : 'query', value : 'Заявки'},{key : 'position', value : 'Позиции'}]
         }));
+        this.topMenu.addDropDownMenu(new DropDownMenu({
+            key : 'stages',
+            title : 'Этапы'
+        }));
         this.topMenu.renderDDMenus();
 
     }
