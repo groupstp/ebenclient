@@ -28,6 +28,8 @@ window.w2utils = w2lib.w2utils;
 window.w2confirm = w2lib.w2confirm;
 window.jQuery = jQuery;
 
+window.stpui = {};
+
 import Controller from './controller';
 
 const controller = new Controller();

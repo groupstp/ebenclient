@@ -42,6 +42,7 @@ export default class contentBuilder extends componentLib.Component {
      * Размещает на странице тулбар и контейнер для страниц
      */
     render() {
+        this.box.innerHTML = '';
         let pageNavigator = document.createElement('div');
         pageNavigator.id = 'pageNavigator';
         pageNavigator.style.marginBottom = '5px';
@@ -127,6 +128,13 @@ export default class contentBuilder extends componentLib.Component {
     refresh() {
         if (this.pages[this.current] !== undefined)
             this.pages[this.current].refresh();
+    }
+
+    // Set default values to properties and render component
+    clearScreen(){
+        this.pages.length = [];
+        this.current = -1;
+        this.render();
     }
 
     /**

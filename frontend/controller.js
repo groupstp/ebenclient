@@ -59,7 +59,7 @@ export default class Controller {
         //подписка на клик, роутер системы
         this._topMenu.on('menuItemSelected', event => {
             let detail = event.detail;
-            if (detail.obj === 'reference' || detail.obj === 'stage' || detail.obj === 'scheme') {
+            //if (detail.obj === 'reference' || detail.obj === 'stage' || detail.obj === 'scheme') {
                 let path;
                 if (detail.obj === 'scheme') {
                     path = 'ref-scheme';
@@ -73,7 +73,7 @@ export default class Controller {
                 page.load();
                 //выделить пункт меню
                 //menu.selectItem(path);
-            }
+            //}
         });
 
         this._topMenu.on('toObjViewSelection', event => {
@@ -102,7 +102,9 @@ export default class Controller {
             this._objViewSelection.hide();
             const menuData = await this._getMenuFromServer(selectedObjView);
             this._updateMenu(menuData);
+            this._clearObjects();
             this._mainScreen.show();
+            this._mainScreen.clearScreen();
         });
 
     }
@@ -111,6 +113,16 @@ export default class Controller {
         this._mainScreen = new ContentBuilder({box: document.querySelector('#container')});
         this._mainScreen.render();
         this._mainScreen.hide();
+    }
+
+    _clearObjects(){
+        // delete all w2ui objects because they don't need anymore after we switch object view
+        for (let obj in w2ui){
+            delete w2ui[obj];
+        }
+        for (let obj in stpui){
+            delete stpui[obj];
+        }
     }
 
     async _updateMenu(elements) {
