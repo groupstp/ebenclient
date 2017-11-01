@@ -24,29 +24,27 @@ export default class Controller {
             allowedObjectViews.push(objViewName);
         }
 
-        /*const currentObjView = CookieService.getCookie('currentObjView');
-        if (allowedObjectViews.indexOf(currentObjView) !== -1){
+        const currentObjView = CookieService.getCookie('currentObjView');
 
-        }*/
 
         if (allowedObjectViews.length > 1) {
             this._initOjViewSelection(allowedObjectViews);
+            // if we already use one of allowed object views
+            if (allowedObjectViews.indexOf(currentObjView) === -1) {
+                this._initOjViewSelection.hide();
+                this._mainScreen.show();
+            } else { // if we use object view that have been forbidden for us
+                CookieService.deleteCookie('currentObjView');
+            }
         } else if (allowedObjectViews.length === 1) {
             const menuData = await this._getMenuFromServer(allowedObjectViews[0]);
+            if (currentObjView !== allowedObjectViews[0]) {
+                // set cookie for one day
+                CookieService.setCookie('currentObjView', allowedObjectViews[0], 84000);
+            }
             this._updateMenu(menuData);
             this._mainScreen.show();
         }
-
-        /*this._topMenu.addDropDownMenu(new DropDownMenu({
-            key: 'reference',
-            title: 'Справочники',
-            items: [{key: 'query', value: 'Заявки'}, {key: 'position', value: 'Позиции'}]
-        }));*/
-        /*this._topMenu.addDropDownMenu(new DropDownMenu({
-            key: 'stages',
-            title: 'Этапы'
-        }));
-        this._topMenu.renderDDMenus();*/
 
     }
 
@@ -60,19 +58,19 @@ export default class Controller {
         this._topMenu.on('menuItemSelected', event => {
             let detail = event.detail;
             //if (detail.obj === 'reference' || detail.obj === 'stage' || detail.obj === 'scheme') {
-                let path;
-                if (detail.obj === 'scheme') {
-                    path = 'ref-scheme';
-                } else {
-                    path = 'ref-' + detail.name;
-                }
+            let path;
+            if (detail.obj === 'scheme') {
+                path = 'ref-scheme';
+            } else {
+                path = 'ref-' + detail.name;
+            }
 
 
-                let page = this._mainScreen.showPage(path, detail.caption);
-                //загружаем содержимое страницы с сервера
-                page.load();
-                //выделить пункт меню
-                //menu.selectItem(path);
+            let page = this._mainScreen.showPage(path, detail.caption);
+            //загружаем содержимое страницы с сервера
+            page.load();
+            //выделить пункт меню
+            //menu.selectItem(path);
             //}
         });
 
@@ -98,7 +96,8 @@ export default class Controller {
 
         this._objViewSelection.on('select', async (event) => {
             let selectedObjView = event.detail.name;
-            CookieService.setCookie('currentObjView', selectedObjView);
+            // set cookie for one day
+            CookieService.setCookie('currentObjView', selectedObjView, 84000);
             this._objViewSelection.hide();
             const menuData = await this._getMenuFromServer(selectedObjView);
             this._updateMenu(menuData);
@@ -115,12 +114,12 @@ export default class Controller {
         this._mainScreen.hide();
     }
 
-    _clearObjects(){
+    _clearObjects() {
         // delete all w2ui objects because they don't need anymore after we switch object view
-        for (let obj in w2ui){
+        for (let obj in w2ui) {
             delete w2ui[obj];
         }
-        for (let obj in stpui){
+        for (let obj in stpui) {
             delete stpui[obj];
         }
     }
