@@ -58,7 +58,6 @@ export default class Controller {
 
         //подписка на клик, роутер системы
         this._topMenu.on('menuItemSelected', event => {
-            debugger;
             let detail = event.detail;
             if (detail.obj === 'reference' || detail.obj === 'stage' || detail.obj === 'scheme') {
                 let path;
@@ -78,6 +77,8 @@ export default class Controller {
         });
 
         this._topMenu.on('toObjViewSelection', event => {
+            this._topMenu.clearDropDownMenus();
+            this._topMenu.render();
             this._mainScreen.hide();
             this._objViewSelection.show();
         });

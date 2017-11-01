@@ -11,6 +11,7 @@
 //подключаем конфиг
 import config from '../config/config.js';
 import * as tools from '../tools/index.js';
+import CookieService from '../services/cookie-service';
 
 /**
  * @classdesc Класс пользовательских функций
@@ -292,8 +293,10 @@ class Request {
     }
 
     _init() {
-        let token = new tools.TokenAuth(config.name).checkToken();
+        const token = new tools.TokenAuth(config.name).checkToken();
         this.addParam('token', token);
+        const currentObjView = CookieService.getCookie('currentObjView') || '';
+        this.addParam('objView', currentObjView);
     }
 
     /**

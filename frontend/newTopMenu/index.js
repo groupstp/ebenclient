@@ -48,17 +48,20 @@ export default class TopMenu {
         this._dropDownMenus.push(menu);
     }
 
+    clearDropDownMenus(){
+        this._dropDownMenus.length = 0;
+    }
+
     _onMenuItemClick(event) {
         // определяем ближайший элемент с доступной обработкой клика
         const target = event.target;
-        let elem = target.closest('[data-action=getObjectForm]');
+        let elem = target.closest('[data-action=getObjForm]');
         if (!elem) return;
         let dataset = elem.dataset;
         // при необходимости выделяем
         if (dataset.sel === 'true') {
             //this._setSelection(elem)
         }
-
         this.trigger('menuItemSelected', dataset);
     }
 

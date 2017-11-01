@@ -11,6 +11,7 @@ import * as tools from '../tools/index.js';
 //подключаем конфиг
 import config from '../config/config.js';
 import twoBe from "../twoBe/index";
+import CookieService from '../services/cookie-service';
 
 let layout = require('../layout/index.js');
 /**
@@ -294,10 +295,12 @@ class Page {
             message: 'Загрузка'
         });
         let token = new tools.TokenAuth(config.name).checkToken();
+        const currentObjView = CookieService.getCookie('currentObjView') || '';
         let options = {
             action: 'get',
             path: this.id,
             token: token,
+            objView: currentObjView,
             data: {
                 type: 'listForm'
             }
