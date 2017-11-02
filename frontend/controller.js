@@ -1,8 +1,9 @@
 import TopMenu from './newTopMenu';
 import DropDownMenu from './newDropdownMenu';
-import CookieService from "./services/cookie-service";
 import ObjViewSelection from "./newObjViewSelection";
 import ContentBuilder from "./newMainScreen";
+
+import CookieService from "./services/cookie-service";
 
 export default class Controller {
     constructor() {
@@ -30,19 +31,19 @@ export default class Controller {
         if (allowedObjectViews.length > 1) {
             this._initOjViewSelection(allowedObjectViews);
             // if we already use one of allowed object views
-            if (allowedObjectViews.indexOf(currentObjView) === -1) {
-                this._initOjViewSelection.hide();
+            if (allowedObjectViews.indexOf(currentObjView) !== -1) {
+                this._objViewSelection.hide();
+                this._updateMenu(currentObjView);
                 this._mainScreen.show();
             } else { // if we use object view that have been forbidden for us
                 CookieService.deleteCookie('currentObjView');
             }
         } else if (allowedObjectViews.length === 1) {
-            const menuData = await this._getMenuFromServer(allowedObjectViews[0]);
             if (currentObjView !== allowedObjectViews[0]) {
                 // set cookie for one day
-                CookieService.setCookie('currentObjView', allowedObjectViews[0], 84000);
+                CookieService.setCookie('currentObjView', allowedObjectViews[0], { expires : 84000 });
             }
-            this._updateMenu(menuData);
+            this._updateMenu(allowedObjectViews[0]);
             this._mainScreen.show();
         }
 
@@ -97,10 +98,9 @@ export default class Controller {
         this._objViewSelection.on('select', async (event) => {
             let selectedObjView = event.detail.name;
             // set cookie for one day
-            CookieService.setCookie('currentObjView', selectedObjView, 84000);
+            CookieService.setCookie('currentObjView', selectedObjView, { expires : 84000 });
             this._objViewSelection.hide();
-            const menuData = await this._getMenuFromServer(selectedObjView);
-            this._updateMenu(menuData);
+            this._updateMenu(selectedObjView);
             this._clearObjects();
             this._mainScreen.show();
             this._mainScreen.clearScreen();
@@ -124,7 +124,8 @@ export default class Controller {
         }
     }
 
-    async _updateMenu(elements) {
+    async _updateMenu(objView) {
+        const elements = await this._getMenuFromServer(objView);
         for (let objType in elements) {
             let options = {
                 key: objType,

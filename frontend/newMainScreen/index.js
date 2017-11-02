@@ -52,6 +52,7 @@ export default class contentBuilder extends componentLib.Component {
         this.box.appendChild(pageContainer);
         this.pageContainer = pageContainer;
         this.buildNavigatorToolbar(pageNavigator);
+        this._buildMain();
     }
 
     /**
@@ -176,6 +177,11 @@ export default class contentBuilder extends componentLib.Component {
         let page = new Page(id, caption, this.pageContainer);
         this.pages.splice(this.current, 0, page);
         return page;
+    }
+
+    _buildMain() {
+        const place = this.showPage('main', 'Главная страница').generatedBox;
+        place.innerHTML = '<div style = "text-align: center"><img src="mainPage.gif" alt=""></div><p><h1 align="center">Вы находитесь на главной странице</h1></p>';
     }
 }
 /**
