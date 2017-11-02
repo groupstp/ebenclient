@@ -4,6 +4,8 @@ import ObjViewSelection from "./newObjViewSelection";
 import ContentBuilder from "./newMainScreen";
 
 import CookieService from "./services/cookie-service";
+import * as tools from './tools';
+import config from './config/config.js';
 
 export default class Controller {
     constructor() {
@@ -83,6 +85,7 @@ export default class Controller {
         });
 
         this._topMenu.on('exit', event => {
+            debugger;
             new tools.TokenAuth(config.name).exit('index.html');
         });
 

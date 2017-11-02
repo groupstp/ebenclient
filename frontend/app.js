@@ -29,6 +29,16 @@ window.w2confirm = w2lib.w2confirm;
 window.jQuery = jQuery;
 
 window.stpui = {};
+// проверка токена
+let token = new tools.TokenAuth(config.name).checkToken();
+// если токена нет - делаем redirect
+if (token === undefined) {
+    document.location.href = 'index.html';
+}
+
+//localStorage.clear();
+let ruLocale = require('./libraries/w2ui/ru-ru.json');
+w2utils.locale(ruLocale);
 
 import Controller from './controller';
 

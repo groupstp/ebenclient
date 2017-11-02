@@ -5,7 +5,7 @@ const webpack = require('webpack');
 const extractTextPlugin = require('extract-text-webpack-plugin');
 module.exports = {
     context: path.resolve(__dirname + '/frontend'),
-    entry: {/*main: './main.js', auth: './auth.js',*/ app: './app.js'},
+    entry: {/*main: './main.js', */auth: './auth.js',app: './app.js'},
     output: {
         path: path.resolve(__dirname + '/public/'),
         filename: 'js/[name].bandle.js'

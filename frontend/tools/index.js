@@ -213,11 +213,12 @@ export class TokenAuth {
      * @param page - куда уходить
      */
     exit(page) {
+        debugger;
         let url = twoBe.getDefaultParams().url + '/logout';
         let token = this.checkToken();
         let self = this;
         if (token) {
-            twoBe.createRequest().addUrl(url).addParam('token', token).addBefore(function () {
+            twoBe.createRequest().addUrl(url).addBefore(function () {
 
             }).addSuccess(function (data) {
                 self._deleteCookie();
