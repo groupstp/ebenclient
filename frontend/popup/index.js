@@ -203,6 +203,11 @@ export class Popup extends Component {
                         onClose: function (event) {
 
                         },
+                        onKeydown: function (event){
+                            if (event.originalEvent.key === "Escape") {
+                                stpui.currentPopup.close();
+                            }
+                        },
                         onToggle: function (event) {
                             event.onComplete = function () {
                                 self.lock('', true);

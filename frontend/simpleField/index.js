@@ -152,6 +152,8 @@ export class SimpleField extends Field {
             } else if (newValue instanceof Date) {
                 $(this.controlEl).datepicker('setDate', newValue);
             }
+        } else if (this.isItFileField()) {
+            this.controlEl.value = '';
         } else {
             this.controlEl.value = newValue;
         }

@@ -213,7 +213,6 @@ export class TokenAuth {
      * @param page - куда уходить
      */
     exit(page) {
-        debugger;
         let url = twoBe.getDefaultParams().url + '/logout';
         let token = this.checkToken();
         let self = this;

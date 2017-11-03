@@ -85,7 +85,6 @@ export default class Controller {
         });
 
         this._topMenu.on('exit', event => {
-            debugger;
             new tools.TokenAuth(config.name).exit('index.html');
         });
 

@@ -560,7 +560,6 @@ class BasicGrid extends component.Component {
                             }
                         }
                     }
-                    ;
                     if (this.handlers.onSelect !== undefined) {
                         try {
                             this.handlers.onSelect();
@@ -1896,7 +1895,9 @@ export class Grid extends BasicGrid {
     }
 
     makew2uiobject() {
+
         let obj = super.makew2uiobject();
+
         obj.onSearch = function (event) {
             this.handlers.onSearch(event);
         }.bind(this);
@@ -1906,6 +1907,7 @@ export class Grid extends BasicGrid {
                 this.handlers.onRequest(event);
             }
         }.bind(this);
+
         obj.parser = this.handlers.parser || "";
         return obj;
     }
