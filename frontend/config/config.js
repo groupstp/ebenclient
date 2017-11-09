@@ -10,11 +10,11 @@
 let config = {
     name: 'test',
     caption: 'Тестовая ИС',
-    defaultUrl: 'http://localhost:12345/login',
+    defaultUrl: 'http://gag-test.groupstp.ru:80/api/login',
     version: '0.0.1',
     authGoogle: false,
     mainPage: 'main.html',
-    testUrl: "http://localhost:12345"
+    testUrl: "http://gag-test.groupstp.ru:80/api"
 };
 
 export default config;
