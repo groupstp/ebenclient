@@ -824,6 +824,12 @@ class BasicGrid extends component.Component {
                 this.handlers.onExpand(event);
             }.bind(this)
         }
+        if (this.handlers.onTreeExpand !== undefined) {
+            // TODO старые поделки Антона, это событие вызывается не так как остальные
+            obj.onTreeExpand = function (name, recid) {
+                this.handlers.onTreeExpand(name, recid);
+            }.bind(this)
+        }
         return obj;
     }
 
@@ -894,7 +900,11 @@ class BasicGrid extends component.Component {
             for (let col in recordsRaw[recid]) {
                 if (this.columnsRaw[col] !== undefined) {
                     if (this.columnsRaw[col].type === 'reference') {
-                        rec[col] = "";
+                        if (recordsRaw[recid][col].length) {
+                            rec[col] = "";
+                        } else {
+                            rec[col] = null;
+                        }
                         for (let j in recordsRaw[recid][col]) {
                             rec[col] += fk[col][recordsRaw[recid][col][j]] + '; '
                         }
@@ -924,15 +934,31 @@ class BasicGrid extends component.Component {
                  rec[col] = recordsRaw[recid][col];
                  }*/
             }
-            if (this.hierachy && this.pagination && recordsRaw[recid].isGroup !== undefined && recordsRaw[recid].isGroup) {
+            if (this.hierachy /*&& this.pagination*/ && recordsRaw[recid].isGroup !== undefined && recordsRaw[recid].isGroup) {
                 rec.w2ui = {
                     children: [{recid: 'treeFake'}]
                 };
             }
             records.push(rec);
         }
-        if (this.hierachy && !this.pagination) {
+        /*if (this.hierachy && !this.pagination) {
             let recordsW = this.makeAsos(records, 'recid');
+
+            //showTree(null, 'parentID');
+            records = [];
+            for (let recid in recordsW) {
+                let record = recordsW[recid];
+                if (record['isGroup']) {
+                    if (!record.w2ui) record.w2ui = {};
+                    record.w2ui.children = [];
+                }
+
+                records.push(record);
+
+                // if (recordsW[recid]['parentID'] === null) {
+                //     records.push(recordsW[recid]);
+                // }
+            }
 
             function showTree(parent, tree) {
                 for (let i in recordsW) {
@@ -949,15 +975,7 @@ class BasicGrid extends component.Component {
                 }
             }
 
-            showTree(null, 'parentID');
-            records = [];
-            for (let recid in recordsW) {
-                if (recordsW[recid]['parentID'] === null) {
-                    records.push(recordsW[recid]);
-                }
-            }
-
-        }
+        }*/
         return records;
     }
 
@@ -1824,6 +1842,81 @@ export class Grid extends BasicGrid {
                 w2ui[this.id].refresh();
             }
         }.bind(this);
+        this.handlers.onTreeExpand = function (name, recid) {
+            /*if (!this.pagination) {
+                w2ui[this.id].toggle(recid);
+                return;
+            }*/
+            // TODO костыль переделать
+            if (typeof name === 'object') {
+                return;
+            }
+
+            //исключаем повторную подгрузку
+            if (w2ui[this.id].get(recid).w2ui !== undefined && w2ui[this.id].get(recid).w2ui.children !== undefined && w2ui[this.id].get(recid).w2ui.children[0].recid !== 'treeFake') {
+                w2ui[this.id].toggle(recid);
+                return;
+            }
+
+            let grid = this;
+            let path = this.path;
+            let request = twoBe.createRequest();
+            request.addParam('action', 'getContent').addData('type', 'gridRecords').addParam('path', path).addFilterParam('parentID', recid).addBefore(function () {
+                grid.lock('Идет загрузка..');
+            }).addSuccess(function (response) {
+                debugger;
+                w2ui[grid.id].unlock();
+                let expRecs = grid.makeRecords(response.content[0].records, response.content[0].fk);
+                //add info to object
+                w2ui[grid.id].set(recid, {w2ui: {children: expRecs}});
+                $.extend(grid.recordsRaw, grid.makeAsos(response.content[0].records, 'ID'));
+                $.extend(grid.fk, response.content[0].fk);
+                w2ui[grid.id].toggle(recid);
+                grid.unlock();
+            }).addError(function (msg) {
+                twoBe.showMessage(0, msg);
+                grid.unlock();
+            }).send();
+
+
+            /*var type = 'elementForm';
+            var path = grid.getProperties().path;
+            var PK = grid.getProperties().PK;
+            // id таблицы для которой запрашиваем форму элемента
+            var gridID = grid.getProperties().id;
+            var request = twoBe.createRequest();
+            request.addParam('action', 'get').addParam('path', path).addData('type', type).addData('parentTableID', gridID).addFilterParam(PK, grid.getSelectedIDs()[0]).addBefore(function () {
+                grid.lock('Идет загрузка..');
+            }).addSuccess(function (data) {
+                twoBe.buildView(data, path + type);
+                grid.unlock();
+            }).addError(function (msg) {
+                twoBe.showMessage(0, msg);
+                grid.unlock();
+            }).addCacheKey(path + type).send();*/
+
+           /* w2ui[this.id].lock('Загружаем', true);
+            let expandQuery = new tools.AjaxSender({
+                url: 'search.json',
+                msg: ''
+            })*/
+            /*expandQuery.sendQuery()
+                .then(
+                    response => {
+                        w2ui[this.id].unlock();
+                        let expRecs = this.makeRecords(response.content[0].records, response.content[0].fk);
+                        //add info to object
+                        w2ui[this.id].set(recid, {w2ui: {children: expRecs}});
+                        $.extend(this.recordsRaw, this.makeAsos(response.content[0].records, 'ID'));
+                        $.extend(this.fk, response.content[0].fk);
+                        console.log(this);
+                        w2ui[this.id].toggle(recid);
+                    },
+                    error => {
+
+                    }
+                )*/
+        }.bind(this);
     }
 
     /**
@@ -1998,10 +2091,10 @@ export class GridNew
         }
         //обработка разворачивания элемента дерева
         this.handlers.onTreeExpand = function (name, recid) {
-            if (!this.pagination) {
+            /*if (!this.pagination) {
                 w2ui[this.id].toggle(recid);
                 return;
-            }
+            }*/
             //исключаем повторную подгрузку
             if (w2ui[this.id].get(recid).w2ui !== undefined && w2ui[this.id].get(recid).w2ui.children !== undefined && w2ui[this.id].get(recid).w2ui.children[0].recid !== 'treeFake') {
                 w2ui[this.id].toggle(recid);
