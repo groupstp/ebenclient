@@ -223,10 +223,12 @@ class BasicGrid extends component.Component {
      * Функция выполняет добавление записи в таблицу
      * @param data - данные с сервера при добавлении
      */
-    addRecord(data) {
-        let ID = data.content[0].records[0][this.PK];
-        let recordRaw = this.makeAsos(data.content[0].records, this.PK);
-        let fk = data.content[0].fk;
+    addRecord(rec, fk) {
+        //let ID = data.content[0].records[0][this.PK];
+        let ID = rec[this.PK];
+        //let recordRaw = this.makeAsos(data.content[0].records, this.PK);
+        let recordRaw = this.makeAsos([rec], this.PK);
+        //let fk = data.content[0].fk;
         //добавление для справочника без иерархии
         if (!this.hierachy && this.groupedBy.length === 0) {
             //записываем в поля объекта
@@ -332,10 +334,16 @@ class BasicGrid extends component.Component {
      * Функция выполняет изменение записи в таблице
      * @param data - данные с сервера
      */
-    updateRecord(data) {
-        let ID = data.content[0].records[0][this.PK];
-        this.deleteRecords(ID);
-        this.addRecord(data);
+    updateRecords(data) {
+        debugger;
+        let records = data.content[0].records;
+        let fk = data.content[0].fk;
+        records.forEach((rec) => {
+            let ID = rec[this.PK];
+            this.deleteRecords(ID);
+            this.addRecord(rec, fk);
+        });
+
     }
 
     /**
@@ -524,6 +532,7 @@ class BasicGrid extends component.Component {
      * @private
      */
     makew2uiobject() {
+        var stpgrid = this;
         let obj = {
             name: this.id,
             autoLoad: (this.pagination ? 'auto' : false),
@@ -811,6 +820,16 @@ class BasicGrid extends component.Component {
 
                 }
             }.bind(this),
+            onRender: function (event) {
+                // на этом этапе можем вмешаться в процесс отображения
+                if (stpgrid.handlers.beforeRender !== undefined) {
+                    let event = {
+                        w2grid: this,
+                        stpgrid: stpgrid
+                    };
+                    stpgrid.handlers.beforeRender(event);
+                }
+            },
             parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw)
 
@@ -867,7 +886,7 @@ class BasicGrid extends component.Component {
      */
     reloadRecords(data) {
         //this.recordsRaw = data.content[0].records;
-        let prepContent = this.prepareData(this.content);
+        let prepContent = this.prepareData(data.content);
         this.recordsRaw = this.makeAsos(prepContent.records, this.PK);
         this.fk = data.content[0].fk;
         let recs = this.makeRecords(data.content[0].records, data.content[0].fk);
@@ -1387,6 +1406,10 @@ class BasicGrid extends component.Component {
         for (let eventName in this.events) {
             this.handlers[eventName] = function (event) {
                 let param = this;
+                // TODO костыль
+                if (this.id === 'ref-stages_billBinding-grid-listForm') {
+                    param = event;
+                }
                 try {
                     //если делаем экспанд нужно сделать предварительные действия, можно убрать в пользовательский код
                     if (eventName === 'onExpand') {
@@ -1556,6 +1579,13 @@ class BasicGrid extends component.Component {
 
     }
 
+    // Метод скрывает записи, но они по прежнему хранятся в объекте
+    hideRecords(w2grid) {
+        //let w2grid = w2ui[this.id];
+        //if (w2grid) {
+        w2grid.clear();
+        //}
+    }
 
     group() {
         let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, '', 0);
@@ -1864,7 +1894,6 @@ export class Grid extends BasicGrid {
             request.addParam('action', 'getContent').addData('type', 'gridRecords').addParam('path', path).addFilterParam('parentID', recid).addBefore(function () {
                 grid.lock('Идет загрузка..');
             }).addSuccess(function (response) {
-                debugger;
                 w2ui[grid.id].unlock();
                 let expRecs = grid.makeRecords(response.content[0].records, response.content[0].fk);
                 //add info to object
@@ -1895,11 +1924,11 @@ export class Grid extends BasicGrid {
                 grid.unlock();
             }).addCacheKey(path + type).send();*/
 
-           /* w2ui[this.id].lock('Загружаем', true);
-            let expandQuery = new tools.AjaxSender({
-                url: 'search.json',
-                msg: ''
-            })*/
+            /* w2ui[this.id].lock('Загружаем', true);
+             let expandQuery = new tools.AjaxSender({
+                 url: 'search.json',
+                 msg: ''
+             })*/
             /*expandQuery.sendQuery()
                 .then(
                     response => {
