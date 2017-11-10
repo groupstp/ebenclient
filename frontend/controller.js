@@ -97,7 +97,7 @@ export default class Controller {
         });
         this._objViewSelection.render();
 
-        this._objViewSelection.on('select', async (event) => {
+        this._objViewSelection.on('objViewSelected', async (event) => {
             let selectedObjView = event.detail.name;
             // set cookie for one day
             CookieService.setCookie('currentObjView', selectedObjView, { expires : 84000 });
