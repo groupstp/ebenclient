@@ -335,7 +335,6 @@ class BasicGrid extends component.Component {
      * @param data - данные с сервера
      */
     updateRecords(data) {
-        debugger;
         let records = data.content[0].records;
         let fk = data.content[0].fk;
         records.forEach((rec) => {

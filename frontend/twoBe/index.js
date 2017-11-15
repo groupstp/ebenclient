@@ -130,6 +130,15 @@ export default class twoBe {
 
     }
 
+    static showConfirmation(msg, callback) {
+        w2confirm({
+            msg: msg,
+            btn_yes: {
+                callBack: callback
+            }
+        });
+    }
+
     /**
      * Отсылает запрос на сервер - не используется (вроде)
      * @param url
@@ -269,19 +278,22 @@ class Request {
          * @member
          * @type {}
          */
-        this.before = function(){};
+        this.before = function () {
+        };
         /**
          * Что делать при успехе
          * @member
          * @type {}
          */
-        this.success = function(){};
+        this.success = function () {
+        };
         /**
          * Что делать при неудаче
          * @member
          * @type {}
          */
-        this.error = function(){};
+        this.error = function () {
+        };
         /**
          * Ключ для поисков в кэшэ
          * @member
