@@ -101,13 +101,11 @@ export default class twoBe {
     }
 
     /**
-     * Показать уведомление
+     * Показать уведомление в виде отдельного popup окна
      * @param {string} type - тип
      * @param {string} msg - сообщение
      */
-    static showMessage(type, msg, options = {}) {
-        //w2alert(msg);
-
+    static showPopup(type, msg, options = {}) {
         w2popup.open({
             showMax: false,
             showClose: false,
@@ -127,7 +125,15 @@ export default class twoBe {
                 if (typeof callBack == 'function') callBack();
             }
         });
+    }
 
+    /**
+     * Показать уведомление
+     * @param {string} type - тип
+     * @param {string} msg - сообщение
+     */
+    static showMessage(type, msg) {
+        w2alert(msg);
     }
 
     static showConfirmation(msg, callback) {
