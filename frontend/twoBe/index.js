@@ -12,6 +12,7 @@
 import config from '../config/config.js';
 import * as tools from '../tools/index.js';
 import CookieService from '../services/cookie-service';
+import LocalStorageService from '../services/local-storage-service';
 
 /**
  * @classdesc Класс пользовательских функций
@@ -313,7 +314,8 @@ class Request {
     _init() {
         const token = new tools.TokenAuth(config.name).checkToken();
         this.addParam('token', token);
-        const currentObjView = CookieService.getCookie('currentObjView') || '';
+        const currentObjView = LocalStorageService.get('currentObjView') || '';
+
         this.addParam('objView', currentObjView);
     }
 
