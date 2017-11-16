@@ -182,7 +182,7 @@ export default class contentBuilder extends componentLib.Component {
 
     _buildMain() {
         const place = this.showPage('main', 'Главная страница').generatedBox;
-        place.innerHTML = '<div style = "text-align: center"><img src="mainPage.gif" alt=""></div><p><h1 align="center">Вы находитесь на главной странице</h1></p>';
+        //place.innerHTML = '<div style = "text-align: center"><img src="mainPage.gif" alt=""></div><p><h1 align="center">Вы находитесь на главной странице</h1></p>';
     }
 }
 /**
