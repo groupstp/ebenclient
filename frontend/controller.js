@@ -27,7 +27,8 @@ export default class Controller {
         for (let objViewName in mainInterface.objectViews) {
             allowedObjectViews.push(objViewName);
         }
-        const currentObjView = LocalStorageService.get('currentObjView');
+
+       const currentObjView = LocalStorageService.get('currentObjView');
 
 
         if (allowedObjectViews.length > 1) {
