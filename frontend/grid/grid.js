@@ -258,30 +258,57 @@ class BasicGrid extends component.Component {
             this.selectInTree(ID);
         }
         //добавление в подгружаемую иерархию
-        if (this.hierachy && this.pagination && this.groupedBy.length === 0) {
+        if (this.hierachy /*&& this.pagination*/ && this.groupedBy.length === 0) {
             let recordRawWithoutKey = recordRaw[Object.keys(recordRaw)[0]];
             let record = this.makeRecords(recordRaw, fk)[0];
             //можем ли отобразить новую запись
-            if (this.selectInTree(recordRawWithoutKey.parentID, false, false)) {
-                if (w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui !== undefined
-                    && w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui.children !== undefined
-                    && w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui.children[0].recid !== 'treeFake') {
+            let parentID = Array.isArray(recordRawWithoutKey.parentID) ? recordRawWithoutKey.parentID[0] : recordRawWithoutKey.parentID;
+            // если добавялем на самый верхний уровень
+            if (!parentID) {
+                //записываем в поля объекта
+                $.extend(this.recordsRaw, recordRaw);
+                $.extend(true, this.fk, fk);
+
+                // если это группа добавим что-то несуществующее в children чтобы появился символ того что это группа
+                let fakeChildren = [];
+                if (record.isGroup) {
+                    fakeChildren = [{'recid': 'treeFake'}];
+                }
+                // формируем запись для добавления
+                record.w2ui = {
+                    children: fakeChildren
+                };
+                w2ui[this.id].add(record);
+
+            } else if (this.selectInTree(parentID, false, false)) { // если добавляем куда-то в дереве
+                let parentRec = w2ui[this.id].get(parentID);
+                if (parentRec.w2ui !== undefined && parentRec.w2ui.children !== undefined /*&& parentRec.w2ui.children[0].recid !== 'treeFake'*/) {
                     //записываем в поля объекта
                     $.extend(this.recordsRaw, recordRaw);
                     $.extend(true, this.fk, fk);
+
+                    // если это группа добавим что-то несуществующее в children чтобы появился символ того что это группа
+                    let fakeChildren = [];
+                    if (record.isGroup) {
+                        fakeChildren = [{'recid': 'treeFake'}];
+                    }
                     //формируем запись для добавления
                     record.w2ui = {
-                        children: [],
-                        parent_recid: recordRawWithoutKey.parentID
+                        children: fakeChildren,
+                        parent_recid: parentID
+                    };
+                    // если добавляем в пустую группу (например которую только что создали) то уберем фейковые данные
+                    if (parentRec.w2ui.children[0].recid === 'treeFake') {
+                        parentRec.w2ui.children = [];
                     }
-                    //разворачиваем дерево
-                    this.selectInTree(recordRawWithoutKey.parentID, true, false);
-                    let children = w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui.children;
+                    // разворачиваем дерево
+                    this.selectInTree(parentID, true, false);
+                    let children = w2ui[this.id].get(parentID).w2ui.children;
                     children.push(record);
-                    w2ui[this.id].set(recordRawWithoutKey.parentID, {w2ui: {children: children}});
+                    w2ui[this.id].set(parentID, {w2ui: {children: children}});
                     //для обновления категории
-                    w2ui[this.id].toggle(recordRawWithoutKey.parentID);
-                    w2ui[this.id].toggle(recordRawWithoutKey.parentID);
+                    w2ui[this.id].toggle(parentID);
+                    //w2ui[this.id].toggle(parentID);
                     //подсвечиваем добавленную запись
                     this.selectInTree(ID);
                 } else {
@@ -1676,7 +1703,7 @@ class BasicGrid extends component.Component {
     findPathInTree(id, records, path, deep) {
         for (let i in records) {
             if (records[i].recid === id) {
-                return (path);
+                return path;
             }
         }
         for (let i in records) {
@@ -1894,6 +1921,10 @@ export class Grid extends BasicGrid {
                 grid.lock('Идет загрузка..');
             }).addSuccess(function (response) {
                 w2ui[grid.id].unlock();
+                // нам может придти и сам элемент раскрываемой группы, отследим это и удалим его
+                response.content[0].records = response.content[0].records.filter((rec) => {
+                    return recid !== rec.ID;
+                });
                 let expRecs = grid.makeRecords(response.content[0].records, response.content[0].fk);
                 //add info to object
                 w2ui[grid.id].set(recid, {w2ui: {children: expRecs}});
