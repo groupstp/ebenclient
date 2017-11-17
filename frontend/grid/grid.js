@@ -572,7 +572,7 @@ class BasicGrid extends component.Component {
                 toolbarSave: true
             },
             columns: this.makeColumns(),
-            records: this.makeRecords(),
+            records: this.initRecords(),
             toolbar: this.makeToolbar(),
             multiSelect: this.multiselect,
             onMenuClick: this.makeMenu().onClick,
@@ -1022,6 +1022,19 @@ class BasicGrid extends component.Component {
 
         }*/
         return records;
+    }
+
+    // Подготовливает записи в серверном формате(recordsRaw) для w2ui, при этом сразу группирует записи если был задан параметр groupBy
+    initRecords(){
+        let records = [];
+
+        if (!this.groupedBy.length){ // формируем записи обычным способом
+            records = this.makeRecords();
+        } else { // формируем сгруппированные записи
+            records = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy);
+        }
+
+        return records
     }
 
     /**
