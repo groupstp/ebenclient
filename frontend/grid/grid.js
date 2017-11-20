@@ -380,9 +380,9 @@ class BasicGrid extends component.Component {
             this.btns[this.toolbar.elements[i].id] = this.toolbar.elements[i].properties;
             this.btns[this.toolbar.elements[i].id].id = this.toolbar.elements[i].id;
             //обработчики нажатий на кнопку
-            this.btns[this.toolbar.elements[i].id].onClick = function (element) {
+            this.btns[this.toolbar.elements[i].id].onClick = function (element, remoteFuncName) {
                 try {
-                    this.code[this.toolbar.elements[i].events.onClick].call(this, element);
+                    this.code[this.toolbar.elements[i].events.onClick].apply(this, [element, remoteFuncName]);
                 } catch (err) {
                     console.log('SERVER CODE ERROR:' + err);
                     w2alert('Серевер вернул некорректное действие!');
@@ -418,18 +418,16 @@ class BasicGrid extends component.Component {
                 if (event.subItem === undefined) {
                     if (this.btns[event.item.id] !== undefined) {
                         try {
-                            this.btns[event.item.id].onClick.call(this, this);
+                            this.btns[event.item.id].onClick.apply(this, [this, event.item.id]);
                         } catch (err) {
                             console.log('SERVER CODE ERROR:' + err);
                             w2alert('Серевер вернул некорректное действие!');
                         }
                     }
-
-
                 } else {
                     if (this.btns[event.subItem.id] !== undefined) {
                         try {
-                            this.btns[event.subItem.id].onClick.call(this, this);
+                            this.btns[event.subItem.id].onClick.apply(this, [this, event.item.id]);
                         } catch (err) {
                             console.log('SERVER CODE ERROR:' + err);
                             w2alert('Серевер вернул некорректное действие!');
@@ -1025,10 +1023,10 @@ class BasicGrid extends component.Component {
     }
 
     // Подготовливает записи в серверном формате(recordsRaw) для w2ui, при этом сразу группирует записи если был задан параметр groupBy
-    initRecords(){
+    initRecords() {
         let records = [];
 
-        if (!this.groupedBy.length){ // формируем записи обычным способом
+        if (!this.groupedBy.length) { // формируем записи обычным способом
             records = this.makeRecords();
         } else { // формируем сгруппированные записи
             records = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy);
