@@ -736,7 +736,7 @@ class BasicGrid extends component.Component {
             },
             onSearch: function (event) {
                 if (/*this.pagination*/true) {
-                    //был ли сброс поиска
+                    // был ли сброс поиска
                     if (!event.reset) {
                         event.preventDefault();
                         w2ui[this.id].searchClose();
@@ -790,7 +790,40 @@ class BasicGrid extends component.Component {
                             }
                             relation.and.push(this.refCol);
                         }
-                        //шлем запрос
+
+                        let request = twoBe.createRequest();
+                        request.addParam('path', this.path)
+                            .addParam('action', 'getContent')
+                            .addData('type', 'gridRecords')
+                            .addData('filter', filter)
+                            .addData('relation', relation)
+                            .addBefore(() => {
+                                w2ui[this.id].lock('Поиск', true);
+                            })
+                            .addSuccess((response) => {
+                                w2ui[this.id].unlock();
+                                if (this.recordsBS[0] === undefined) {
+                                    this.recordsBS = w2ui[this.id].records;
+                                }
+                                w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
+                                w2ui[this.id].searchData = [];
+                                for (let searchInd in event.searchData) {
+                                    if (event.searchData[searchInd].operator !== 'between') {
+                                        w2ui[this.id].searchData.push(event.searchData[searchInd]);
+                                    }
+
+                                }
+                                w2ui[this.id].localSearch();
+                                w2ui[this.id].refresh();
+                            })
+                            .addError((err) => {
+                                w2ui[this.id].unlock();
+                                w2alert(err);
+                            });
+
+                        request.send();
+
+                        /*// шлем запрос
                         let searchQuery = new tools.AjaxSender({
                             url: config.testUrl,
                             msg: JSON.stringify({
@@ -800,7 +833,7 @@ class BasicGrid extends component.Component {
                                     type: 'gridRecords',
                                     filter: filter,
                                     relation: relation
-                                }
+                                },
                             }),
                             before: function () {
                                 w2ui[this.id].lock('Поиск', true);
@@ -828,9 +861,8 @@ class BasicGrid extends component.Component {
                                 error => {
                                     w2ui[this.id].unlock();
                                     w2alert(error);
-                                });
-                    }
-                    else {
+                                });*/
+                    } else {
                         if (w2ui[this.id].searchData.length === 0) return;
                         if (this.pagination && !this.hierachy) {
                             w2ui[this.id].reload();
@@ -1865,7 +1897,46 @@ export class Grid extends BasicGrid {
                     this.gridSearchParams.setCurrentSearch(event.searchData);
                 }
 
-                //отсылаем запрос
+                let request = twoBe.createRequest();
+                request.addParam('path', this.path)
+                    .addParam('action', 'getContent')
+                    .addData('type', 'gridRecords')
+                    .addData('filter', queryOptions.data.filter)
+                    .addData('relation', queryOptions.data.relation)
+                    .addBefore(() => {
+                        w2ui[this.id].lock('Поиск', true);
+                    })
+                    .addSuccess((response) => {
+                        w2ui[this.id].unlock();
+                        if (this.recordsBS[0] === undefined) {
+                            this.recordsBS = w2ui[this.id].records;
+                        }
+                        w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
+                        w2ui[this.id].searchData = [];
+                        for (let searchInd in event.searchData) {
+                            if (event.searchData[searchInd].operator !== 'between') {
+                                w2ui[this.id].searchData.push(event.searchData[searchInd]);
+                            }
+
+                        }
+                        w2ui[this.id].localSearch();
+                        w2ui[this.id].refresh();
+                    })
+                    .addError((err) => {
+                        w2ui[this.id].unlock();
+                        w2alert(err);
+                    });
+
+                if (queryOptions.data.offset) {
+                    request.addData('offset', queryOptions.data.offset);
+                }
+                if (queryOptions.data.limit) {
+                    request.addData('limit', queryOptions.data.limit);
+                }
+
+                request.send();
+
+                /*//отсылаем запрос
                 let searchQuery = new tools.AjaxSender({
                     url: config.testUrl,
                     msg: JSON.stringify(queryOptions),
@@ -1884,7 +1955,7 @@ export class Grid extends BasicGrid {
                             w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
                             w2ui[this.id].searchData = [];
                             for (let searchInd in event.searchData) {
-                                if (/*event.searchData[searchInd].operator !== 'between'*/true) {
+                                if (/!*event.searchData[searchInd].operator !== 'between'*!/true) {
                                     w2ui[this.id].searchData.push(event.searchData[searchInd]);
                                 }
                             }
@@ -1894,7 +1965,7 @@ export class Grid extends BasicGrid {
                         error => {
                             w2ui[this.id].unlock();
                             w2alert(error);
-                        });
+                        });*/
             }
             else {
                 this.gridSearchParams.setDefaults();
