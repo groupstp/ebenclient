@@ -395,6 +395,7 @@ export class CrossGrid extends component.Component {
 
     _renderBody(table) {
         let tBody = document.createElement('tbody');
+        this.records.sort(sortByObjName);
         this.records.forEach((item) => {
             let tr = document.createElement('tr');
             this.columns.forEach((col) => {
@@ -421,6 +422,14 @@ export class CrossGrid extends component.Component {
         });
 
         return tBody;
+
+        function sortByObjName(a,b){
+            if (a.object.name > b.object.name) {
+                return 1
+            } else {
+                return -1;
+            }
+        }
     }
 
 }
