@@ -12,6 +12,7 @@ import * as tools from '../tools/index.js';
 import config from '../config/config.js';
 import twoBe from "../twoBe/index";
 import CookieService from '../services/cookie-service';
+import LocalStorageService from '../services/local-storage-service';
 
 let layout = require('../layout/index.js');
 /**
@@ -181,7 +182,7 @@ export default class contentBuilder extends componentLib.Component {
 
     _buildMain() {
         const place = this.showPage('main', 'Главная страница').generatedBox;
-        place.innerHTML = '<div style = "text-align: center"><img src="mainPage.gif" alt=""></div><p><h1 align="center">Вы находитесь на главной странице</h1></p>';
+        //place.innerHTML = '<div style = "text-align: center"><img src="mainPage.gif" alt=""></div><p><h1 align="center">Вы находитесь на главной странице</h1></p>';
     }
 }
 /**
@@ -309,7 +310,7 @@ class Page {
             message: 'Загрузка'
         });
         let token = new tools.TokenAuth(config.name).checkToken();
-        const currentObjView = CookieService.getCookie('currentObjView') || '';
+        const currentObjView = LocalStorageService.get('currentObjView') || '';
         let options = {
             action: 'get',
             path: this.id,

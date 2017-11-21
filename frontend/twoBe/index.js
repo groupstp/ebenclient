@@ -12,6 +12,7 @@
 import config from '../config/config.js';
 import * as tools from '../tools/index.js';
 import CookieService from '../services/cookie-service';
+import LocalStorageService from '../services/local-storage-service';
 
 /**
  * @classdesc Класс пользовательских функций
@@ -101,13 +102,11 @@ export default class twoBe {
     }
 
     /**
-     * Показать уведомление
+     * Показать уведомление в виде отдельного popup окна
      * @param {string} type - тип
      * @param {string} msg - сообщение
      */
-    static showMessage(type, msg, options = {}) {
-        //w2alert(msg);
-
+    static showPopup(type, msg, options = {}) {
         w2popup.open({
             showMax: false,
             showClose: false,
@@ -127,7 +126,24 @@ export default class twoBe {
                 if (typeof callBack == 'function') callBack();
             }
         });
+    }
 
+    /**
+     * Показать уведомление
+     * @param {string} type - тип
+     * @param {string} msg - сообщение
+     */
+    static showMessage(type, msg) {
+        w2alert(msg);
+    }
+
+    static showConfirmation(msg, callback) {
+        w2confirm({
+            msg: msg,
+            btn_yes: {
+                callBack: callback
+            }
+        });
     }
 
     /**
@@ -269,19 +285,22 @@ class Request {
          * @member
          * @type {}
          */
-        this.before = function(){};
+        this.before = function () {
+        };
         /**
          * Что делать при успехе
          * @member
          * @type {}
          */
-        this.success = function(){};
+        this.success = function () {
+        };
         /**
          * Что делать при неудаче
          * @member
          * @type {}
          */
-        this.error = function(){};
+        this.error = function () {
+        };
         /**
          * Ключ для поисков в кэшэ
          * @member
@@ -295,7 +314,8 @@ class Request {
     _init() {
         const token = new tools.TokenAuth(config.name).checkToken();
         this.addParam('token', token);
-        const currentObjView = CookieService.getCookie('currentObjView') || '';
+        const currentObjView = LocalStorageService.get('currentObjView') || '';
+
         this.addParam('objView', currentObjView);
     }
 

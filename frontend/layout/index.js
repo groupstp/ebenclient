@@ -102,6 +102,25 @@ export class Layout extends component.Component {
                     });
                 });
             }
+            if (this.panels[panel].elements[0].type === 'crossGrid') {
+                //запоминание контекста
+                let self = this;
+                console.log(self);
+                //подключаем нужную библиотеку
+                let needLib = require('bundle-loader!../crossGrid/index.js')(function (mod) {
+                    //строим таблицу
+                    let crossGrid = new mod.CrossGrid({
+                        element: self.panels[panel].elements[0],
+                        code: self.code,
+                        content: self.content,
+                        columns : self.panels[panel].elements[0].columns,
+                        records : self.panels[panel].elements[0].records,
+                        headID : self.panels[panel].elements[0].headID,
+                        parent: self
+                    });
+                    w2ui[self.id].el(panel).appendChild(crossGrid.render());
+                });
+            }
             if (this.panels[panel].elements[0].type === 'form') {
                 //запоминание контекста
                 let self = this;

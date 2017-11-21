@@ -223,10 +223,12 @@ class BasicGrid extends component.Component {
      * Функция выполняет добавление записи в таблицу
      * @param data - данные с сервера при добавлении
      */
-    addRecord(data) {
-        let ID = data.content[0].records[0][this.PK];
-        let recordRaw = this.makeAsos(data.content[0].records, this.PK);
-        let fk = data.content[0].fk;
+    addRecord(rec, fk) {
+        //let ID = data.content[0].records[0][this.PK];
+        let ID = rec[this.PK];
+        //let recordRaw = this.makeAsos(data.content[0].records, this.PK);
+        let recordRaw = this.makeAsos([rec], this.PK);
+        //let fk = data.content[0].fk;
         //добавление для справочника без иерархии
         if (!this.hierachy && this.groupedBy.length === 0) {
             //записываем в поля объекта
@@ -256,30 +258,57 @@ class BasicGrid extends component.Component {
             this.selectInTree(ID);
         }
         //добавление в подгружаемую иерархию
-        if (this.hierachy && this.pagination && this.groupedBy.length === 0) {
+        if (this.hierachy /*&& this.pagination*/ && this.groupedBy.length === 0) {
             let recordRawWithoutKey = recordRaw[Object.keys(recordRaw)[0]];
             let record = this.makeRecords(recordRaw, fk)[0];
             //можем ли отобразить новую запись
-            if (this.selectInTree(recordRawWithoutKey.parentID, false, false)) {
-                if (w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui !== undefined
-                    && w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui.children !== undefined
-                    && w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui.children[0].recid !== 'treeFake') {
+            let parentID = Array.isArray(recordRawWithoutKey.parentID) ? recordRawWithoutKey.parentID[0] : recordRawWithoutKey.parentID;
+            // если добавялем на самый верхний уровень
+            if (!parentID) {
+                //записываем в поля объекта
+                $.extend(this.recordsRaw, recordRaw);
+                $.extend(true, this.fk, fk);
+
+                // если это группа добавим что-то несуществующее в children чтобы появился символ того что это группа
+                let fakeChildren = [];
+                if (record.isGroup) {
+                    fakeChildren = [{'recid': 'treeFake'}];
+                }
+                // формируем запись для добавления
+                record.w2ui = {
+                    children: fakeChildren
+                };
+                w2ui[this.id].add(record);
+
+            } else if (this.selectInTree(parentID, false, false)) { // если добавляем куда-то в дереве
+                let parentRec = w2ui[this.id].get(parentID);
+                if (parentRec.w2ui !== undefined && parentRec.w2ui.children !== undefined /*&& parentRec.w2ui.children[0].recid !== 'treeFake'*/) {
                     //записываем в поля объекта
                     $.extend(this.recordsRaw, recordRaw);
                     $.extend(true, this.fk, fk);
+
+                    // если это группа добавим что-то несуществующее в children чтобы появился символ того что это группа
+                    let fakeChildren = [];
+                    if (record.isGroup) {
+                        fakeChildren = [{'recid': 'treeFake'}];
+                    }
                     //формируем запись для добавления
                     record.w2ui = {
-                        children: [],
-                        parent_recid: recordRawWithoutKey.parentID
+                        children: fakeChildren,
+                        parent_recid: parentID
+                    };
+                    // если добавляем в пустую группу (например которую только что создали) то уберем фейковые данные
+                    if (parentRec.w2ui.children[0].recid === 'treeFake') {
+                        parentRec.w2ui.children = [];
                     }
-                    //разворачиваем дерево
-                    this.selectInTree(recordRawWithoutKey.parentID, true, false);
-                    let children = w2ui[this.id].get(recordRawWithoutKey.parentID).w2ui.children;
+                    // разворачиваем дерево
+                    this.selectInTree(parentID, true, false);
+                    let children = w2ui[this.id].get(parentID).w2ui.children;
                     children.push(record);
-                    w2ui[this.id].set(recordRawWithoutKey.parentID, {w2ui: {children: children}});
+                    w2ui[this.id].set(parentID, {w2ui: {children: children}});
                     //для обновления категории
-                    w2ui[this.id].toggle(recordRawWithoutKey.parentID);
-                    w2ui[this.id].toggle(recordRawWithoutKey.parentID);
+                    w2ui[this.id].toggle(parentID);
+                    //w2ui[this.id].toggle(parentID);
                     //подсвечиваем добавленную запись
                     this.selectInTree(ID);
                 } else {
@@ -332,10 +361,15 @@ class BasicGrid extends component.Component {
      * Функция выполняет изменение записи в таблице
      * @param data - данные с сервера
      */
-    updateRecord(data) {
-        let ID = data.content[0].records[0][this.PK];
-        this.deleteRecords(ID);
-        this.addRecord(data);
+    updateRecords(data) {
+        let records = data.content[0].records;
+        let fk = data.content[0].fk;
+        records.forEach((rec) => {
+            let ID = rec[this.PK];
+            this.deleteRecords(ID);
+            this.addRecord(rec, fk);
+        });
+
     }
 
     /**
@@ -346,9 +380,9 @@ class BasicGrid extends component.Component {
             this.btns[this.toolbar.elements[i].id] = this.toolbar.elements[i].properties;
             this.btns[this.toolbar.elements[i].id].id = this.toolbar.elements[i].id;
             //обработчики нажатий на кнопку
-            this.btns[this.toolbar.elements[i].id].onClick = function (element) {
+            this.btns[this.toolbar.elements[i].id].onClick = function (element, remoteFuncName) {
                 try {
-                    this.code[this.toolbar.elements[i].events.onClick].call(this, element);
+                    this.code[this.toolbar.elements[i].events.onClick].apply(this, [element, remoteFuncName]);
                 } catch (err) {
                     console.log('SERVER CODE ERROR:' + err);
                     w2alert('Серевер вернул некорректное действие!');
@@ -384,18 +418,16 @@ class BasicGrid extends component.Component {
                 if (event.subItem === undefined) {
                     if (this.btns[event.item.id] !== undefined) {
                         try {
-                            this.btns[event.item.id].onClick.call(this, this);
+                            this.btns[event.item.id].onClick.apply(this, [this, event.item.id]);
                         } catch (err) {
                             console.log('SERVER CODE ERROR:' + err);
                             w2alert('Серевер вернул некорректное действие!');
                         }
                     }
-
-
                 } else {
                     if (this.btns[event.subItem.id] !== undefined) {
                         try {
-                            this.btns[event.subItem.id].onClick.call(this, this);
+                            this.btns[event.subItem.id].onClick.apply(this, [this, event.item.id]);
                         } catch (err) {
                             console.log('SERVER CODE ERROR:' + err);
                             w2alert('Серевер вернул некорректное действие!');
@@ -524,6 +556,7 @@ class BasicGrid extends component.Component {
      * @private
      */
     makew2uiobject() {
+        var stpgrid = this;
         let obj = {
             name: this.id,
             autoLoad: (this.pagination ? 'auto' : false),
@@ -537,7 +570,7 @@ class BasicGrid extends component.Component {
                 toolbarSave: true
             },
             columns: this.makeColumns(),
-            records: this.makeRecords(),
+            records: this.initRecords(),
             toolbar: this.makeToolbar(),
             multiSelect: this.multiselect,
             onMenuClick: this.makeMenu().onClick,
@@ -811,6 +844,16 @@ class BasicGrid extends component.Component {
 
                 }
             }.bind(this),
+            onRender: function (event) {
+                // на этом этапе можем вмешаться в процесс отображения
+                if (stpgrid.handlers.beforeRender !== undefined) {
+                    let event = {
+                        w2grid: this,
+                        stpgrid: stpgrid
+                    };
+                    stpgrid.handlers.beforeRender(event);
+                }
+            },
             parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw)
 
@@ -867,7 +910,7 @@ class BasicGrid extends component.Component {
      */
     reloadRecords(data) {
         //this.recordsRaw = data.content[0].records;
-        let prepContent = this.prepareData(this.content);
+        let prepContent = this.prepareData(data.content);
         this.recordsRaw = this.makeAsos(prepContent.records, this.PK);
         this.fk = data.content[0].fk;
         let recs = this.makeRecords(data.content[0].records, data.content[0].fk);
@@ -977,6 +1020,19 @@ class BasicGrid extends component.Component {
 
         }*/
         return records;
+    }
+
+    // Подготовливает записи в серверном формате(recordsRaw) для w2ui, при этом сразу группирует записи если был задан параметр groupBy
+    initRecords() {
+        let records = [];
+
+        if (!this.groupedBy.length) { // формируем записи обычным способом
+            records = this.makeRecords();
+        } else { // формируем сгруппированные записи
+            records = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy);
+        }
+
+        return records
     }
 
     /**
@@ -1387,6 +1443,10 @@ class BasicGrid extends component.Component {
         for (let eventName in this.events) {
             this.handlers[eventName] = function (event) {
                 let param = this;
+                // TODO костыль
+                if (this.id === 'ref-stages_billBinding-grid-listForm') {
+                    param = event;
+                }
                 try {
                     //если делаем экспанд нужно сделать предварительные действия, можно убрать в пользовательский код
                     if (eventName === 'onExpand') {
@@ -1556,6 +1616,13 @@ class BasicGrid extends component.Component {
 
     }
 
+    // Метод скрывает записи, но они по прежнему хранятся в объекте
+    hideRecords(w2grid) {
+        //let w2grid = w2ui[this.id];
+        //if (w2grid) {
+        w2grid.clear();
+        //}
+    }
 
     group() {
         let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, '', 0);
@@ -1647,7 +1714,7 @@ class BasicGrid extends component.Component {
     findPathInTree(id, records, path, deep) {
         for (let i in records) {
             if (records[i].recid === id) {
-                return (path);
+                return path;
             }
         }
         for (let i in records) {
@@ -1864,8 +1931,11 @@ export class Grid extends BasicGrid {
             request.addParam('action', 'getContent').addData('type', 'gridRecords').addParam('path', path).addFilterParam('parentID', recid).addBefore(function () {
                 grid.lock('Идет загрузка..');
             }).addSuccess(function (response) {
-                debugger;
                 w2ui[grid.id].unlock();
+                // нам может придти и сам элемент раскрываемой группы, отследим это и удалим его
+                response.content[0].records = response.content[0].records.filter((rec) => {
+                    return recid !== rec.ID;
+                });
                 let expRecs = grid.makeRecords(response.content[0].records, response.content[0].fk);
                 //add info to object
                 w2ui[grid.id].set(recid, {w2ui: {children: expRecs}});
@@ -1895,11 +1965,11 @@ export class Grid extends BasicGrid {
                 grid.unlock();
             }).addCacheKey(path + type).send();*/
 
-           /* w2ui[this.id].lock('Загружаем', true);
-            let expandQuery = new tools.AjaxSender({
-                url: 'search.json',
-                msg: ''
-            })*/
+            /* w2ui[this.id].lock('Загружаем', true);
+             let expandQuery = new tools.AjaxSender({
+                 url: 'search.json',
+                 msg: ''
+             })*/
             /*expandQuery.sendQuery()
                 .then(
                     response => {

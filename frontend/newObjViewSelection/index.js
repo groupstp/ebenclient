@@ -39,7 +39,7 @@ export default class ObjViewSelection {
         const target = event.target;
 
         if (target.closest('.objViews-list-element')) {
-            this.trigger('select', {
+            this.trigger('objViewSelected', {
                 name : target.dataset.name
             });
         }

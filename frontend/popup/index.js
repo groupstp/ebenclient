@@ -201,7 +201,10 @@ export class Popup extends Component {
 
                         },
                         onClose: function (event) {
-
+                            // не даем w2ui закрыть весь попап, если мы выходим из одного из вложенных
+                            if (stpui.currentPopup.parent !== null) {
+                                event.preventDefault();
+                            }
                         },
                         onKeydown: function (event){
                             if (event.originalEvent.key === "Escape") {

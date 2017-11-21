@@ -4,6 +4,7 @@ import ObjViewSelection from "./newObjViewSelection";
 import ContentBuilder from "./newMainScreen";
 
 import CookieService from "./services/cookie-service";
+import LocalStorageService from './services/local-storage-service';
 import * as tools from './tools';
 import config from './config/config.js';
 
@@ -27,7 +28,7 @@ export default class Controller {
             allowedObjectViews.push(objViewName);
         }
 
-        const currentObjView = CookieService.getCookie('currentObjView');
+       const currentObjView = LocalStorageService.get('currentObjView');
 
 
         if (allowedObjectViews.length > 1) {
@@ -38,12 +39,11 @@ export default class Controller {
                 this._updateMenu(currentObjView);
                 this._mainScreen.show();
             } else { // if we use object view that have been forbidden for us
-                CookieService.deleteCookie('currentObjView');
+                LocalStorageService.delete('currentObjView');
             }
         } else if (allowedObjectViews.length === 1) {
             if (currentObjView !== allowedObjectViews[0]) {
-                // set cookie for one day
-                CookieService.setCookie('currentObjView', allowedObjectViews[0], { expires : 84000 });
+                LocalStorageService.set('currentObjView', allowedObjectViews[0]);
             }
             this._updateMenu(allowedObjectViews[0]);
             this._mainScreen.show();
@@ -97,10 +97,10 @@ export default class Controller {
         });
         this._objViewSelection.render();
 
-        this._objViewSelection.on('select', async (event) => {
+        this._objViewSelection.on('objViewSelected', async (event) => {
             let selectedObjView = event.detail.name;
             // set cookie for one day
-            CookieService.setCookie('currentObjView', selectedObjView, { expires : 84000 });
+            LocalStorageService.set('currentObjView', selectedObjView);
             this._objViewSelection.hide();
             this._updateMenu(selectedObjView);
             this._clearObjects();
