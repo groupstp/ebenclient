@@ -194,28 +194,37 @@ export class CrossGrid extends component.Component {
 
     _sendForAdd(recordsArr) {
         let promiseArr = [];
+        let recsData = [];
         recordsArr.forEach((record) => {
             let {recID, actionID, description, element} = record;
-            let data = {
+            let values = {
                 actionID: actionID,
                 description: description,
                 filterID: this.filterID
             };
-            let request = twoBe.createRequest();
-            request
-                .addParam('action', 'add')
-                .addParam('path', 'ref-filters_actions')
-                .addData('record', data)
-                .addSuccess((data) => {
-                    this.deleteFromChanged(actionID);
-                    element.dataset.recid = data.content[0].records[0].ID;
-
-
-                });
-
-            promiseArr.push(request.send());
+            recsData.push(values);
         });
-        return Promise.all(promiseArr);
+        let request = twoBe.createRequest();
+        request
+            .addParam('action', 'add')
+            .addParam('path', 'ref-filters_actions')
+            .addData('record', recsData)
+            .addSuccess((data) => {
+                data.content[0].records.forEach((rec) => {
+                    let actionID = rec.actionID[0];
+                    // удалим из измененных элементов
+                    this.deleteFromChanged(actionID);
+                    // добавим id нового элемента в таблицу
+                    for (let i = 0; i < recordsArr.length; i++) {
+                        if (recordsArr[i].actionID === actionID) {
+                            recordsArr[i].element.dataset.recid = rec.ID;
+                            break;
+                        }
+                    }
+                });
+            });
+
+        return request.send();
     }
 
     _sendForDelete(recordsArr) {
@@ -338,10 +347,8 @@ export class CrossGrid extends component.Component {
         let tableWrapper = document.createElement('div');
 
         let table = document.createElement('table');
-        //table.classList.add('my-table-fixed');
         table.classList.add('table');
         table.classList.add('table-bordered');
-        //table.classList.add('table-fixed');
 
         tableWrapper.appendChild(table);
 
