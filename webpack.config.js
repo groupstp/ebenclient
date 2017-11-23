@@ -5,7 +5,7 @@ const webpack = require('webpack');
 const extractTextPlugin = require('extract-text-webpack-plugin');
 module.exports = {
     context: path.resolve(__dirname + '/frontend'),
-    entry: {/*main: './main.js', */auth: './auth.js',app: './app.js'},
+    entry: {/*main: './main.js', */auth: './auth.js', app: './app.js'},
     output: {
         path: path.resolve(__dirname + '/public/'),
         filename: 'js/[name].bandle.js'
@@ -13,7 +13,7 @@ module.exports = {
     watch: true,
     devtool: 'source-map',
     plugins: [
-       /*new webpack.optimize.UglifyJsPlugin({
+        /*new webpack.optimize.UglifyJsPlugin({
             compress: {
                 warnings: false
             }
@@ -28,7 +28,8 @@ module.exports = {
         loaders: [{
             test: /\.js$/,
             loader: 'babel-loader',
-            exclude: [/(libraries)/, /\/node_modules\//],
+            exclude: [/libraries/, /node_modules/],
+            //exclude: wrapRegexp(/\/node_modules\//, 'exclude'),
             query: {
                 presets: ["es2015"]
             }
@@ -46,3 +47,11 @@ module.exports = {
     }
 }
 
+function wrapRegexp(regExp, label) {
+    regExp.test = function (path) {
+        let result = RegExp.prototype.test.call(this, path);
+        if (result) console.log(path, label, result);
+        return result;
+    };
+    return regExp;
+}

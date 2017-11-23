@@ -550,6 +550,11 @@ class BasicGrid extends component.Component {
         return true;
     }
 
+    // определение является ли grid табличной частью
+    isChildGrid(){
+        return this.headID ? true : false;
+    }
+
     /**
      * Делаем объект для в2уи
      * @returns {{name: *, show: {toolbar: boolean, footer: boolean}, recid: string, columns: Array, records: Array, toolbar: {items: Array, onClick: (function(this:grid))}, onMenuClick: (function()), menu: Array}}
@@ -567,7 +572,7 @@ class BasicGrid extends component.Component {
                 toolbar: true,
                 footer: true,
                 selectColumn: this.showSelectColumn,
-                toolbarSave: true
+                toolbarSave: this.isChildGrid() // если это ТЧ то показываем кнопку сохранить
             },
             columns: this.makeColumns(),
             records: this.initRecords(),
