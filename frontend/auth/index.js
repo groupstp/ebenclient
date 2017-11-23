@@ -216,6 +216,6 @@ export default class stpAuth {
      * @private
      */
     _saveObjInfo(info) {
-        localStorage[this.name + '_ObjInfo'] = JSON.stringify(info);
+        //localStorage[this.name + '_ObjInfo'] = JSON.stringify(info);
     }
 }
