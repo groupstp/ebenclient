@@ -54,7 +54,7 @@ export class DropdownField extends Field {
     _saveChanges(value) {
         this.value = value;
         // закэшируем выбранное значение
-        this._cacheValue(value);
+        //this._cacheValue(value);
     }
 
     _addListeners() {
