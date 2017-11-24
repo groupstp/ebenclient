@@ -1439,7 +1439,7 @@ class BasicGrid extends component.Component {
             };
 
             // редактирование в таблице делаем только для ТЧ
-            if (this.refCol) {
+            if (this.refCol && rawColumn.editable) {
                 // определим тип подставляемый в редактирование
                 let editableType = types[serverType];
                 if (editableType !== undefined) {
