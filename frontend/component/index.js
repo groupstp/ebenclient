@@ -110,6 +110,7 @@ export class Component {
                 if (id === this.id) {
                     content.records = item.records || [];
                     content.fk = item.fk || {};
+                    content.summary = item.summary || [];
                 }
             })
         });
