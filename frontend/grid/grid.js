@@ -73,6 +73,8 @@ class BasicGrid extends component.Component {
          * @type {object}
          */
         this.recordsRaw = {};//строки таблицы из формата
+        // массив строк с итогами
+        this.summary = [];
         /**
          * Внешние ключи
          * @member
@@ -138,6 +140,7 @@ class BasicGrid extends component.Component {
         this.columnsRaw = this.makeAsos(this.columnsRaw, 'field');
         let prepContent = this.prepareData(this.content);
         this.recordsRaw = this.makeAsos(prepContent.records, this.PK);
+        this.summary = prepContent.summary || [];
         this.fk = prepContent.fk;
         this.selectedRecs = attributes.properties.selectedRecords;
         this.multiselect = attributes.properties.multiselect || false;
@@ -576,6 +579,7 @@ class BasicGrid extends component.Component {
             },
             columns: this.makeColumns(),
             records: this.initRecords(),
+            summary: this.summary,
             toolbar: this.makeToolbar(),
             multiSelect: this.multiselect,
             onMenuClick: this.makeMenu().onClick,
@@ -1244,6 +1248,19 @@ class BasicGrid extends component.Component {
         return value;
     }
 
+    getCellRawValue(recID, columnName){
+        let value = null;
+        let recordRaw = this.recordsRaw[recID];
+        let columnRaw = this.columnsRaw[columnName];
+        if (recordRaw && columnRaw) {
+            value = recordRaw[columnName];
+            if (Array.isArray(value)) {
+                value = value[0];
+            }
+        }
+        return value;
+    }
+
     /**
      * Возвращает HTML для подсветки пустой обязательной колонки
      * @returns {string}
@@ -1422,7 +1439,7 @@ class BasicGrid extends component.Component {
             };
 
             // редактирование в таблице делаем только для ТЧ
-            if (this.refCol) {
+            if (this.refCol && rawColumn.editable) {
                 // определим тип подставляемый в редактирование
                 let editableType = types[serverType];
                 if (editableType !== undefined) {
