@@ -9816,6 +9816,7 @@ w2utils.event = {
                     if (obj.columns[i].frozen || obj.columns[i].hidden) continue;
                     var cSize = parseInt(obj.columns[i].sizeCalculated ? obj.columns[i].sizeCalculated : obj.columns[i].size);
                     if (cLeft + cSize + 30 > obj.last.scrollLeft && colStart == null) colStart = i;
+                    // Дюков Не знаю почему, но из за этого бывают проблемы с исчезающими колонками
                     if (cLeft + cSize - 30 > obj.last.scrollLeft + sWidth && colEnd == null) colEnd = i;
                     cLeft += cSize;
                 }
