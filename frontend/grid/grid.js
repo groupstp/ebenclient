@@ -1287,8 +1287,14 @@ class BasicGrid extends component.Component {
             }
         }
 
+        // определим строки которые не надо рендерить как ссылки, то есть группы и строки итогов
+        let noRenderRecord = false;
+        if (record.recid.indexOf('group') >= 0 || record.recid.indexOf('Summary') >= 0) {
+            noRenderRecord = true;
+        }
+
         // если поле необязательное и для его типа определена кастомная функция, то вызовем ее
-        if (customRenderFunction) {
+        if (customRenderFunction && !noRenderRecord) {
             //if (typeof customRenderFunction === 'function') {
             //return customRenderFunction.apply(this, [record, index, column_index]);
             //} else if (typeof customRenderFunction === 'string') {
