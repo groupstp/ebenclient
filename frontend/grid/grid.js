@@ -554,7 +554,7 @@ class BasicGrid extends component.Component {
     }
 
     // определение является ли grid табличной частью
-    isChildGrid(){
+    isChildGrid() {
         return this.headID ? true : false;
     }
 
@@ -633,6 +633,17 @@ class BasicGrid extends component.Component {
                                 let btnId = (this.btns[btn].more ? 'moreMenu:' : '') + btn;
                                 w2ui[this.id + '_toolbar'].disable(btnId);
                             }
+                        }
+                        if (this.handlers.onUnselect !== undefined) {
+                            // планируем выполнение асинхронно, чтобы успел перед этим выполниться обработчик onSelect
+                            setTimeout(() => {
+                                try {
+                                    this.handlers.onUnselect();
+                                } catch (err) {
+                                    console.log('SERVER CODE ERROR:' + err);
+                                    w2alert('Серевер вернул некорректное действие!');
+                                }
+                            }, 0);
                         }
                     }
                 }.bind(this)
@@ -1248,7 +1259,7 @@ class BasicGrid extends component.Component {
         return value;
     }
 
-    getCellRawValue(recID, columnName){
+    getCellRawValue(recID, columnName) {
         let value = null;
         let recordRaw = this.recordsRaw[recID];
         let columnRaw = this.columnsRaw[columnName];
@@ -1287,8 +1298,14 @@ class BasicGrid extends component.Component {
             }
         }
 
+        // определим строки которые не надо рендерить как ссылки, то есть группы и строки итогов
+        let noRenderRecord = false;
+        if (record.recid.indexOf('group') >= 0 || record.recid.indexOf('Summary') >= 0) {
+            noRenderRecord = true;
+        }
+
         // если поле необязательное и для его типа определена кастомная функция, то вызовем ее
-        if (customRenderFunction) {
+        if (customRenderFunction && !noRenderRecord) {
             //if (typeof customRenderFunction === 'function') {
             //return customRenderFunction.apply(this, [record, index, column_index]);
             //} else if (typeof customRenderFunction === 'string') {
