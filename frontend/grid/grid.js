@@ -492,6 +492,11 @@ class BasicGrid extends component.Component {
         return (w2ui[this.id].getSelection()[0] === null ? null : w2ui[this.id].getSelection())
     }
 
+    // Получает запись по ID
+    getRecord(id){
+        return this.recordsRaw[id] ? this.recordsRaw[id] : null;
+    }
+
     /**
      * Делаем контекстное меню
      * @returns {{items: Array, onClick: (function(this:grid))}}
