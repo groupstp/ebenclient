@@ -178,17 +178,6 @@ class BasicGrid extends component.Component {
         if (this.refCol) {
             this._getValuesFromServer();
         }
-        if (this.showGroupCol && this.groupedBy) {
-            let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
-            w2ui[this.id].clear();
-            for (let i in this.groupedBy) {
-                w2ui[this.id].removeColumn(this.groupedBy[i]);
-            }
-            w2ui[this.id].records = groupedRecs;
-            for (let i in this.selectedRecs) {
-                w2ui[this.id].select(this.selectedRecs[i]);
-            }
-        }
         w2ui[this.id].refresh();
         for (let i in this.selectedRecs) {
             w2ui[this.id].select(this.selectedRecs[i]);
@@ -970,10 +959,15 @@ class BasicGrid extends component.Component {
         let prepContent = this.prepareData(data.content);
         this.recordsRaw = this.makeAsos(prepContent.records, this.PK);
         this.fk = data.content[0].fk;
-        let recs = this.makeRecords(data.content[0].records, data.content[0].fk);
-        w2ui[this.id].clear();
-        w2ui[this.id].records = recs;
-        this.refresh();
+
+        if (Array.isArray(this.groupedBy) && this.groupedBy.length) {
+            this.group();
+        } else {
+            let recs = this.makeRecords(data.content[0].records, data.content[0].fk);
+            w2ui[this.id].clear();
+            w2ui[this.id].records = recs;
+            this.refresh();
+        }
     };
 
     /**
@@ -1082,13 +1076,11 @@ class BasicGrid extends component.Component {
     // Подготовливает записи в серверном формате(recordsRaw) для w2ui, при этом сразу группирует записи если был задан параметр groupBy
     initRecords() {
         let records = [];
-
         if (!this.groupedBy.length) { // формируем записи обычным способом
             records = this.makeRecords();
         } else { // формируем сгруппированные записи
             records = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy);
         }
-
         return records
     }
 
@@ -1696,9 +1688,20 @@ class BasicGrid extends component.Component {
     }
 
     group() {
-        let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, '', 0);
+        /*let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, '', 0);
+        w2ui[this.id].records = groupedRecs;
+        w2ui[this.id].refresh();*/
+
+        let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
+        //w2ui[this.id].clear();
+        //for (let i in this.groupedBy) {
+        //    w2ui[this.id].removeColumn(this.groupedBy[i]);
+        //}
         w2ui[this.id].records = groupedRecs;
         w2ui[this.id].refresh();
+        //for (let i in this.selectedRecs) {
+        //   w2ui[this.id].select(this.selectedRecs[i]);
+        //}
     }
 
     ungroup() {
