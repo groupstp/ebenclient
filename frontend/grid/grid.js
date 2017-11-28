@@ -1591,7 +1591,6 @@ class BasicGrid extends component.Component {
         // колонка, по которой проводится группировка
         let currentGrouppingCol = groupedColumns[grpLevel];
         for (let recid in records) {
-
             let recordInfo = this._getRecordValueAndDisplay(records[recid], currentGrouppingCol);
             let value = recordInfo.value;
             let display = recordInfo.display;
@@ -1629,10 +1628,8 @@ class BasicGrid extends component.Component {
 
             // выведем в группировочную строку значение, если оно одинаково для все группируемых строк
             for (let col in columns) {
-                if (col === currentGrouppingCol) {
-                    //continue;
-                }
-
+                // TODO пока уберем это, если потом понадобится, то нужно разобраться с undefined в итоговых значениях
+                if (col !== currentGrouppingCol) continue;
                 // считаем что изначально все значения одинаковы
                 let valueEquals = true;
                 let recordInfo = this._getRecordValueAndDisplay(childrenRecords[0], col);
@@ -1659,7 +1656,6 @@ class BasicGrid extends component.Component {
                 if (valueEquals) {
                     rec[col] = valueForCheck;
                 }
-
             }
 
             // в summaryColumn добавляем представление для сгруппированых записей
@@ -1689,7 +1685,6 @@ class BasicGrid extends component.Component {
             }
         }
         return w2uiGroupedRecords;
-
     }
 
     // Метод скрывает записи, но они по прежнему хранятся в объекте
