@@ -178,17 +178,6 @@ class BasicGrid extends component.Component {
         if (this.refCol) {
             this._getValuesFromServer();
         }
-        if (this.showGroupCol && this.groupedBy) {
-            let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
-            w2ui[this.id].clear();
-            for (let i in this.groupedBy) {
-                w2ui[this.id].removeColumn(this.groupedBy[i]);
-            }
-            w2ui[this.id].records = groupedRecs;
-            for (let i in this.selectedRecs) {
-                w2ui[this.id].select(this.selectedRecs[i]);
-            }
-        }
         w2ui[this.id].refresh();
         for (let i in this.selectedRecs) {
             w2ui[this.id].select(this.selectedRecs[i]);
@@ -490,6 +479,11 @@ class BasicGrid extends component.Component {
      */
     getSelectedIDs() {
         return (w2ui[this.id].getSelection()[0] === null ? null : w2ui[this.id].getSelection())
+    }
+
+    // Получает запись по ID
+    getRecord(id){
+        return this.recordsRaw[id] ? this.recordsRaw[id] : null;
     }
 
     /**
@@ -965,10 +959,15 @@ class BasicGrid extends component.Component {
         let prepContent = this.prepareData(data.content);
         this.recordsRaw = this.makeAsos(prepContent.records, this.PK);
         this.fk = data.content[0].fk;
-        let recs = this.makeRecords(data.content[0].records, data.content[0].fk);
-        w2ui[this.id].clear();
-        w2ui[this.id].records = recs;
-        this.refresh();
+
+        if (Array.isArray(this.groupedBy) && this.groupedBy.length) {
+            this.group();
+        } else {
+            let recs = this.makeRecords(data.content[0].records, data.content[0].fk);
+            w2ui[this.id].clear();
+            w2ui[this.id].records = recs;
+            this.refresh();
+        }
     };
 
     /**
@@ -1077,13 +1076,11 @@ class BasicGrid extends component.Component {
     // Подготовливает записи в серверном формате(recordsRaw) для w2ui, при этом сразу группирует записи если был задан параметр groupBy
     initRecords() {
         let records = [];
-
         if (!this.groupedBy.length) { // формируем записи обычным способом
             records = this.makeRecords();
         } else { // формируем сгруппированные записи
             records = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy);
         }
-
         return records
     }
 
@@ -1586,7 +1583,6 @@ class BasicGrid extends component.Component {
         // колонка, по которой проводится группировка
         let currentGrouppingCol = groupedColumns[grpLevel];
         for (let recid in records) {
-
             let recordInfo = this._getRecordValueAndDisplay(records[recid], currentGrouppingCol);
             let value = recordInfo.value;
             let display = recordInfo.display;
@@ -1624,10 +1620,8 @@ class BasicGrid extends component.Component {
 
             // выведем в группировочную строку значение, если оно одинаково для все группируемых строк
             for (let col in columns) {
-                if (col === currentGrouppingCol) {
-                    //continue;
-                }
-
+                // TODO пока уберем это, если потом понадобится, то нужно разобраться с undefined в итоговых значениях
+                if (col !== currentGrouppingCol) continue;
                 // считаем что изначально все значения одинаковы
                 let valueEquals = true;
                 let recordInfo = this._getRecordValueAndDisplay(childrenRecords[0], col);
@@ -1654,7 +1648,6 @@ class BasicGrid extends component.Component {
                 if (valueEquals) {
                     rec[col] = valueForCheck;
                 }
-
             }
 
             // в summaryColumn добавляем представление для сгруппированых записей
@@ -1684,7 +1677,6 @@ class BasicGrid extends component.Component {
             }
         }
         return w2uiGroupedRecords;
-
     }
 
     // Метод скрывает записи, но они по прежнему хранятся в объекте
@@ -1696,9 +1688,20 @@ class BasicGrid extends component.Component {
     }
 
     group() {
-        let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, '', 0);
+        /*let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, '', 0);
+        w2ui[this.id].records = groupedRecs;
+        w2ui[this.id].refresh();*/
+
+        let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, this.groupedBy, this.showGroupCol);
+        //w2ui[this.id].clear();
+        //for (let i in this.groupedBy) {
+        //    w2ui[this.id].removeColumn(this.groupedBy[i]);
+        //}
         w2ui[this.id].records = groupedRecs;
         w2ui[this.id].refresh();
+        //for (let i in this.selectedRecs) {
+        //   w2ui[this.id].select(this.selectedRecs[i]);
+        //}
     }
 
     ungroup() {

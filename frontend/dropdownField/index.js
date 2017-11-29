@@ -123,13 +123,16 @@ export class DropdownField extends Field {
     }
 
     setValue(newValue) {
-        if (newValue.length) {
+        if (Array.isArray(newValue) && newValue.length) {
             this.value = [];
-            // newValue.forEach((item) => {
-            //     this.value.push(item);
-            // });
-            // this.magicObj.setSelection(newValue);
             let value = newValue[0];
+            if (value.id !== undefined && value.id !== null){
+                this.value.push(value);
+                this.magicObj.setSelection(newValue);
+            }
+        } else {
+            this.value = [];
+            let value = newValue;
             if (value.id !== undefined && value.id !== null){
                 this.value.push(value);
                 this.magicObj.setSelection(newValue);
