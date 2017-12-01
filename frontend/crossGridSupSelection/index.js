@@ -44,9 +44,88 @@ export class CrossGrid extends component.Component {
         let prepContent = this.prepareData(this.content);
         this.recordsRaw = this.makeAsos(prepContent.records, this.PK);
         this.fk = prepContent.fk;
-        //this.setButtons();
+        this.setButtons();
         //this.setHandlers();
 
+    }
+
+    setButtons() {
+        for (let i in this.toolbar.elements) {
+            this.btns[this.toolbar.elements[i].id] = this.toolbar.elements[i].properties;
+            this.btns[this.toolbar.elements[i].id].id = this.toolbar.elements[i].id;
+            //обработчики нажатий на кнопку
+            this.btns[this.toolbar.elements[i].id].onClick = function (element, remoteFuncName) {
+                try {
+                    this.code[this.toolbar.elements[i].events.onClick].apply(this, [element, remoteFuncName]);
+                } catch (err) {
+                    console.log('SERVER CODE ERROR:' + err);
+                    w2alert('Сервер вернул некорректное действие!');
+                }
+
+            }.bind(this)
+        }
+    }
+
+    makeToolbar() {
+        let tlb = {
+            items: [],
+            onClick: function (event) {
+                if (event.subItem === undefined) {
+                    if (this.btns[event.item.id] !== undefined) {
+                        try {
+                            this.btns[event.item.id].onClick.apply(this, [this, event.item.id]);
+                        } catch (err) {
+                            console.log('SERVER CODE ERROR:' + err);
+                            w2alert('Серевер вернул некорректное действие!');
+                        }
+                    }
+                } else {
+                    if (this.btns[event.subItem.id] !== undefined) {
+                        try {
+                            this.btns[event.subItem.id].onClick.apply(this, [this, event.item.id]);
+                        } catch (err) {
+                            console.log('SERVER CODE ERROR:' + err);
+                            w2alert('Серевер вернул некорректное действие!');
+                        }
+                    }
+
+                }
+
+            }.bind(this)
+        };
+        for (let name in this.btns) {
+            if (name === 'refreshGrid') {
+                continue;
+            }
+            if (!this.btns[name].more)
+                tlb.items.push({
+                    type: 'button',
+                    id: this.btns[name].id,
+                    icon: this.btns[name].icon,
+                    text: this.btns[name].caption,
+                    disabled: (this.btns[name].needOnceSelected || this.btns[name].needSelected ? true : false)
+                })
+        }
+        let menuItems = [];
+        for (let name in this.btns) {
+            if (this.btns[name].more)
+                menuItems.push({
+                    type: 'button',
+                    id: this.btns[name].id,
+                    icon: this.btns[name].icon,
+                    text: this.btns[name].caption,
+                    disabled: (this.btns[name].needOnceSelected || this.btns[name].needSelected ? true : false)
+                })
+        }
+        if (menuItems.length > 0) {
+            tlb.items.push({
+                type: 'menu',
+                id: 'moreMenu',
+                text: 'Ещё',
+                items: menuItems
+            });
+        }
+        return tlb;
     }
 
     // TODO вынести в utils
@@ -156,46 +235,33 @@ export class CrossGrid extends component.Component {
     }
 
     _getUniqueGroupValues(groupColName) {
-        /*let uniqueGroupValues = {};
-        this.records.forEach((rec) => {
-            let groupValue = rec[groupColName];
-            if (!uniqueGroupValues[groupValue]) {
-                uniqueGroupValues[groupValue] = 1;
+        let uniqueGroupValues = {};
+        for (let colName in this.fk) {
+            let colNameShort = colName.split('-')[0];
+            if (colNameShort === this._groupColName) {
+                for (let id in this.fk[colName]) {
+                    uniqueGroupValues[id] = this.fk[colName][id];
+                }
             }
-        });
-        return uniqueGroupValues;*/
-        return this.fk[this._groupColName];
+        }
+        return uniqueGroupValues;
     }
 
     _extendColumns(groupValues) {
         let newColumns = [];
-
         for (let colName in this.columnsRaw) {
+            let colNameShort = colName.split('-')[0];
             let col = this.columnsRaw[colName];
             let clonedCol = _.cloneDeep(col);
             clonedCol.size = '10%';
-            if (colName !== 'description') {
+            if (colNameShort !== 'description' && colNameShort !== this._groupColName) {
                 clonedCol.hidden = true;
             }
-            if (colName !== this._groupColName) {
+            if (colNameShort == this._groupColName) {
                 //let transformedCol = this._colTransformation(col, colName);
-                newColumns.push(clonedCol);
+                clonedCol.editable = {type: 'checkbox'};
             }
-        }
-
-        for (let id in groupValues) {
-            for (let colName in this.columnsRaw) {
-                if (colName !== this._groupColName) continue;
-                let col = this.columnsRaw[colName];
-                let newName = `${colName}-${id}`;
-                let clonedCol = _.cloneDeep(col);
-                clonedCol.field = newName;
-                clonedCol.editable = {type : 'checkbox'};
-                clonedCol.size = '10%';
-                clonedCol.caption = groupValues[id];
-                //let transformedCol = this._colTransformation(clonedCol, newName);
-                newColumns.push(clonedCol);
-            }
+            newColumns.push(clonedCol);
         }
         return newColumns;
     }
@@ -207,11 +273,13 @@ export class CrossGrid extends component.Component {
             let w2rec = {};
             w2rec.recid = rec[this.PK];
             for (let colName in rec) {
+                let colNameShort = colName.split('-')[0];
                 let value = rec[colName];
-                let groupNameValue = rec[this._groupColName][0];
-                if (colName === this._groupColName && groupNameValue) {
-                    let newColName = `${colName}-${groupNameValue}`;
-                    w2rec[newColName] = true;
+                if (colNameShort === this._groupColName) {
+                    value = value[0];
+                    if (value) {
+                        w2rec[colName] = true;
+                    }
                 } else {
                     w2rec[colName] = value;
                 }
@@ -221,6 +289,35 @@ export class CrossGrid extends component.Component {
         return w2records;
     }
 
+    addColumn(value) {
+        let id = value.id;
+        let description = value.name;
+
+        let newColName = `supplier-${id}`;
+        // проверить если ли в columnsRaw поле supplier c префиксом value.id
+        if (this.columnsRaw[newColName]) return;
+
+        // если нет то добавляем в this.columnsRaw новую колонку
+        this.columnsRaw[newColName] = {
+            field: newColName,
+            caption: description,
+            size: '10%',
+            hidden: false,
+            editable: {type: 'checkbox'}
+        };
+        // добавляем новое значение в this.fk
+        this.fk[newColName] = {};
+        this.fk[newColName][id] = description;
+
+        // формируем новые колонки и записи для w2ui
+        let uniqueGroupValues = this._getUniqueGroupValues();
+        let columns = this._extendColumns(uniqueGroupValues);
+        // заменяем текущие колонки и записи
+        w2ui[this.id].columns = columns;
+
+        // обновляем таблицу w2ui
+        w2ui[this.id].refresh();
+    }
 
     _makeW2uiObject() {
         let uniqueGroupValues = this._getUniqueGroupValues();
@@ -228,12 +325,6 @@ export class CrossGrid extends component.Component {
         //let w2uiColumns = this._columnsChangeToW2UI(newColumns);
         //let columnsGroups = this._makeColumnsGroups(uniqueGroupValues, this._colsInGroup);
         let records = this._changeRecords();
-
-        /*this._renderGrid({
-            columnsGroups: columnsGroups,
-            columns: w2uiColumns,
-            records: records
-        });*/
 
         let stpgrid = this;
         let obj = {
@@ -245,11 +336,8 @@ export class CrossGrid extends component.Component {
             },
             columns: сolumns,
             records: records,
-            //toolbar: this.makeToolbar(),
-            //onMenuClick: this.makeMenu().onClick,
-            //menu: this.makeMenu().items,
-            // событие нажатия на кнопку сохранить в тулбаре ТЧ
-            onSave: function (event) {
+            toolbar: this.makeToolbar()
+            /*onSave: function (event) {
                 // по нажатию на кнопку Сохранить в тулбаре ТЧ необходимо выполнить проверку заполненности данных и сформировать запрос на сервере
 
                 // отменить действие по умолчанию
@@ -324,15 +412,56 @@ export class CrossGrid extends component.Component {
                     grid.unlock();
                 });
 
-            },
-            parser: this.handlers.parser || ""
-            //searches: this.makeSearches(this.columnsRaw)
+            },*/
         };
         return obj;
     }
 
-    _makeColumnsGroups() {
+    getChanges() {
+        let listForAdd = [];
+        let listForDelete = [];
+        let w2grid = w2ui[this.id];
+        let w2changes = w2grid.getChanges();
+        w2changes.forEach((change) => {
+            let mainID = change.recid;
+            let recordRaw = this.recordsRaw[mainID];
+            for (let col in change) {
+                if (col === 'recid') continue;
+                let changedValue = change[col];
+                // если изменили на ложь, то передаем запись на удаление только если там вообще изначально что-то было
+                if (!changedValue) {
+                    if (recordRaw[col]) {
+                        let supID = col.replace('supplier-','');
+                        if (supID) {
+                            let childID = recordRaw.childID[supID];
+                            if (childID) listForDelete.push(childID);
+                        }
+                    }
+                } else { // если изменили на истина, то это по-любому запись на добавление
+                    let supID = col.replace('supplier-','');
+                    if (supID) {
+                        let values = {
+                            supSelectionID: mainID,
+                            supplier: supID
+                        };
+                        listForAdd.push(values);
+                    }
+                }
+            }
 
+
+        });
+        return {
+            listForAdd : listForAdd,
+            listForDelete : listForDelete
+        }
+    }
+
+    refresh() {
+        w2ui[this.id].refresh();
+        for (var i in this.children) {
+            this.children[i].refresh();
+        }
     }
 
     render(place) {
