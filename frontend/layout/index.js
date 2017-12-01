@@ -121,6 +121,22 @@ export class Layout extends component.Component {
                     w2ui[self.id].el(panel).appendChild(crossGrid.render());
                 });
             }
+            if (this.panels[panel].elements[0].type === 'crossGridSupSelection') {
+                //запоминание контекста
+                let self = this;
+                console.log(self);
+                //подключаем нужную библиотеку
+                let needLib = require('bundle-loader!../crossGridSupSelection/index.js')(function (mod) {
+                    //строим таблицу
+                    let crossGrid = new mod.CrossGrid({
+                        box: w2ui[self.id].el(panel),
+                        element: self.panels[panel].elements[0],
+                        code: self.code,
+                        content: self.content,
+                        parent: self
+                    });
+                });
+            }
             if (this.panels[panel].elements[0].type === 'form') {
                 //запоминание контекста
                 let self = this;
