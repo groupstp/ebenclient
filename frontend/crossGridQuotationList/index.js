@@ -2,7 +2,7 @@ import * as tools from '../tools/index.js';
 import * as component from '../component'
 import * as layout from '../layout'
 import config from '../config/config.js';
-//import {_} from 'lodash';
+
 const _ = require('lodash');
 
 export class CrossGrid extends component.Component {
@@ -20,6 +20,7 @@ export class CrossGrid extends component.Component {
         this.recordsRaw = {};
         this._groupColName = null;
         this._colsInGroup = null;
+        this._editableFields = [];
 
         this.saveInWindow();
         this.getAttributes(options.element);
@@ -37,6 +38,7 @@ export class CrossGrid extends component.Component {
                 this.toolbar = attributes.elements[i];
             }
         }
+        this._editableFields = attributes.properties.editableFields || [];
         this._groupColName = attributes.properties.groupColName || '';
         this._colsInGroup = attributes.properties.colsInGroup || 1;
         this.PK = attributes.properties.PK || 'ID';
@@ -171,12 +173,13 @@ export class CrossGrid extends component.Component {
             let col = this.columnsRaw[colName];
             let clonedCol = _.cloneDeep(col);
             clonedCol.size = '10%';
-            if (colNameShort !== 'description' && colNameShort !== this._groupColName) {
+            if (colNameShort !== 'description' && this._editableFields.indexOf(colNameShort) === -1) {
                 clonedCol.hidden = true;
             }
-            if (colNameShort == this._groupColName) {
+            if (this._editableFields.indexOf(colNameShort) !== -1) {
                 //let transformedCol = this._colTransformation(col, colName);
-                clonedCol.editable = {type: 'checkbox'};
+                let type = clonedCol.type === 'integer' ? 'int' : clonedCol.type;
+                clonedCol.editable = {type: type};
             }
             newColumns.push(clonedCol);
         }
@@ -192,53 +195,48 @@ export class CrossGrid extends component.Component {
             for (let colName in rec) {
                 let colNameShort = colName.split('-')[0];
                 let value = rec[colName];
-                if (colNameShort === this._groupColName) {
-                    value = value[0];
-                    if (value) {
-                        w2rec[colName] = true;
-                    }
-                } else {
-                    w2rec[colName] = value;
-                }
+                w2rec[colName] = value;
             }
             w2records.push(w2rec);
         }
         return w2records;
     }
 
-    addColumn(value) {
-        let id = value.id;
-        let description = value.name;
+    _makeColumnsGroups() {
+        let columnGroups = [
+            {span: 1, caption: '', master: true},
+            {span: 1, caption: '', master: true},
+            {span: 1, caption: '', master: true}
+        ];
 
-        let newColName = `supplier-${id}`;
-        // проверить если ли в columnsRaw поле supplier c префиксом value.id
-        if (this.columnsRaw[newColName]) return;
+        // сделаем массив из имен колонок для удобства перебора
+        let colArr = [];
+        for (let colName in this.columnsRaw) {
+            colArr.push(colName);
+        }
 
-        // если нет то добавляем в this.columnsRaw новую колонку
-        this.columnsRaw[newColName] = {
-            field: newColName,
-            caption: description,
-            size: '10%',
-            hidden: false,
-            editable: {type: 'checkbox'}
-        };
-        // добавляем новое значение в this.fk
-        this.fk[newColName] = {};
-        this.fk[newColName][id] = description;
+        for (let i = 0; i < colArr.length; i++) {
+            let colName = colArr[i];
+            let colNameShort = colName.split('-')[0];
+            let groupedCol = this._editableFields.indexOf(colNameShort) !== -1;
+            if (!groupedCol) continue;
+            let colGroupID = colName.replace(`${colNameShort}-`, '');
+            let colGroupCaption = this.fk[this._groupColName][colGroupID];
+            columnGroups.push({
+                span: this._colsInGroup,
+                caption: colGroupCaption
+            });
+            let indexJump = (this._colsInGroup - 1);
+            i = i + indexJump; // перескочим сразу к сделующей группе колонок
+        }
 
-        // формируем новые колонки и записи для w2ui
-        let uniqueGroupValues = this._getUniqueGroupValues();
-        let columns = this._extendColumns(uniqueGroupValues);
-        // заменяем текущие колонки и записи
-        w2ui[this.id].columns = columns;
-
-        // обновляем таблицу w2ui
-        w2ui[this.id].refresh();
+        return columnGroups;
     }
 
     _makeW2uiObject() {
         let uniqueGroupValues = this._getUniqueGroupValues();
         let сolumns = this._extendColumns(uniqueGroupValues);
+        let columnGroups = this._makeColumnsGroups(uniqueGroupValues);
         let records = this._changeRecords();
 
         let stpgrid = this;
@@ -249,6 +247,7 @@ export class CrossGrid extends component.Component {
                 toolbar: true,
                 footer: true
             },
+            columnGroups: columnGroups,
             columns: сolumns,
             records: records,
             toolbar: this.makeToolbar()
@@ -257,42 +256,46 @@ export class CrossGrid extends component.Component {
     }
 
     getChanges() {
+        debugger;
+        let listForUpdate = {};
         let listForAdd = [];
-        let listForDelete = [];
         let w2grid = w2ui[this.id];
         let w2changes = w2grid.getChanges();
         w2changes.forEach((change) => {
             let mainID = change.recid;
             let recordRaw = this.recordsRaw[mainID];
+            let valuesForAdd = null;
             for (let col in change) {
                 if (col === 'recid') continue;
-                let changedValue = change[col];
-                // если изменили на ложь, то передаем запись на удаление только если там вообще изначально что-то было
-                if (!changedValue) {
-                    if (recordRaw[col]) {
-                        let supID = col.replace('supplier-','');
-                        if (supID) {
-                            let childID = recordRaw.childID[supID];
-                            if (childID) listForDelete.push(childID);
-                        }
-                    }
-                } else { // если изменили на истина, то это по-любому запись на добавление
-                    let supID = col.replace('supplier-','');
-                    if (supID) {
-                        let values = {
+                let changedValue = +change[col];
+                let originalValue = recordRaw[col];
+                let colName = col.split('-')[0];
+                let supID = col.replace(`${colName}-`, '');
+
+                if (originalValue === undefined && changedValue) { // запрос на добавление
+                    if (!valuesForAdd) {
+                        valuesForAdd = {
                             supSelectionID: mainID,
                             supplier: supID
+                        }
+                    }
+                    valuesForAdd[colName] = changedValue;
+                } else if (originalValue !== undefined) { // запрос на изменение
+                    if (changedValue !== originalValue) {
+                        let childID = recordRaw.childID[supID];
+                        if (!listForUpdate[childID]) listForUpdate[childID] = {
+                            supSelectionID: mainID
                         };
-                        listForAdd.push(values);
+                        listForUpdate[childID][colName] = changedValue;
                     }
                 }
             }
 
-
+            if (valuesForAdd) listForAdd.push(valuesForAdd);
         });
         return {
-            listForAdd : listForAdd,
-            listForDelete : listForDelete
+            listForAdd: listForAdd,
+            listForUpdate: listForUpdate
         }
     }
 
