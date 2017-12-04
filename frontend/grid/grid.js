@@ -1802,6 +1802,14 @@ class BasicGrid extends component.Component {
         return null;//path doesn't exist
     }
 
+    // Определяет является ли таблица раскрывающейся (по иконке +)
+    isExpandGrid(){
+        let result = false;
+        if (this.headID) {
+            result = this.id.indexOf(this.headID) !== -1 ? true : false;
+        }
+        return result;
+    }
 
     /**
      * Отправляет запрос за записями и обновляет таблицу при успешном выполнении
@@ -1814,6 +1822,9 @@ class BasicGrid extends component.Component {
         let selectedID = this.getSelectedID();
 
         let request = twoBe.createRequest();
+        if (this.isExpandGrid()) {
+            request.addData('expGridPostfix', this.headID);
+        }
         request.addParam('action', 'getContent').addParam('path', path).addData('type', 'gridRecords').addBefore(function () {
             grid.lock('Идет загрузка..');
         }).addSuccess(function (data) {

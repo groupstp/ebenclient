@@ -256,7 +256,6 @@ export class CrossGrid extends component.Component {
     }
 
     getChanges() {
-        debugger;
         let listForUpdate = {};
         let listForAdd = [];
         let w2grid = w2ui[this.id];
