@@ -55,7 +55,8 @@ export default class Controller {
         let userName = CookieService.getCookie('userName');
         this._topMenu = new TopMenu({
             el: document.querySelector('#topMenu'),
-            userName: userName
+            userName: userName,
+            title: config.caption
         });
         this._topMenu.render();
 
