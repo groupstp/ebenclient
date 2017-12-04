@@ -103,9 +103,9 @@ export default class stpAuth {
         });
         query.sendQuery()
             .then(
-                token => {
+                loginData => {
                     $('#' + this.name + this._freezePostfix).unblock();
-                    this._saveToken(token);
+                    this._saveUserData(loginData);
                     document.location.href = this.redirectUrl;
                 },
                 error => {
@@ -205,9 +205,9 @@ export default class stpAuth {
      * @private
      */
 
-    _saveToken(token) {
+    _saveUserData(loginData) {
         var t = new tools.TokenAuth(this.name);
-        t.addToken(token);
+        t.saveUserData(loginData);
     }
 
     /**
