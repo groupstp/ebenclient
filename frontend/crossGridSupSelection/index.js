@@ -280,7 +280,7 @@ export class CrossGrid extends component.Component {
                     let supID = col.replace('supplier-','');
                     if (supID) {
                         let values = {
-                            supSelectionID: mainID,
+                            initialOfferID: mainID,
                             supplier: supID
                         };
                         listForAdd.push(values);
