@@ -482,7 +482,7 @@ class BasicGrid extends component.Component {
     }
 
     // Получает запись по ID
-    getRecord(id){
+    getRecord(id) {
         return this.recordsRaw[id] ? this.recordsRaw[id] : null;
     }
 
@@ -552,6 +552,19 @@ class BasicGrid extends component.Component {
         return this.headID ? true : false;
     }
 
+    // определяет есть ли хоть одно редактируемое поле
+    isEditableTable() {
+        let result = false;
+        for (let colName in this.columnsRaw) {
+            let col = this.columnsRaw[colName];
+            if (col.editable) {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
+
     /**
      * Делаем объект для в2уи
      * @returns {{name: *, show: {toolbar: boolean, footer: boolean}, recid: string, columns: Array, records: Array, toolbar: {items: Array, onClick: (function(this:grid))}, onMenuClick: (function()), menu: Array}}
@@ -569,7 +582,7 @@ class BasicGrid extends component.Component {
                 toolbar: true,
                 footer: true,
                 selectColumn: this.showSelectColumn,
-                toolbarSave: this.isChildGrid() // если это ТЧ то показываем кнопку сохранить
+                toolbarSave: this.isEditableTable() // если это ТЧ то показываем кнопку сохранить
             },
             columns: this.makeColumns(),
             records: this.initRecords(),
@@ -1452,8 +1465,7 @@ class BasicGrid extends component.Component {
                 return renderedValue;
             };
 
-            // редактирование в таблице делаем только для ТЧ
-            if (this.refCol && rawColumn.editable) {
+            if (rawColumn.editable) {
                 // определим тип подставляемый в редактирование
                 let editableType = types[serverType];
                 if (editableType !== undefined) {
@@ -1803,7 +1815,7 @@ class BasicGrid extends component.Component {
     }
 
     // Определяет является ли таблица раскрывающейся (по иконке +)
-    isExpandGrid(){
+    isExpandGrid() {
         let result = false;
         if (this.headID) {
             result = this.id.indexOf(this.headID) !== -1 ? true : false;

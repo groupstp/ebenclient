@@ -174,8 +174,9 @@ export class TokenAuth {
      * Добавляет токен
      * @param token - токен
      */
-    addToken(token) {
-        this._setCookie(this.name, token, {expires: 0});//устанавливаем "сессионное куки"
+    saveUserData(data) {
+        this._setCookie(this.name, data.token, {expires: 0}); // устанавливаем "сессионное куки"
+        this._setCookie('userName', data.userName, {expires: 0});
     }
 
     /**

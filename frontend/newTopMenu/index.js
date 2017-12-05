@@ -5,7 +5,7 @@ export default class TopMenu {
     constructor(options) {
         this._el = options.el;
         this._title = options.title || 'Hello, world!';
-        this._user = options.user || 'Hodor';
+        this._user = options.userName || 'Default username';
         this._dropDownMenus = [];
 
         this._el.addEventListener('click', this._onMenuItemClick.bind(this));

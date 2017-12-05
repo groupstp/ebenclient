@@ -9,7 +9,7 @@
  */
 let config = {
     name: 'test',
-    caption: 'Тестовая ИС',
+    caption: 'ИС Снабжение',
     defaultUrl: 'http://gag-test.groupstp.ru:80/api/login',
     version: '0.0.1',
     authGoogle: false,

@@ -274,7 +274,7 @@ export class CrossGrid extends component.Component {
                 if (originalValue === undefined && changedValue) { // запрос на добавление
                     if (!valuesForAdd) {
                         valuesForAdd = {
-                            supSelectionID: mainID,
+                            initialOfferID: mainID,
                             supplier: supID
                         }
                     }
@@ -283,7 +283,7 @@ export class CrossGrid extends component.Component {
                     if (changedValue !== originalValue) {
                         let childID = recordRaw.childID[supID];
                         if (!listForUpdate[childID]) listForUpdate[childID] = {
-                            supSelectionID: mainID
+                            initialOfferID: mainID
                         };
                         listForUpdate[childID][colName] = changedValue;
                     }
