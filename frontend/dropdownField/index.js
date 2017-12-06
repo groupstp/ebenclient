@@ -63,7 +63,7 @@ export class DropdownField extends Field {
 
         $(this.magicObj).on('selectionchange', (e, ms, records) => {
             this._saveChanges(records);
-            this.trigger('changeValue');
+            this.trigger('changeValue', this);
         });
 
         $(this.magicObj).on('focus', () => {
@@ -137,6 +137,13 @@ export class DropdownField extends Field {
                 this.value.push(value);
                 this.magicObj.setSelection(newValue);
             }
+        }
+    }
+
+    clear(){
+        if (this.magicObj) {
+            this.magicObj.clear();
+            this.trigger('changeValue', this);
         }
     }
 

@@ -328,7 +328,6 @@ export class CrossGrid extends component.Component {
             this.changedRecords[actionID]['description'] = `${objectName}--${actionName}`;
             this.changedRecords[actionID]['element'] = target;
         }
-        console.log(this.changedRecords);
     }
 
     _setHandlers() {

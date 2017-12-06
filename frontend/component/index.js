@@ -169,7 +169,11 @@ export class Component {
      * @param data
      */
     trigger(eventName, data) {
-        let customEvent = new CustomEvent(eventName, {detail: data});
+        let customEvent = new CustomEvent(eventName, {
+            detail: data,
+            bubbles: true,
+            cancelable: true
+        });
         this.box.dispatchEvent(customEvent);
     }
 

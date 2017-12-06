@@ -75,7 +75,6 @@ export class Layout extends component.Component {
             }
         }
         obj.panels = panels;
-        console.log(obj);
         return obj;
     }
 
@@ -105,7 +104,6 @@ export class Layout extends component.Component {
             if (this.panels[panel].elements[0].type === 'crossGrid') {
                 //запоминание контекста
                 let self = this;
-                console.log(self);
                 //подключаем нужную библиотеку
                 let needLib = require('bundle-loader!../crossGrid/index.js')(function (mod) {
                     //строим таблицу
@@ -124,7 +122,6 @@ export class Layout extends component.Component {
             if (this.panels[panel].elements[0].type === 'crossGridSupSelection') {
                 //запоминание контекста
                 let self = this;
-                console.log(self);
                 //подключаем нужную библиотеку
                 let needLib = require('bundle-loader!../crossGridSupSelection/index.js')(function (mod) {
                     //строим таблицу
@@ -140,7 +137,6 @@ export class Layout extends component.Component {
             if (this.panels[panel].elements[0].type === 'crossGridQuotationList') {
                 //запоминание контекста
                 let self = this;
-                console.log(self);
                 //подключаем нужную библиотеку
                 let needLib = require('bundle-loader!../crossGridQuotationList/index.js')(function (mod) {
                     //строим таблицу
@@ -170,7 +166,6 @@ export class Layout extends component.Component {
             if (this.panels[panel].elements[0].type === 'tabs') {
                 //запоминание контекста
                 let self = this;
-                console.log(self);
                 //подключаем нужную библиотеку
                 let needLib = require('bundle-loader!../tabs/index.js')(function (mod) {
                     let tabs = new mod.Tabs({
@@ -185,7 +180,6 @@ export class Layout extends component.Component {
             if (this.panels[panel].elements[0].type === 'map') {
                 //запоминание контекста
                 let self = this;
-                console.log(self);
                 //подключаем нужную библиотеку
                 let needLib = require('bundle-loader!../map/index.js')(function (mod) {
                     let m = new mod.Map({
@@ -195,7 +189,6 @@ export class Layout extends component.Component {
                         content: self.content,
                         parent: self
                     });
-                    console.log(m);
                 });
             }
         }

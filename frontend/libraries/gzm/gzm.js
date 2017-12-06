@@ -358,7 +358,9 @@ window.PointObject = class PointObject extends GeoObject{
 	Точечный капитальный объект
 */
 window.CapitalPointObject = class CapitalPointObject extends PointObject{
-	constructor(){}
+	constructor(){
+		super();
+	}
 }
 },{}],2:[function(require,module,exports){
 /*
@@ -2307,7 +2309,9 @@ window.MCapitalPlaneObject = class MCapitalPlaneObject extends MGeoZone{
 	Точечный капитальный объект
 */
 window.MCapitalPointObject = class MCapitalPointObject extends MPointObject{
-	constructor(){}
+	constructor(){
+		super();
+	}
 }
 },{}],11:[function(require,module,exports){
 window.MCircleGeoZone = class MCircleGeoZone extends MCircleObject{

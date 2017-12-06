@@ -1338,9 +1338,6 @@ class BasicGrid extends component.Component {
         let grid = this;
 
         window.stpui.showFiles = function (recid, col, index, column_index, gridID) {
-            /*console.log(recid, col);
-             console.log(w2ui[this.id].getCellHTML(index, column_index));
-             console.log('gird_' + this.id + '_data_' + index + '_' + column_index);*/
             // нужно для правильного контекста
             let self = stpui[gridID];
             let links = '';
@@ -1487,7 +1484,6 @@ class BasicGrid extends component.Component {
 
             columns.push(options)
         }
-        //console.log(columns);
         return columns;
     }
 
@@ -2201,7 +2197,6 @@ export class Grid extends BasicGrid {
             this.handlers.onSearch(event);
         }.bind(this);
         obj.onRequest = function (event) {
-            console.log(event, this.handlers.onRequest);
             if (this.handlers.onRequest !== undefined) {
                 this.handlers.onRequest(event);
             }
@@ -2248,7 +2243,6 @@ export class GridNew
                         w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
                         w2ui[this.id].refresh();
                         document.getElementById('grid_' + this.id + '_search_all').value = event.searchValue;
-                        console.log(this);
                         if (w2ui[this.id + '_toolbar'].get('undoSearch') === null) {
                             w2ui[this.id + '_toolbar'].add([
                                 {
@@ -2280,7 +2274,6 @@ export class GridNew
         if (this.pagination && !this.hierachy) {
             //щит для пагинации
             this.handlers.onRequest = function (event) {
-                console.log(event);
                 event.url = 'search.json';
 
             }
@@ -2320,7 +2313,6 @@ export class GridNew
                         w2ui[this.id].set(recid, {w2ui: {children: expRecs}});
                         $.extend(this.recordsRaw, this.makeAsos(response.content[0].records, 'ID'));
                         $.extend(this.fk, response.content[0].fk);
-                        console.log(this);
                         w2ui[this.id].toggle(recid);
                     },
                     error => {

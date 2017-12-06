@@ -12,6 +12,7 @@ import {SimpleField} from '../simpleField';
 import {DropdownField} from '../dropdownField';
 import {Button} from '../button';
 import template from './template.hbs';
+
 /**
  * @extends module:component.Component
  */
@@ -337,22 +338,38 @@ export class Form extends Component {
      * @returns {Array}
      */
     getDroplists() {
-
         let droplists = [];
-
         let fields = this.getFields();
-
         fields.forEach((field) => {
             let type = field.getType();
-            if (type === 'reference'){
+            if (type === 'reference') {
                 droplists.push(fields);
             }
         });
-
         return droplists;
-
     }
 
+    _setInternalHandlers() {
+        this.box.addEventListener('changeValue', (event) => {
+            this._onFieldValueChanged(event.detail);
+        });
+    }
+
+    _onFieldValueChanged(field) {
+        // обнулим все поля которые зависят от изменившегося поля
+        let fieldsToClear = [];
+        let fields = this.getFields();
+        fields.forEach((fld) => {
+            fld.filterFields.forEach((filterFld) => {
+                if (filterFld.filterBy === field.name) {
+                    fieldsToClear.push(fld);
+                }
+            });
+        });
+        fieldsToClear.forEach((fld) => {
+            fld.clear();
+        });
+    }
 
     /**
      * Генерирует DOM элемент с формой и возвращает его
@@ -371,6 +388,8 @@ export class Form extends Component {
         this._loadData();
 
         this.addHandlers();
+
+        this._setInternalHandlers();
 
 
         // вызываем событие "rendered"

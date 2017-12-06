@@ -76,7 +76,7 @@ export class CrossGrid extends component.Component {
                             this.btns[event.item.id].onClick.apply(this, [this, event.item.id]);
                         } catch (err) {
                             console.log('SERVER CODE ERROR:' + err);
-                            w2alert('Серевер вернул некорректное действие!');
+                            w2alert('Сервер вернул некорректное действие!');
                         }
                     }
                 } else {
@@ -85,7 +85,7 @@ export class CrossGrid extends component.Component {
                             this.btns[event.subItem.id].onClick.apply(this, [this, event.item.id]);
                         } catch (err) {
                             console.log('SERVER CODE ERROR:' + err);
-                            w2alert('Серевер вернул некорректное действие!');
+                            w2alert('Сервер вернул некорректное действие!');
                         }
                     }
 

@@ -76,7 +76,6 @@ export class SimpleField extends Field {
         } else {
             this.value = event.target.value;
         }
-
         this.trigger('changeValue');
     }
 

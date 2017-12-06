@@ -30,7 +30,6 @@ export class Popup extends Component {
     }
 
     getAttributes(properties) {
-        console.log(properties);
         for (let i in properties.elements) {
             if (properties.elements[i].type === 'header') {
                 if (properties.elements[i].properties !== undefined) {
@@ -194,8 +193,6 @@ export class Popup extends Component {
                                 closeBtn.onclick = function () {
                                     stpui.currentPopup.close();
                                 };
-                                console.log(document.getElementById('popup0').clientHeight);
-                                console.log(document.getElementById('popupDiv').clientHeight);
                                 resolve(document.getElementById('popup0'));
                             }
 

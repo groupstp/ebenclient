@@ -135,7 +135,6 @@ class Tab extends componentLib.Component {
         this.getAttributes(params.element);
         this.render();
         this.saveInWindow(this.id);
-        console.log(this);
     }
 
     getAttributes(attributes) {

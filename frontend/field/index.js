@@ -30,6 +30,7 @@ export class Field extends Component {
         this.hidden = options.element.properties.hidden || false;
         this.enabled = options.element.properties.enabled || true;
         this.required = options.element.properties.required || false;
+        this.filterFields = options.element.properties.filterFields || [];
 
         this._initField(options.element.elements);
     }
@@ -208,6 +209,10 @@ export class Field extends Component {
     }
 
     getValue() {
+
+    }
+
+    clear(){
 
     }
 
