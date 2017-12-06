@@ -114,7 +114,7 @@ export class DropdownField extends Field {
         }
     }
 
-    getRawValue(){
+    getRawValue() {
         return this.magicObj.getRawValue();
     }
 
@@ -126,21 +126,21 @@ export class DropdownField extends Field {
         if (Array.isArray(newValue) && newValue.length) {
             this.value = [];
             let value = newValue[0];
-            if (value.id !== undefined && value.id !== null){
+            if (value.id !== undefined && value.id !== null) {
                 this.value.push(value);
                 this.magicObj.setSelection(newValue);
             }
         } else {
             this.value = [];
             let value = newValue;
-            if (value.id !== undefined && value.id !== null){
+            if (value.id !== undefined && value.id !== null) {
                 this.value.push(value);
                 this.magicObj.setSelection(newValue);
             }
         }
     }
 
-    clear(){
+    clear() {
         if (this.magicObj) {
             this.magicObj.clear();
             this.trigger('changeValue', this);
@@ -176,14 +176,41 @@ export class DropdownField extends Field {
     _getListDataFromServer(text) {
         let url = twoBe.getDefaultParams().url;
         let self = this;
-        twoBe.createRequest().addUrl(url).addParam('action', 'getContent').addParam('path', 'ref-' + this.link).addData('type', 'getFieldValues').addFilterParam('description', text, 'consist').addBefore(function () {
+        let request = twoBe.createRequest();
+        request.addParam('action', 'getContent').addParam('path', 'ref-' + this.link).addData('type', 'getFieldValues').addFilterParam('description', text, 'consist').addBefore(function () {
         }).addSuccess(function (data) {
             let suggestion = self._prepareDataForList.call(self, data);
             self.setListData(suggestion);
         }).addError(function (msg) {
             twoBe.showMessage(0, msg);
-        }).send();
+        });
+        let filterParams = this.getFiltersParams();
+        if (filterParams) {
+            filterParams.forEach((filerParam) => {
+                request.addFilterParam(filerParam.name, filerParam.value);
+            });
+        }
+        request.send();
+    }
 
+    getFiltersParams() {
+        let filterParams = [];
+        if (this.filterFields.length) {
+            this.filterFields.forEach((field) => {
+                let filterFieldName = field.filterBy;
+                let filterField = this.parent.getField(filterFieldName);
+                if (filterField) {
+                    let filterValue = filterField.getValue();
+                    if (filterValue && filterValue.length) {
+                        filterParams.push({
+                            name: field.alias,
+                            value: filterValue[0].id
+                        });
+                    }
+                }
+            });
+        }
+        return filterParams.length ? filterParams : null;
     }
 
     /**
@@ -293,7 +320,7 @@ export class DropdownField extends Field {
 
             let result = true;
 
-            for (let i in cache){
+            for (let i in cache) {
                 let id = cache[i].id;
                 if (id === valueToCache.id) {
                     result = false;
@@ -306,11 +333,11 @@ export class DropdownField extends Field {
         }
 
 
-}
+    }
 
 
-_getCacheKey() {
-    return 'dropList-' + this.link;
-}
+    _getCacheKey() {
+        return 'dropList-' + this.link;
+    }
 
 }

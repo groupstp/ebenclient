@@ -368,6 +368,9 @@ export class Form extends Component {
         });
         fieldsToClear.forEach((fld) => {
             fld.clear();
+            if (fld.type === 'reference') {
+                fld.clearListData();
+            }
         });
     }
 
@@ -383,22 +386,15 @@ export class Form extends Component {
             // устанавливаем логику полей и кнопок
             this._setupLogic();
         }
-
         // загружаем данные которые пришли с сервера, либо обновляем из значений которые уже есть в fields
         this._loadData();
-
         this.addHandlers();
-
         this._setInternalHandlers();
-
-
         // вызываем событие "rendered"
         this.trigger('rendered');
         // ставим флаг, чтобы при повторном render'e брать данные уже с формы
         this.rendered = true;
-
         return this.box;
-
     }
 
 }
