@@ -6,6 +6,7 @@
 
 import {Field} from "../field";
 import {AjaxSender} from '../tools/index.js';
+import {utils} from '../tools';
 
 //подключаем библиотеку и экспортируем переменные из нее
 const magiclib = require('imports-loader?jQuery=jquery!../libraries/magicsuggest/magicsuggest.js');
@@ -30,6 +31,9 @@ export class DropdownField extends Field {
 
         // объект magicSuggest, так как проще большинство действий совершать через него, а не через controlEl
         this.magicObj = null;
+
+        // делаем запросы на сервер при подборе текста не чаще чем раз в 600мс
+        this._getListDataFromServer = utils.debounce(this._getListDataFromServer, 600);
     }
 
     ///// Private methods /////
