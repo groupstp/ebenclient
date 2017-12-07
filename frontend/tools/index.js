@@ -322,4 +322,20 @@ export class utils {
         if (dateArr.length !== 3) return '';
         return (dateArr[2] + '-' + dateArr[1] + '-' + dateArr[0])
     }
+
+    // возвращает обертку функции func, которая будет вызвана не чаще чем раз в ms миллисекунд
+    static debounce(func, ms) {
+        let timerID = null;
+        let args;
+        return function () {
+            args = arguments;
+            if (!timerID) {
+                timerID = setTimeout(() => {
+                    timerID = null;
+                    func.apply(this, args);
+                }, ms);
+
+            }
+        }
+    }
 }
