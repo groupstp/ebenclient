@@ -1933,8 +1933,13 @@ export class Grid extends BasicGrid {
             if (!event.reset) {
                 event.preventDefault();
                 w2ui[this.id].searchClose();
+                let allFields = false;
+                if (event.searchField === 'all'){
+                    allFields = true;
+                }
+
                 // преобразуем параметры поиска w2ui в формат, который понимает сервер
-                let paramsForServer = this._parseSearchData(event.searchData);
+                let paramsForServer = this._parseSearchData(event.searchData, allFields);
 
                 let queryOptions = {
                     path: this.path,
@@ -1973,6 +1978,7 @@ export class Grid extends BasicGrid {
                             this.recordsBS = w2ui[this.id].records;
                         }
                         w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
+                        // TODO если сохраняем поиск, то не отображаются записи после поиска по числу и булеву типу, но если его выключить то скорее всего загнется поиск при пагинации
                         w2ui[this.id].searchData = [];
                         for (let searchInd in event.searchData) {
                             if (event.searchData[searchInd].operator !== 'between') {
@@ -1996,37 +2002,6 @@ export class Grid extends BasicGrid {
                 }
 
                 request.send();
-
-                /*//отсылаем запрос
-                let searchQuery = new tools.AjaxSender({
-                    url: config.testUrl,
-                    msg: JSON.stringify(queryOptions),
-                    before: function () {
-                        w2ui[this.id].lock('Поиск', true);
-                    }.bind(this)
-                })
-                //в случае успеха
-                searchQuery.sendQuery()
-                    .then(
-                        response => {
-                            w2ui[this.id].unlock();
-                            if (this.recordsBS[0] === undefined) {
-                                this.recordsBS = w2ui[this.id].records;
-                            }
-                            w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
-                            w2ui[this.id].searchData = [];
-                            for (let searchInd in event.searchData) {
-                                if (/!*event.searchData[searchInd].operator !== 'between'*!/true) {
-                                    w2ui[this.id].searchData.push(event.searchData[searchInd]);
-                                }
-                            }
-                            w2ui[this.id].localSearch();
-                            w2ui[this.id].refresh();
-                        },
-                        error => {
-                            w2ui[this.id].unlock();
-                            w2alert(error);
-                        });*/
             }
             else {
                 this.gridSearchParams.setDefaults();
@@ -2127,7 +2102,7 @@ export class Grid extends BasicGrid {
      * @returns {{filter: {}, relation: {and: Array, or: Array}}}
      * @private
      */
-    _parseSearchData(searchData) {
+    _parseSearchData(searchData, allFields = false) {
 
         let result = {
             filter: {},
@@ -2145,14 +2120,78 @@ export class Grid extends BasicGrid {
             is: 'equal',
             between: 'between',
             less: 'less',
-            more: 'greater'
+            more: 'greater',
+            'more than': 'greaterEqual',
+            'less than': 'lessEqual'
+            /*'more than': 'greater',
+            'less than': 'less'*/
         };
         for (let i in searchData) {
+            let colRaw = this.columnsRaw[searchData[i].field];
             let nameCol = searchData[i].field.split('*').join('.');
-            if (this.fk[nameCol] !== undefined) {
+            let colType = colRaw.type;
+            let w2Sign = searchData[i].operator;
+            let value = searchData[i].value;
+            let sign = actions[w2Sign];
+
+            if (allFields) {
+                if (colType === 'string' || colType === 'reference') {
+                    if (colType === 'reference') {
+                        nameCol += '.description';
+                    }
+                    sign = 'consist'; // для строк всегда стравнение по подстроке
+                } else {
+                    continue;
+                }
+            } else {
+                if (colType === 'float' || colType === 'integer') {
+
+                } else if (colType === 'string' || colType === 'reference') {
+                    if (colType === 'reference') {
+                        nameCol += '.description';
+                    }
+                    sign = 'consist';
+                } else if (colType === 'date') {
+                    if (typeof(value) !== 'string') {
+                        let valueArr = [];
+                        for (let j in value) {
+                            valueArr[j] = value[j];
+                        }
+                        value = valueArr;
+                    }
+                    if (Array.isArray(value)) {
+                        for (let j in value) {
+                            value[j] = tools.utils.getISODate(value[j], '-');
+                        }
+                    } else {
+                        value = tools.utils.getISODate(value, '-');
+                    }
+                } else if (colType === 'boolean') {
+                    if (value.trim().toLowerCase() === 'да') {
+                        sign = 'equal';
+                    } else {
+                        sign = 'unEqual';
+                    }
+                    value = true;
+                } else {
+                    continue;
+                }
+            }
+
+            if (value && sign) {
+                filter[nameCol] = {
+                    value: value,
+                    sign: sign
+                };
+                relation.or.push(nameCol);
+            }
+
+
+            /*if (this.fk[nameCol] !== undefined) {
                 nameCol += '.description';
             }
             let value = searchData[i].value;
+            let sign = actions[searchData[i].operator] || 'consist';
             if (searchData[i].type === 'date') {
                 if (typeof(searchData[i].value) !== 'string') {
                     value = [];
@@ -2164,19 +2203,26 @@ export class Grid extends BasicGrid {
                 }
                 if (typeof(value) === 'object') {
                     for (let j in value) {
-                        value[j] = tools.utils.getISODate(value[j], '/');
+                        value[j] = tools.utils.getISODate(value[j], '-');
                     }
                 } else {
-                    value = tools.utils.getISODate(value, '/');
+                    value = tools.utils.getISODate(value, '-');
                 }
+            } else if (colType === 'boolean') {
+                if (value.trim().toLowerCase() === 'да') {
+                    sign = 'equal';
+                } else {
+                    sign = 'unEqual';
+                }
+                value = true;
             }
             filter[nameCol] = {
                 value: value,
-                sign: actions[searchData[i].operator] || 'consist'
+                sign: sign
             };
-            relation.or.push(nameCol);
+            relation.or.push(nameCol);*/
         }
-        //для табличных частей
+        // для табличных частей
         if (this.headID !== '') {
             filter[this.refCol] = {
                 value: this.headID,
