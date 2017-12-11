@@ -1859,7 +1859,7 @@ w2utils.event = {
             return;
         }
         if (!$.isArray(this.handlers)) this.handlers = [];
-        console.log('add', edata);
+        //console.log('add', edata);
         this.handlers.push({edata: edata, handler: handler});
     },
 
