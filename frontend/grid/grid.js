@@ -419,7 +419,7 @@ class BasicGrid extends component.Component {
                 } else {
                     if (this.btns[event.subItem.id] !== undefined) {
                         try {
-                            this.btns[event.subItem.id].onClick.apply(this, [this, event.item.id]);
+                            this.btns[event.subItem.id].onClick.apply(this, [this, event.subItem.id]);
                         } catch (err) {
                             console.log('SERVER CODE ERROR:' + err);
                             w2alert('Серевер вернул некорректное действие!');
