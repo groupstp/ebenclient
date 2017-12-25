@@ -494,7 +494,7 @@ class Request {
                 },
                 errorResponse => {
                     this.error(errorResponse);
-                    return Promise.reject();
+                    return Promise.reject(errorResponse);
                 }
             )
     }

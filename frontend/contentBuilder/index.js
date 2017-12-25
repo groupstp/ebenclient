@@ -135,7 +135,7 @@ export default class contentBuilder extends componentLib.Component {
      * @param caption - подпись
      * @returns{Page}
      */
-    showPage(id, caption) {
+    showPage(id, caption = '') {
         //меняем подпись вверху
         w2ui.navigatorToolbar.set('navigatorLabel', {html: '<b><h3>' + caption + '</h3></b>'});
         w2ui.navigatorToolbar.refresh();

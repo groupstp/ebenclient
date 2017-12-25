@@ -20,16 +20,22 @@ export default class Controller {
         this._initMenu();
         this._initMainScreen();
 
+        let urlParams = this._getURLParams();
+
         // получить данные с сервера
-        const mainInterface = await this._getInterface();
+        const mainInterface = await this._getInterface(urlParams.token);
+
+        // если получили интерфейс с токеном, который получили в url, то сохраним его (скорее всего это поставщик зашел по ссылке)
+        if (urlParams.token) {
+            CookieService.setCookie(config.name, urlParams.token);
+        }
 
         const allowedObjectViews = [];
         for (let objViewName in mainInterface.objectViews) {
             allowedObjectViews.push(objViewName);
         }
 
-       const currentObjView = LocalStorageService.get('currentObjView');
-
+        const currentObjView = LocalStorageService.get('currentObjView');
 
         if (allowedObjectViews.length > 1) {
             this._initOjViewSelection(allowedObjectViews);
@@ -47,6 +53,14 @@ export default class Controller {
             }
             this._updateMenu(allowedObjectViews[0]);
             this._mainScreen.show();
+        }
+
+        // если в url передали название объекта и предметной области, то подгрузим этот объект
+
+        if (urlParams.object) {
+            let page = this._mainScreen.showPage(`ref-${urlParams.object}`);
+            //загружаем содержимое страницы с сервера
+            page.load();
         }
 
     }
@@ -70,7 +84,6 @@ export default class Controller {
             } else {
                 path = 'ref-' + detail.name;
             }
-
 
             let page = this._mainScreen.showPage(path, detail.caption);
             //загружаем содержимое страницы с сервера
@@ -129,13 +142,22 @@ export default class Controller {
         }
     }
 
+    _getURLParams() {
+        let urlParams = {};
+        let queryString = window.location.hash.slice(1);
+        urlParams = tools.utils.parseQueryString(queryString);
+        return urlParams;
+    }
+
     async _updateMenu(objView) {
         const elements = await this._getMenuFromServer(objView);
         for (let objType in elements) {
             let options = {
                 key: objType,
                 title: '',
-                items: []
+                items: [],
+                objView: objView,
+                mainPage: config.mainPage
             };
             const element = elements[objType];
             options.title = element.display;
@@ -162,12 +184,16 @@ export default class Controller {
         //twoBe.showMessage(0, "Не удалось получить навигационное меню с сервера!");
     }
 
-    async _getInterface() {
+    async _getInterface(token) {
         const request = twoBe.createRequest();
         const url = twoBe.getDefaultParams().url + '/getConfigInfo';
-
+        if (token) request.addParam('token', token);
         request.addUrl(url);
-        return request.send();
+        return request.send().catch((err) => {
+            if (err.code === 401) {
+                window.location.href = 'index.html';
+            }
+        });
 
     }
 }

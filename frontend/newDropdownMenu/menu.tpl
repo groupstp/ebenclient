@@ -6,7 +6,7 @@
         <ul class="dropdown-menu">
             {{#each items}}
             <li id="topMenu_{{../menuKey}}-{{this.key}}" style="cursor: pointer" data-obj="{{../menuKey}}"
-                data-name="{{this.key}}" data-caption="{{this.value}}" data-sel=true data-action="getObjForm"><a>{{this.value}}</a></li>
+                data-name="{{this.key}}" data-caption="{{this.value}}" data-sel=true data-action="getObjForm"><a href = "#objView={{../objView}}&object={{this.key}}">{{this.value}}</a></li>
             {{/each}}
         </ul>
     </li>

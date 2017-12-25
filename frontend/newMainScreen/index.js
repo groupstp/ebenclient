@@ -145,7 +145,7 @@ export default class contentBuilder extends componentLib.Component {
      * @param caption - подпись
      * @returns{Page}
      */
-    showPage(id, caption) {
+    showPage(id, caption = '') {
         //меняем подпись вверху
         w2ui.navigatorToolbar.set('navigatorLabel', {html: '<b><h3>' + caption + '</h3></b>'});
         w2ui.navigatorToolbar.refresh();
@@ -258,6 +258,13 @@ class Page {
         }
     }
 
+    setCaption(value){
+        this.caption = value;
+        // меняем подпись вверху
+        w2ui.navigatorToolbar.set('navigatorLabel', {html: '<b><h3>' + value + '</h3></b>'});
+        w2ui.navigatorToolbar.refresh();
+    }
+
     /**
      * Перезагрузить страницу
      */
@@ -337,6 +344,9 @@ class Page {
             .then(
                 response => {
                     locker.unlock();
+                    if (response.elements[0].properties.header) {
+                        this.setCaption(response.elements[0].properties.header);
+                    }
                     new layout.Layout({
                             box: this.generatedBox,
                             element: response.elements[0],
