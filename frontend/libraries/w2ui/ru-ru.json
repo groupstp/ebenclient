@@ -87,5 +87,6 @@
         "Yesterday": "Вчера",
         "more than": "больше, чем",
         "less than": "меньше, чем"
-    }
+    },
+    "dataType" : "JSON"
 }

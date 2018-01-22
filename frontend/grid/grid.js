@@ -5,6 +5,7 @@
  * @requires component
  */
 import * as tools from '../tools/index.js';
+import LocalStorageService from '../services/local-storage-service'
 
 import * as component from '../component'
 import * as layout from '../layout'
@@ -914,8 +915,16 @@ class BasicGrid extends component.Component {
                 }
             },
             parser: this.handlers.parser || "",
-            searches: this.makeSearches(this.columnsRaw)
+            searches: this.makeSearches(this.columnsRaw),
+            onEditField: function(event){
+                debugger;
+            },
+            onChange: function(event){
 
+            },
+            onRestore: function(event){
+
+            }
         }
         for (let i in this.sortBy) {
             this.sortBy[i].direction = this.sortBy[i].sort;
@@ -1438,7 +1447,7 @@ class BasicGrid extends component.Component {
             'float': 'float',
             'integer': 'int',
             'boolean': 'checkbox',
-            'reference': 'select'
+            'reference': 'list'
         };
         for (let i in this.columnsRaw) {
             let rawColumn = this.columnsRaw[i];
@@ -1469,11 +1478,64 @@ class BasicGrid extends component.Component {
                     options.editable = {
                         type: editableType
                     };
+                    if (editableType === 'list') {
+                        debugger;
+                        let token = new tools.TokenAuth(config.name).checkToken();
+                        let objView = LocalStorageService.get('currentObjView');
+                        options.editable = {
+                            type: editableType,
+                            url: 'http://localhost:12345/',
+                            method: 'POST',
+                            minLength: 3,
+                            postData: {
+                                action: 'getContent',
+                                data: {
+                                    type: 'getFieldValues'
+                                },
+                                token: token,
+                                objView: objView,
+                                path: `ref-${rawColumn.link}`
+                            },
+                            // функция для сравнения результатов после запроса, непонятно зачем, ведь предполагается, что сервер все вернул правильно, поэтому просто подтверждаем корректность для каждой записи
+                            compare: function (item, search) {
+                                return true;
+                            },
+                            onRequest: function (event) {
+                                // передадим параметр поиска в нужном формате
+                                let filter = {
+                                    description : {
+                                        value: event.search,
+                                        sign: 'consist'
+                                    }
+                                };
+                                event.postData.data.filter = filter;
+                            },
+                            onLoad: function (event) {
+                                debugger;
+                                // переделаем ответ сервера под нужный формат
+                                let items = [];
+                                let objectsParts = grid.path.split('-');
+                                let object = objectsParts[objectsParts.length - 1];
+                                let data = event.data.message.content[0].fk[rawColumn.link];
+                                for (let id in data) {
+                                    let description = data[id];
+                                    items.push({
+                                        id: id,
+                                        text: description
+                                    });
+                                }
+                                event.data = {
+                                    status: 'success',
+                                    records: items
+                                };
+                            }
+                        }
+                    }
 
                     // пока не редактируем поля ссылочного типа которые не являются перечислениями (static === true)
-                    if (serverType === 'reference' && !rawColumn.static) {
+                    /*if (serverType === 'reference' && !rawColumn.static) {
                         delete options.editable;
-                    }
+                    }*/
                 }
                 if (serverType === 'boolean') {
                     // функция рендера есть для каждой ячейки(кроме булева значения так как для них всегда должны показываться чекбоксы), это нужно для того чтобы подсвечивать незаполненные обязательные ячейки при
