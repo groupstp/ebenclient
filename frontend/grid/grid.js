@@ -917,7 +917,7 @@ class BasicGrid extends component.Component {
             parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw),
             onEditField: function(event){
-                debugger;
+
             },
             onChange: function(event){
 
@@ -1245,6 +1245,13 @@ class BasicGrid extends component.Component {
             if (colRaw.type === 'date') {
                 rec[colName] = this._preformatDate(rec[colName]);
             }
+            if (colRaw.type === 'reference') {
+                if (rec[colName].id) {
+                    rec[colName] = rec[colName].id;
+                } else {
+                    rec[colName] = null;
+                }
+            }
         }
 
         // посылаем на сервер данные без id
@@ -1496,7 +1503,6 @@ class BasicGrid extends component.Component {
                         type: editableType
                     };
                     if (editableType === 'list') {
-                        debugger;
                         let token = new tools.TokenAuth(config.name).checkToken();
                         let objView = LocalStorageService.get('currentObjView');
                         options.editable = {
@@ -1528,7 +1534,6 @@ class BasicGrid extends component.Component {
                                 event.postData.data.filter = filter;
                             },
                             onLoad: function (event) {
-                                debugger;
                                 // переделаем ответ сервера под нужный формат
                                 let items = [];
                                 let objectsParts = grid.path.split('-');
