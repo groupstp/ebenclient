@@ -1505,9 +1505,10 @@ class BasicGrid extends component.Component {
                     if (editableType === 'list') {
                         let token = new tools.TokenAuth(config.name).checkToken();
                         let objView = LocalStorageService.get('currentObjView');
+                        let url = config.testUrl;
                         options.editable = {
                             type: editableType,
-                            url: 'http://localhost:12345/',
+                            url: url,
                             method: 'POST',
                             minLength: 3,
                             postData: {
