@@ -1011,46 +1011,53 @@ class BasicGrid extends component.Component {
             if (recid === 'null') {
                 continue;
             }
+            let recordRaw = recordsRaw[recid];
             let rec = {};
-            rec.recid = recordsRaw[recid][this.PK];
-            for (let col in recordsRaw[recid]) {
+            rec.recid = recordRaw[this.PK];
+            for (let col in recordRaw) {
                 if (this.columnsRaw[col] !== undefined) {
                     if (this.columnsRaw[col].type === 'reference') {
-                        if (recordsRaw[recid][col].length) {
-                            rec[col] = "";
+                        if (recordRaw[col].length) {
+                            rec[col] = {};
                         } else {
-                            rec[col] = null;
+                            rec[col] = {};
                         }
-                        for (let j in recordsRaw[recid][col]) {
-                            rec[col] += fk[col][recordsRaw[recid][col][j]] + '; '
+                        for (let j in recordRaw[col]) {
+                            let id = recordRaw[col][j];
+                            let description = fk[col][id];
+                            //rec[col] += fk[col][recordRaw[col][j]] + '; '
+                            rec[col] = {
+                                id: id,
+                                text: description
+                            }
                         }
                     } else if (this.columnsRaw[col].type === 'date') {
-                        rec[col] = Date.parse(recordsRaw[recid][col]);
+                        rec[col] = Date.parse(recordRaw[col]);
 
                     } else {
-                        rec[col] = recordsRaw[recid][col];
+                        rec[col] = recordRaw[col];
                     }
                 } else {
                     if (col === 'style') {
                         rec.w2ui = {
-                            style: recordsRaw[recid][col]
+                            style: recordRaw[col]
                         }
                     }
                 }
                 /*if (this.columnsRaw[col] !== undefined && this.columnsRaw[col].type === 'reference') {
                  rec[col] = "";
-                 for (let j in recordsRaw[recid][col]) {
-                 rec[col] += fk[col][recordsRaw[recid][col][j]] + '; '
+                 for (let j in recordRaw[col]) {
+                 rec[col] += fk[col][recordRaw[col][j]] + '; '
                  }
                  } else if (col === 'style') {
                  rec.w2ui = {
-                 style: recordsRaw[recid][col]
+                 style: recordRaw[col]
                  }
                  } else {
-                 rec[col] = recordsRaw[recid][col];
+                 rec[col] = recordRaw[col];
                  }*/
             }
-            if (this.hierachy /*&& this.pagination*/ && recordsRaw[recid].isGroup !== undefined && recordsRaw[recid].isGroup) {
+            if (this.hierachy /*&& this.pagination*/ && recordRaw.isGroup !== undefined && recordRaw.isGroup) {
                 rec.w2ui = {
                     children: [{recid: 'treeFake'}]
                 };
@@ -1403,7 +1410,17 @@ class BasicGrid extends component.Component {
                 if (typeof value === 'string' && value.indexOf('null') !== -1) {
                     value = "";
                 }
-                if (stpGrid.fk[columnName] !== undefined) {
+
+                // если храним ссылочные данные в формате w2ui как тип list, то есть {id: '123', text: 'Название'}
+                if (typeof value === 'object') {
+                    if (value.id) {
+                        value = value.text;
+                    } else { // если пустая ссылка
+                        value = '';
+                    }
+                }
+
+                /*if (stpGrid.fk[columnName] !== undefined) {
                     let valueFromFK = stpGrid.fk[columnName][value];
                     if (valueFromFK !== undefined) {
                         // еще надо изменить recordsRaw, хотя не очень конечно выглядит менять их здесь
@@ -1411,7 +1428,7 @@ class BasicGrid extends component.Component {
                         // и изменим id на наименование
                         value = valueFromFK;
                     }
-                }
+                }*/
                 let cellContent = '<a class = "link-in-grid" onclick  = stpui.showEditForm("' + record.recid + '","' + columnName + '","' + this.name + '")>' + value + '</a>';
                 return cellContent;
             },
