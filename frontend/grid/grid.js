@@ -112,6 +112,8 @@ class BasicGrid extends component.Component {
          * @type {string}
          */
         this.PK = '';
+        // произвольные данные с сервера
+        this.data = {};
         this.selectedRecs = [];
         this.multiselect = false;
         this.showSelectColumn = false;
@@ -155,6 +157,7 @@ class BasicGrid extends component.Component {
         this.gridSearchParams = new GridSearchStructure();
         // имя табличной части которую нужно разворачивать в форме списка
         this.refToExpand = attributes.properties.refToExpand;
+        this.data = attributes.properties.data || {};
         this.setButtons();
         this.setHandlers();
 
@@ -2101,84 +2104,94 @@ export class Grid extends BasicGrid {
                 w2ui[this.id].refresh();
             }
         }.bind(this);
-        this.handlers.onTreeExpand = function (name, recid) {
-            /*if (!this.pagination) {
-                w2ui[this.id].toggle(recid);
-                return;
-            }*/
-            // TODO костыль переделать
-            if (typeof name === 'object') {
-                return;
-            }
+        // мы можем переопределить этот обработчик, например это делается для получения дополнительных полей
+        //if (!this.handlers.onTreeExpand) {
+        // TODO костыль для формы добавления филдов, где нужно отображать данные иерархически, но в текущую модель это не вписывается
+        if (this.path === 'additionalFieldsForm') {
+            this.handlers.onTreeExpand = function (name, recid) {
+                /*if (!this.pagination) {
+                    w2ui[this.id].toggle(recid);
+                    return;
+                }*/
+                // TODO костыль переделать
+                if (typeof name === 'object') {
+                    return;
+                }
 
-            //исключаем повторную подгрузку
-            if (w2ui[this.id].get(recid).w2ui !== undefined && w2ui[this.id].get(recid).w2ui.children !== undefined && w2ui[this.id].get(recid).w2ui.children[0].recid !== 'treeFake') {
-                w2ui[this.id].toggle(recid);
-                return;
-            }
-
-            let grid = this;
-            let path = this.path;
-            let request = twoBe.createRequest();
-            request.addParam('action', 'getContent').addData('type', 'gridRecords').addParam('path', path).addFilterParam('parentID', recid).addBefore(function () {
-                grid.lock('Идет загрузка..');
-            }).addSuccess(function (response) {
-                w2ui[grid.id].unlock();
-                // нам может придти и сам элемент раскрываемой группы, отследим это и удалим его
-                response.content[0].records = response.content[0].records.filter((rec) => {
-                    return recid !== rec.ID;
-                });
-                let expRecs = grid.makeRecords(response.content[0].records, response.content[0].fk);
-                //add info to object
-                w2ui[grid.id].set(recid, {w2ui: {children: expRecs}});
-                $.extend(grid.recordsRaw, grid.makeAsos(response.content[0].records, 'ID'));
-                $.extend(grid.fk, response.content[0].fk);
-                w2ui[grid.id].toggle(recid);
-                grid.unlock();
-            }).addError(function (msg) {
-                twoBe.showMessage(0, msg);
-                grid.unlock();
-            }).send();
+                //исключаем повторную подгрузку
+                if (w2ui[this.id].get(recid).w2ui !== undefined && w2ui[this.id].get(recid).w2ui.children !== undefined && w2ui[this.id].get(recid).w2ui.children[0].recid !== 'treeFake') {
+                    w2ui[this.id].toggle(recid);
+                    return;
+                }
 
 
-            /*var type = 'elementForm';
-            var path = grid.getProperties().path;
-            var PK = grid.getProperties().PK;
-            // id таблицы для которой запрашиваем форму элемента
-            var gridID = grid.getProperties().id;
-            var request = twoBe.createRequest();
-            request.addParam('action', 'get').addParam('path', path).addData('type', type).addData('parentTableID', gridID).addFilterParam(PK, grid.getSelectedIDs()[0]).addBefore(function () {
-                grid.lock('Идет загрузка..');
-            }).addSuccess(function (data) {
-                twoBe.buildView(data, path + type);
-                grid.unlock();
-            }).addError(function (msg) {
-                twoBe.showMessage(0, msg);
-                grid.unlock();
-            }).addCacheKey(path + type).send();*/
+                let grid = this;
+                let request = twoBe.createRequest();
+                let url = twoBe.getDefaultParams().url + '/request/getInnerFields';
+                request.addUrl(url).addData('formID', this.id).addData('parentID', recid).addData('link',grid.recordsRaw[recid].link).addBefore(function () {
+                    grid.lock('Идет загрузка..');
+                }).addSuccess(function (response) {
+                    w2ui[grid.id].unlock();
+                    // нам может придти и сам элемент раскрываемой группы, отследим это и удалим его
+                    response.content[0].records = response.content[0].records.filter((rec) => {
+                        return recid !== rec.ID;
+                    });
+                    let expRecs = grid.makeRecords(response.content[0].records, response.content[0].fk);
+                    //add info to object
+                    w2ui[grid.id].set(recid, {w2ui: {children: expRecs}});
+                    $.extend(grid.recordsRaw, grid.makeAsos(response.content[0].records, 'ID'));
+                    $.extend(grid.fk, response.content[0].fk);
+                    w2ui[grid.id].toggle(recid);
+                    grid.unlock();
+                }).addError(function (msg) {
+                    twoBe.showMessage(0, msg);
+                    grid.unlock();
+                }).send();
+            }.bind(this);
+        } else {
+            this.handlers.onTreeExpand = function (name, recid) {
+                /*if (!this.pagination) {
+                    w2ui[this.id].toggle(recid);
+                    return;
+                }*/
+                // TODO костыль переделать
+                if (typeof name === 'object') {
+                    return;
+                }
 
-            /* w2ui[this.id].lock('Загружаем', true);
-             let expandQuery = new tools.AjaxSender({
-                 url: 'search.json',
-                 msg: ''
-             })*/
-            /*expandQuery.sendQuery()
-                .then(
-                    response => {
-                        w2ui[this.id].unlock();
-                        let expRecs = this.makeRecords(response.content[0].records, response.content[0].fk);
-                        //add info to object
-                        w2ui[this.id].set(recid, {w2ui: {children: expRecs}});
-                        $.extend(this.recordsRaw, this.makeAsos(response.content[0].records, 'ID'));
-                        $.extend(this.fk, response.content[0].fk);
-                        console.log(this);
-                        w2ui[this.id].toggle(recid);
-                    },
-                    error => {
+                //исключаем повторную подгрузку
+                if (w2ui[this.id].get(recid).w2ui !== undefined && w2ui[this.id].get(recid).w2ui.children !== undefined && w2ui[this.id].get(recid).w2ui.children[0].recid !== 'treeFake') {
+                    w2ui[this.id].toggle(recid);
+                    return;
+                }
 
-                    }
-                )*/
-        }.bind(this);
+                let grid = this;
+                let path = this.path;
+                let request = twoBe.createRequest();
+                request.addParam('action', 'getContent').addData('type', 'gridRecords').addParam('path', path).addFilterParam('parentID', recid).addBefore(function () {
+                    grid.lock('Идет загрузка..');
+                }).addSuccess(function (response) {
+                    w2ui[grid.id].unlock();
+                    // нам может придти и сам элемент раскрываемой группы, отследим это и удалим его
+                    response.content[0].records = response.content[0].records.filter((rec) => {
+                        return recid !== rec.ID;
+                    });
+                    let expRecs = grid.makeRecords(response.content[0].records, response.content[0].fk);
+                    //add info to object
+                    w2ui[grid.id].set(recid, {w2ui: {children: expRecs}});
+                    $.extend(grid.recordsRaw, grid.makeAsos(response.content[0].records, 'ID'));
+                    $.extend(grid.fk, response.content[0].fk);
+                    w2ui[grid.id].toggle(recid);
+                    grid.unlock();
+                }).addError(function (msg) {
+                    twoBe.showMessage(0, msg);
+                    grid.unlock();
+                }).send();
+
+            }.bind(this);
+        }
+
+        //}
     }
 
     /**
@@ -2335,179 +2348,6 @@ export class Grid extends BasicGrid {
 
         obj.parser = this.handlers.parser || "";
         return obj;
-    }
-}
-
-/**
- * Класс для тестирования возможностей таблиц - скорее всего не работает((
- * @extends module:grid.Grid
- */
-export class GridNew
-    extends Grid {
-    setHandlers() {
-        super.setHandlers();
-        /*обработчик поиска в таблице*/
-        this.handlers.onSearch = function (event) {
-            event.preventDefault();
-            if (event.searchValue === undefined) {
-                return;
-            }
-            //нужен адрес и сообщение
-            let searchQuery = new tools.AjaxSender({
-                url: 'search.json',
-                msg: '',
-                before: function () {
-                    w2ui[this.id].lock('Поиск', true);
-                    let searchNotification = new tools.BrowserNotification(
-                        'Поиск',
-                        {body: 'Поиск по запросу ' + event.searchValue}
-                    )
-                }.bind(this)
-            })
-            searchQuery.sendQuery()
-                .then(
-                    response => {
-                        w2ui[this.id].unlock();
-                        if (this.recordsBS[0] === undefined) {
-                            this.recordsBS = w2ui[this.id].records;
-                        }
-                        w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
-                        w2ui[this.id].refresh();
-                        document.getElementById('grid_' + this.id + '_search_all').value = event.searchValue;
-                        if (w2ui[this.id + '_toolbar'].get('undoSearch') === null) {
-                            w2ui[this.id + '_toolbar'].add([
-                                {
-                                    type: 'button',
-                                    id: 'undoSearch',
-                                    text: 'Выйти из поиска',
-                                    icon: 'fa fa-times',
-                                    onClick: function () {
-                                        if (this.pagination && !this.hierachy) {
-                                            w2ui[this.id].reload();
-                                        } else {
-                                            w2ui[this.id].clear();
-                                            w2ui[this.id].records = this.recordsBS;
-                                        }
-                                        w2ui[this.id + '_toolbar'].remove('undoSearch');
-                                        w2ui[this.id].refresh();
-                                        w2ui[this.id].searchReset();
-                                    }.bind(this)
-                                }
-                            ])
-                        }
-                    },
-                    error => {
-
-                    }
-                )
-
-        }.bind(this);
-        if (this.pagination && !this.hierachy) {
-            //щит для пагинации
-            this.handlers.onRequest = function (event) {
-                event.url = 'search.json';
-
-            }
-            this.handlers.parser = function (responseText) {
-                responseText = responseText.toString();
-                responseText = JSON.parse(responseText);
-                responseText = new tools.Unzipper(responseText).unzippedData;
-                if (responseText.status === 'success') {
-                    responseText = responseText.message;
-                    let recs = this.makeRecords(responseText.content[0].records, responseText.content[0].fk);
-                    return recs;
-                }
-            }.bind(this);
-        }
-        //обработка разворачивания элемента дерева
-        this.handlers.onTreeExpand = function (name, recid) {
-            /*if (!this.pagination) {
-                w2ui[this.id].toggle(recid);
-                return;
-            }*/
-            //исключаем повторную подгрузку
-            if (w2ui[this.id].get(recid).w2ui !== undefined && w2ui[this.id].get(recid).w2ui.children !== undefined && w2ui[this.id].get(recid).w2ui.children[0].recid !== 'treeFake') {
-                w2ui[this.id].toggle(recid);
-                return;
-            }
-            w2ui[this.id].lock('Загружаем', true);
-            let expandQuery = new tools.AjaxSender({
-                url: 'search.json',
-                msg: ''
-            })
-            expandQuery.sendQuery()
-                .then(
-                    response => {
-                        w2ui[this.id].unlock();
-                        let expRecs = this.makeRecords(response.content[0].records, response.content[0].fk);
-                        //add info to object
-                        w2ui[this.id].set(recid, {w2ui: {children: expRecs}});
-                        $.extend(this.recordsRaw, this.makeAsos(response.content[0].records, 'ID'));
-                        $.extend(this.fk, response.content[0].fk);
-                        w2ui[this.id].toggle(recid);
-                    },
-                    error => {
-
-                    }
-                )
-        }.bind(this);
-    }
-
-    setButtons() {
-        super.setButtons();
-        this.btns.edit.onClick = function (event) {
-            let response = {
-                "content": [
-                    {
-                        "records": [
-                            {
-                                "ID": "5",
-                                "name": "Petya",
-                                "mark": 3,
-                                "subject": [
-                                    "6"
-                                ],
-                                "parentID": "1-1"
-                            }
-                        ],
-                        "fk": {
-                            "subject": {
-                                "6": "ОБЖ"
-                            }
-                        }
-                    }
-                ]
-            };
-            this.editRecord(response);
-        }
-        this.btns.group = {
-            id: 'group',
-            caption: 'Группировать',
-            more: true,
-            icon: 'fa fa-object-group',
-            onClick: function (event) {
-                let groupies = ['mark'];
-                this.groupedBy = groupies;
-                let showGroupCol = 'name';
-                this.showGroupCol = showGroupCol;
-                let groupedRecs = this.getGroupedRecords(this.recordsRaw, this.columnsRaw, groupies, showGroupCol);
-                w2ui[this.id].clear();
-                for (let i in groupies) {
-                    w2ui[this.id].removeColumn(groupies[i]);
-                }
-                w2ui[this.id].records = groupedRecs;
-                w2ui[this.id].refresh();
-            }.bind(this)
-        }
-        this.btns.sel = {
-            id: 'sel',
-            caption: 'Выделить 1-3',
-            more: true,
-            icon: 'fa  fa-tty',
-            onClick: function () {
-                this.selectInTree("1-3");
-            }.bind(this)
-        }
     }
 }
 
