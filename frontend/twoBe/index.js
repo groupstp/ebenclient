@@ -75,6 +75,11 @@ export default class twoBe {
         return result;
     }
 
+    static getObjectName(path) {
+        let pathParts = path.split('-');
+        return pathParts[pathParts.length - 1];
+    }
+
     /**
      * Строит инетрфейс по полученным данным с сервера
      * @param {object} data - данные
