@@ -36,6 +36,10 @@ export default class twoBe {
         return LocalStorageService.get(key);
     }
 
+    static deleteCache(key){
+        LocalStorageService.delete(key);
+    }
+
     /**
      * Получает конифигурационные данные - пока в виде заглушки
      * @returns {{url: string}} Объект с конфигами

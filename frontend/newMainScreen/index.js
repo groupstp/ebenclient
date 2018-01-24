@@ -328,7 +328,8 @@ class Page {
             }
         };
         // Проверим кэш на наличие дополнительных полей которые надо вернуть с запросом
-        let cacheKey = 'customFieldsFor-' + this.id + '-grid-listForm';
+        let object = twoBe.getObjectName(this.id);
+        let cacheKey = 'additionalFields-' + object;
         let additionalFields = twoBe.getCache(cacheKey);
         // И добавим их в данные запроса
         if (additionalFields) options.data.additionalFields = additionalFields;
