@@ -23,7 +23,17 @@ export default class twoBe {
      * @param {string} key - ключ
      */
     static cacheData(data, key) {
-        localStorage[key] = JSON.stringify(data);
+        //localStorage[key] = JSON.stringify(data);
+        LocalStorageService.set(key, data);
+    }
+
+    /**
+     * Получить данные по ключу из кэша
+     * @param {string} key - ключ
+     * @returns {} объект с данными
+     */
+    static getCache(key) {
+        return LocalStorageService.get(key);
     }
 
     /**
@@ -85,19 +95,6 @@ export default class twoBe {
                 content: data.content,
                 code: data.code
             });
-        }
-    }
-
-    /**
-     * Получить данные по ключу из кэша
-     * @param {string} key - ключ
-     * @returns {} объект с данными
-     */
-    static getCache(key) {
-        if (localStorage[key] !== undefined) {
-            return (JSON.parse(localStorage[key]));
-        } else {
-            return null;
         }
     }
 
