@@ -15,6 +15,7 @@ import config from '../config/config.js';
 
 let isEqual = require('lodash').isEqual;
 let values = require('lodash').values;
+let find = require('lodash').find;
 
 //подключаем стили
 import './grid.css';
@@ -919,13 +920,13 @@ class BasicGrid extends component.Component {
             },
             parser: this.handlers.parser || "",
             searches: this.makeSearches(this.columnsRaw),
-            onEditField: function(event){
+            onEditField: function (event) {
 
             },
-            onChange: function(event){
+            onChange: function (event) {
 
             },
-            onRestore: function(event){
+            onRestore: function (event) {
 
             }
         }
@@ -1530,7 +1531,7 @@ class BasicGrid extends component.Component {
                             onRequest: function (event) {
                                 // передадим параметр поиска в нужном формате
                                 let filter = {
-                                    description : {
+                                    description: {
                                         value: event.search,
                                         sign: 'consist'
                                     }
@@ -2022,7 +2023,7 @@ export class Grid extends BasicGrid {
                 event.preventDefault();
                 w2ui[this.id].searchClose();
                 let allFields = false;
-                if (event.searchField === 'all'){
+                if (event.searchField === 'all') {
                     allFields = true;
                 }
 
@@ -2110,44 +2111,82 @@ export class Grid extends BasicGrid {
         if (this.path === 'additionalFieldsForm') {
             this.handlers.onTreeExpand = function (name, recid) {
                 /*if (!this.pagination) {
-                    w2ui[this.id].toggle(recid);
+                    w2Grid.toggle(recid);
                     return;
                 }*/
                 // TODO костыль переделать
                 if (typeof name === 'object') {
                     return;
                 }
-
+                
+                let w2Grid = w2ui[this.id];
                 //исключаем повторную подгрузку
-                if (w2ui[this.id].get(recid).w2ui !== undefined && w2ui[this.id].get(recid).w2ui.children !== undefined && w2ui[this.id].get(recid).w2ui.children[0].recid !== 'treeFake') {
-                    w2ui[this.id].toggle(recid);
+                if (w2Grid.get(recid).w2ui !== undefined && w2Grid.get(recid).w2ui.children !== undefined && w2Grid.get(recid).w2ui.children[0].recid !== 'treeFake') {
+                    w2Grid.toggle(recid);
                     return;
                 }
-
+                // запомним записи, которые были выделены, чтобы заного их подсветить после раскрытия ветки дерева, которое убирает все выделение
+                let alreadySelected = w2Grid.getSelection();
+                // снимаем выбор со строки, которую развернули
+                setTimeout(() => {
+                    w2Grid.unselect(recid);
+                }, 0);
 
                 let grid = this;
                 let request = twoBe.createRequest();
                 let url = twoBe.getDefaultParams().url + '/request/getInnerFields';
-                request.addUrl(url).addData('formID', this.id).addData('parentID', recid).addData('link',grid.recordsRaw[recid].link).addBefore(function () {
+                request.addUrl(url).addData('formID', this.id).addData('parentID', recid).addData('link', grid.recordsRaw[recid].link).addBefore(function () {
                     grid.lock('Идет загрузка..');
                 }).addSuccess(function (response) {
-                    w2ui[grid.id].unlock();
+                    w2Grid.unlock();
                     // нам может придти и сам элемент раскрываемой группы, отследим это и удалим его
                     response.content[0].records = response.content[0].records.filter((rec) => {
                         return recid !== rec.ID;
                     });
                     let expRecs = grid.makeRecords(response.content[0].records, response.content[0].fk);
                     //add info to object
-                    w2ui[grid.id].set(recid, {w2ui: {children: expRecs}});
+                    w2Grid.set(recid, {w2ui: {children: expRecs}});
                     $.extend(grid.recordsRaw, grid.makeAsos(response.content[0].records, 'ID'));
                     $.extend(grid.fk, response.content[0].fk);
-                    w2ui[grid.id].toggle(recid);
+                    w2Grid.toggle(recid);
+                    w2Grid.unselect(recid);
+                    alreadySelected.forEach((id)=>{
+                        w2Grid.select(id);
+                    });
+                    _highlightChosenFields();
                     grid.unlock();
                 }).addError(function (msg) {
                     twoBe.showMessage(0, msg);
                     grid.unlock();
                 }).send();
+
+                function _highlightChosenFields() {
+                    let object = grid.data.object;
+                    let chosenFields = LocalStorageService.get(`additionalFields-${object}`);
+                    if (!chosenFields || !chosenFields.length) return;
+                    let currentRoot = w2Grid.get(recid);
+                    let children = currentRoot.w2ui.children;
+                    // для каждой открывшейся записи
+                    children.forEach((rec) => {
+                        let fieldParts = [];
+                        let record =  w2Grid.get(rec.recid);
+                        do {
+                            // получить значение поля parentID
+                            let parentID = record.parentID;
+                            // добавить значение поля field в начало массива fieldParts
+                            fieldParts.unshift(record.field);
+                            record = w2Grid.get(parentID);
+                        } while (record);
+                        let fieldPath = fieldParts.join('.');
+                        if (find(chosenFields, item => item === fieldPath)) {
+                            w2Grid.select(rec.recid);
+                        }
+                    });
+                }
+
             }.bind(this);
+
+
         } else {
             this.handlers.onTreeExpand = function (name, recid) {
                 /*if (!this.pagination) {
