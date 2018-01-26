@@ -36,7 +36,7 @@ export default class twoBe {
         return LocalStorageService.get(key);
     }
 
-    static deleteCache(key){
+    static deleteCache(key) {
         LocalStorageService.delete(key);
     }
 
@@ -356,8 +356,8 @@ class Request {
      * @param {object} sign - тип сравнения (равно, содержит и т.д.)
      * @returns {Request}
      */
-    addFilterParam(key, value, sign) {
-        if (sign === undefined) sign = 'equal';
+    addFilterParam(key, field, value, sign) {
+        /*if (sign === undefined) sign = 'equal';
 
         if (this.param.data === undefined) {
             this.param.data = {};
@@ -368,7 +368,28 @@ class Request {
         this.param.data.filter[key] = {
             value: value,
             sign: sign
+        };*/
+        if (sign === undefined) sign = 'equal';
+        if (this.param.data === undefined) {
+            this.param.data = {};
+        }
+        if (this.param.data.filter === undefined) {
+            this.param.data.filter = {};
+        }
+        let filter = this.param.data.filter[key] = {
+            comparisons: {},
+            tree: {}
         };
+        filter.comparisons.left = {
+            type: 'field',
+            value: field
+        };
+        filter.comparisons.right = {
+            type: 'value',
+            value: value
+        };
+        filter.comparisons.sign = sign;
+
         return this;
     }
 
