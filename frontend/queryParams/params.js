@@ -37,7 +37,7 @@ export default class Params {
         this.pagination.offset = value;
     }
 
-    // добавляет поле для сортировки, можно передавать имя поля или массив имен полей
+    // добавляет объект поля { field: имя поля, sort: направление сортировки(asc|desc)} для сортировки, можно передавать массив полей
     addOrderBy(value) {
         if (Array.isArray(value)) {
             value.forEach((field) => {

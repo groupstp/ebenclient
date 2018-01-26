@@ -13,6 +13,9 @@ import config from '../config/config.js';
 import * as tools from '../tools/index.js';
 import CookieService from '../services/cookie-service';
 import LocalStorageService from '../services/local-storage-service';
+import Params from '../queryParams/params';
+import FilterGroup from '../queryParams/filterGroup';
+import FilterItem from '../queryParams/filterItem';
 
 /**
  * @classdesc Класс пользовательских функций
@@ -187,6 +190,55 @@ export default class twoBe {
      */
     static createRequest() {
         return new Request();
+    }
+
+    /**
+     * Создает объект типа Params
+     * @returns {Params}
+     */
+    static createQueryParams() {
+        return new Params();
+    }
+
+    /**
+     * Создает объект типа FilterGroup
+     * @param options - параметры для передачи в конструктор
+     * @returns {FilterGroup}
+     */
+    static createFilterGroup(options) {
+        return new FilterGroup(options);
+    }
+
+    /**
+     * Создает объект типа FilterItem
+     * @param options- параметры для передачи в конструктор
+     * @returns {FilterItem}
+     */
+    static createFilterItem(options) {
+        return new FilterItem(options);
+    }
+
+    /**
+     * Функция для самого распространеного использования фильтра, отбора по одному параметру. Возвращает объект типа Params, настроенный на отбор по одному полю
+     * @param name - имя условия
+     * @param field - поле по которому устанавливается отбор
+     * @param value - значение отбора
+     * @param sign - тип сравнения значения
+     * @returns {Params}
+     */
+    static createSimpleCondition(name, field, value, sign){
+        let queryParams = new Params();
+
+        let filterItem = new FilterItem({name: name});
+        filterItem.setLeft('field', field);
+        filterItem.setRight('value', value);
+        filterItem.setSign(sign);
+
+        let filterGroup = new FilterGroup({type: 'and'});
+        filterGroup.add(filterItem);
+
+        queryParams.addRootGroup(filterGroup);
+        return queryParams;
     }
 
     /**
@@ -445,6 +497,29 @@ class Request {
             field: field,
             sort: sortDirection
         })
+    }
+
+    /**
+     * Функция добавляет параметры для сервера в тело запроса
+     * @param params - экземпляр объекта Params (/queryParams/params.js)
+     */
+    addQueryParams(params) {
+        if (!this.param.data) {
+            this.param.data = {};
+        }
+
+        this.param.data.queryParams = {};
+
+        this.param.data.queryParams.filter = {
+            comparisons: params.comparisons,
+            tree: params.tree
+        };
+
+        this.param.data.queryParams.parameters = {
+            pagination: params.pagination,
+            orderBy: params.orderBy
+        };
+        return this;
     }
 
     /**
