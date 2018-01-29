@@ -181,7 +181,8 @@ export class DropdownField extends Field {
         let url = twoBe.getDefaultParams().url;
         let self = this;
         let request = twoBe.createRequest();
-        request.addParam('action', 'getContent').addParam('path', 'ref-' + this.link).addData('type', 'getFieldValues').addFilterParam('description', text, 'consist').addBefore(function () {
+        var queryParams = twoBe.createSimpleCondition('description', 'description', text, 'consist');
+        request.addParam('action', 'getContent').addParam('path', 'ref-' + this.link).addData('type', 'getFieldValues').addQueryParams(queryParams).addBefore(function () {
         }).addSuccess(function (data) {
             let suggestion = self._prepareDataForList.call(self, data);
             self.setListData(suggestion);

@@ -6,6 +6,9 @@
  */
 import * as tools from '../tools/index.js';
 import LocalStorageService from '../services/local-storage-service'
+import Params from '../queryParams/params';
+import FilterGroup from '../queryParams/filterGroup';
+import FilterItem from '../queryParams/filterItem';
 
 import * as component from '../component'
 import * as layout from '../layout'
@@ -1390,7 +1393,8 @@ class BasicGrid extends component.Component {
             let PK = self.getProperties().PK;
             let url = twoBe.getDefaultParams().url;
             let grid = self;
-            twoBe.createRequest().addUrl(url).addParam('action', 'get').addParam('path', path).addData('type', type).addFilterParam(PK, id).addBefore(function () {
+            let queryParams = twoBe.createSimpleCondition(PK, PK, id, 'equal');
+            twoBe.createRequest().addUrl(url).addParam('action', 'get').addParam('path', path).addData('type', type).addQueryParams(queryParams).addBefore(function () {
                 grid.lock('Идет загрузка..');
             }).addSuccess(function (data) {
                 twoBe.buildView(data, path + type);
@@ -1935,12 +1939,14 @@ class BasicGrid extends component.Component {
             grid.unlock();
         });
         if (headID !== "" && refCol !== "") {
-            let filter = {};
-            filter[refCol] = {
-                value: headID,
-                sign: 'equal'
-            };
-            request.addData('filter', filter);
+            let queryParams = twoBe.createSimpleCondition(refCol,refCol,headID, 'equal');
+            // let filter = {};
+            // filter[refCol] = {
+            //     value: headID,
+            //     sign: 'equal'
+            // };
+            // request.addData('filter', filter);
+            request.addQueryParams(queryParams);
         }
 
         // Проверим кэш на наличие дополнительных полей которые надо вернуть с запросом
@@ -2037,8 +2043,9 @@ export class Grid extends BasicGrid {
                     action: 'getContent',
                     data: {
                         type: 'gridRecords',
-                        filter: paramsForServer.filter,
-                        relation: paramsForServer.relation
+                        queryParams: paramsForServer
+                        //filter: paramsForServer.filter,
+                        //relation: paramsForServer.relation
                     }
                 };
 
@@ -2047,8 +2054,10 @@ export class Grid extends BasicGrid {
                     if (this.gridSearchParams.isSearchChanged(event.searchData)) {
                         this.gridSearchParams.setOffset(0);
                     }
-                    queryOptions.data.offset = this.gridSearchParams.getOffset();
-                    queryOptions.data.limit = this.limit;
+                    //queryOptions.data.offset = this.gridSearchParams.getOffset();
+                    //queryOptions.data.limit = this.limit;
+                    paramsForServer.addLimit(this.limit);
+                    paramsForServer.addOffset(this.gridSearchParams.getOffset());
                     // отмечаем что поиск теперь активен
                     this.gridSearchParams.setActive(true);
                     this.gridSearchParams.setCurrentSearch(event.searchData);
@@ -2058,8 +2067,9 @@ export class Grid extends BasicGrid {
                 request.addParam('path', this.path)
                     .addParam('action', 'getContent')
                     .addData('type', 'gridRecords')
-                    .addData('filter', queryOptions.data.filter)
-                    .addData('relation', queryOptions.data.relation)
+                    //.addData('filter', queryOptions.data.filter)
+                    //.addData('relation', queryOptions.data.relation)
+                    .addQueryParams(paramsForServer)
                     .addBefore(() => {
                         w2ui[this.id].lock('Поиск', true);
                     })
@@ -2071,12 +2081,11 @@ export class Grid extends BasicGrid {
                         w2ui[this.id].records = this.makeRecords(response.content[0].records, response.content[0].fk);
                         // TODO если сохраняем поиск, то не отображаются записи после поиска по числу и булеву типу, но если его выключить то скорее всего загнется поиск при пагинации
                         w2ui[this.id].searchData = [];
-                        for (let searchInd in event.searchData) {
-                            if (event.searchData[searchInd].operator !== 'between') {
-                                w2ui[this.id].searchData.push(event.searchData[searchInd]);
-                            }
-
-                        }
+                        // for (let searchInd in event.searchData) {
+                        //     if (event.searchData[searchInd].operator !== 'between') {
+                        //         w2ui[this.id].searchData.push(event.searchData[searchInd]);
+                        //     }
+                        // }
                         w2ui[this.id].localSearch();
                         w2ui[this.id].refresh();
                     })
@@ -2085,12 +2094,12 @@ export class Grid extends BasicGrid {
                         w2alert(err);
                     });
 
-                if (queryOptions.data.offset) {
-                    request.addData('offset', queryOptions.data.offset);
-                }
-                if (queryOptions.data.limit) {
-                    request.addData('limit', queryOptions.data.limit);
-                }
+                // if (queryOptions.data.offset) {
+                //     request.addData('offset', queryOptions.data.offset);
+                // }
+                // if (queryOptions.data.limit) {
+                //     request.addData('limit', queryOptions.data.limit);
+                // }
 
                 request.send();
             }
@@ -2243,16 +2252,22 @@ export class Grid extends BasicGrid {
      */
     _parseSearchData(searchData, allFields = false) {
 
-        let result = {
-            filter: {},
-            relation: {
-                and: [],
-                or: []
-            }
-        };
+        // параметры для запроса на сервера
+        let params = new Params();
 
-        let filter = result.filter;
-        let relation = result.relation;
+        // группа "или" для отобра по полям
+        let fieldsGroupOr = new FilterGroup({type: 'or'});
+
+        // let result = {
+        //     filter: {},
+        //     relation: {
+        //         and: [],
+        //         or: []
+        //     }
+        // };
+
+        // let filter = result.filter;
+        // let relation = result.relation;
 
         let actions = {
             contains: 'consist',
@@ -2262,8 +2277,6 @@ export class Grid extends BasicGrid {
             more: 'greater',
             'more than': 'greaterEqual',
             'less than': 'lessEqual'
-            /*'more than': 'greater',
-            'less than': 'less'*/
         };
         for (let i in searchData) {
             let colRaw = this.columnsRaw[searchData[i].field];
@@ -2318,59 +2331,58 @@ export class Grid extends BasicGrid {
             }
 
             if (value && sign) {
-                filter[nameCol] = {
-                    value: value,
-                    sign: sign
-                };
-                relation.or.push(nameCol);
-            }
+                // разобъем условие "между" на 2 условия
+                if (sign === 'between') {
+                    let filterItemGreater = new FilterItem({name: `${nameCol}-greater`});
+                    filterItemGreater.setLeft('field', nameCol);
+                    filterItemGreater.setRight('value', value[0]);
+                    filterItemGreater.setSign('greaterEqual');
+                    fieldsGroupOr.add(filterItemGreater);
 
+                    let filterItemLess = new FilterItem({name: `${nameCol}-less`});
+                    filterItemLess.setLeft('field', nameCol);
+                    filterItemLess.setRight('value', value[1]);
+                    filterItemLess.setSign('lessEqual');
+                    fieldsGroupOr.add(filterItemLess);
+                } else {
+                    let filterItem = new FilterItem({name: nameCol});
+                    filterItem.setLeft('field', nameCol);
+                    filterItem.setRight('value', value);
+                    filterItem.setSign(sign);
+                    fieldsGroupOr.add(filterItem);
+                }
 
-            /*if (this.fk[nameCol] !== undefined) {
-                nameCol += '.description';
+                // filter[nameCol] = {
+                //     value: value,
+                //     sign: sign
+                // };
+                // relation.or.push(nameCol);
             }
-            let value = searchData[i].value;
-            let sign = actions[searchData[i].operator] || 'consist';
-            if (searchData[i].type === 'date') {
-                if (typeof(searchData[i].value) !== 'string') {
-                    value = [];
-                    for (let j in searchData[i].value) {
-                        value[j] = searchData[i].value[j];
-                    }
-                } else {
-                    value = searchData[i].value
-                }
-                if (typeof(value) === 'object') {
-                    for (let j in value) {
-                        value[j] = tools.utils.getISODate(value[j], '-');
-                    }
-                } else {
-                    value = tools.utils.getISODate(value, '-');
-                }
-            } else if (colType === 'boolean') {
-                if (value.trim().toLowerCase() === 'да') {
-                    sign = 'equal';
-                } else {
-                    sign = 'unEqual';
-                }
-                value = true;
-            }
-            filter[nameCol] = {
-                value: value,
-                sign: sign
-            };
-            relation.or.push(nameCol);*/
         }
         // для табличных частей
+        let headIDFilterItem;
         if (this.headID !== '') {
-            filter[this.refCol] = {
-                value: this.headID,
-                sign: 'equal'
-            };
-            relation.and.push(this.refCol);
+            headIDFilterItem = new FilterItem({name: this.refCol});
+            headIDFilterItem.setLeft('field', this.refCol);
+            headIDFilterItem.setRight('value', this.headID);
+            headIDFilterItem.setSign('equal');
+            // filter[this.refCol] = {
+            //     value: this.headID,
+            //     sign: 'equal'
+            // };
+            // relation.and.push(this.refCol);
         }
 
-        return result;
+        if (headIDFilterItem) {
+           let rootGroupAnd = new FilterGroup({type: 'and'});
+            rootGroupAnd.add(headIDFilterItem);
+            rootGroupAnd.add(fieldsGroupOr);
+            params.addRootGroup(rootGroupAnd);
+        } else {
+            params.addRootGroup(fieldsGroupOr);
+        }
+
+        return params;
 
     }
 
