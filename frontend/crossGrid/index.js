@@ -235,11 +235,12 @@ export class CrossGrid extends component.Component {
 
         if (!IDs.length) return;
 
+        let queryParams = twoBe.createSimpleCondition('ID', 'ID', IDs, 'in');
         let request = twoBe.createRequest();
         request
             .addParam('action', 'delete')
             .addParam('path', 'ref-filters_actions')
-            .addFilterParam('ID', IDs, 'in')
+            .addQueryParams(queryParams)
             .addSuccess((data) => {
                 recordsArr.forEach((record) => {
                     record.element.dataset.recid = '';

@@ -191,11 +191,7 @@ export default class contentBuilder extends componentLib.Component {
 class Page {
     /**
      * @constructor
-     * @param path - идентификdebuggerатоif (token) {
-        sendResponse(res, 'success', token);
-    } else {
-        sendResponse(res, 'error', 'Login error!');
-    }р страницы
+     * @param path - идентификатор страницы
      * @param caption - подпись к странице
      * @param box - куда поместить
      */

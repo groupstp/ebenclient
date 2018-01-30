@@ -730,7 +730,8 @@ class BasicGrid extends component.Component {
                     // подготовим данные для отправки на сервер
                     let data = grid._prepareRecordsForSaving(rec);
                     let request = twoBe.createRequest();
-                    request.addParam('action', 'update').addParam('path', grid.path).addData('record', data).addFilterParam(grid.PK, id)
+                    let queryParams = twoBe.createSimpleCondition(grid.PK, grid.PK, id, 'equal');
+                    request.addParam('action', 'update').addParam('path', grid.path).addData('record', data).addQueryParams(queryParams)
                         .addBefore(function () {
                             grid.lock('Подождите...');
                         })
@@ -1340,7 +1341,7 @@ class BasicGrid extends component.Component {
 
         // определим строки которые не надо рендерить как ссылки, то есть группы и строки итогов
         let noRenderRecord = false;
-        if (record.recid.indexOf('group') >= 0 || record.recid.indexOf('Summary') >= 0) {
+        if (/*record.recid.indexOf('group') >= 0 || */record.recid.indexOf('Summary') >= 0) {
             noRenderRecord = true;
         }
 
@@ -1499,8 +1500,10 @@ class BasicGrid extends component.Component {
             let serverType = rawColumn.type;
 
             options.render = function (record, index, column_index) {
-                let renderedValue = grid._renderRecordCell.apply(this, [record, index, column_index, customRenderFunction]);
-                return renderedValue;
+                if (record) {
+                    let renderedValue = grid._renderRecordCell.apply(this, [record, index, column_index, customRenderFunction]);
+                    return renderedValue;
+                }
             };
 
             if (rawColumn.editable) {
@@ -2218,7 +2221,8 @@ export class Grid extends BasicGrid {
                 let grid = this;
                 let path = this.path;
                 let request = twoBe.createRequest();
-                request.addParam('action', 'getContent').addData('type', 'gridRecords').addParam('path', path).addFilterParam('parentID', recid).addBefore(function () {
+                var queryParams = twoBe.createSimpleCondition('parentID', 'parentID', recid, 'equal');
+                request.addParam('action', 'getContent').addData('type', 'gridRecords').addParam('path', path).addQueryParams(queryParams).addBefore(function () {
                     grid.lock('Идет загрузка..');
                 }).addSuccess(function (response) {
                     w2ui[grid.id].unlock();

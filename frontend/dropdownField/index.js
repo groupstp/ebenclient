@@ -181,20 +181,34 @@ export class DropdownField extends Field {
         let url = twoBe.getDefaultParams().url;
         let self = this;
         let request = twoBe.createRequest();
-        var queryParams = twoBe.createSimpleCondition('description', 'description', text, 'consist');
-        request.addParam('action', 'getContent').addParam('path', 'ref-' + this.link).addData('type', 'getFieldValues').addQueryParams(queryParams).addBefore(function () {
+        request.addParam('action', 'getContent').addParam('path', 'ref-' + this.link).addData('type', 'getFieldValues').addBefore(function () {
         }).addSuccess(function (data) {
             let suggestion = self._prepareDataForList.call(self, data);
             self.setListData(suggestion);
         }).addError(function (msg) {
             twoBe.showMessage(0, msg);
         });
+
+        let filterGroup = twoBe.createFilterGroup({type: 'and'});
+        let descriptionFilterItem = twoBe.createFilterItem({name: 'description'});
+        descriptionFilterItem.setLeft('field', 'description');
+        descriptionFilterItem.setRight('value', text);
+        descriptionFilterItem.setSign('consist');
+        filterGroup.add(descriptionFilterItem);
+
+        let queryParams = twoBe.createQueryParams();
         let filterParams = this.getFiltersParams();
         if (filterParams) {
             filterParams.forEach((filerParam) => {
-                request.addFilterParam(filerParam.name, filerParam.value);
+                let filterItem = twoBe.createFilterItem({name: filerParam.name});
+                filterItem.setLeft('field', filerParam.name);
+                filterItem.setRight('value', filerParam.value);
+                filterItem.setSign('equal');
+                filterGroup.add(filterItem);
             });
         }
+        queryParams.addRootGroup(filterGroup);
+        request.addQueryParams(queryParams);
         request.send();
     }
 

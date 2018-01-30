@@ -14,6 +14,17 @@ export default class ObjViewSelection {
         });
     }
 
+    addObjectView(objView){
+        if (!objView) return;
+        if (Array.isArray(objView)) {
+            objView.forEach((item)=>{
+                this._objViews.push(item);
+            });
+        } else {
+            this._objViews.push(objView);
+        }
+    }
+
     hide(){
         this._el.style.display = 'none';
     }

@@ -16,14 +16,21 @@ export default class Controller {
     }
 
     async init() {
-
         this._initMenu();
         this._initMainScreen();
+        this._initOjViewSelection();
 
         let urlParams = this._getURLParams();
 
         // получить данные с сервера
-        const mainInterface = await this._getInterface(urlParams.token);
+        let mainInterface;
+        try {
+            mainInterface = await this._getInterface(urlParams.token);
+        } catch (err) {
+            alert('Ошибка при получении интерфейса!');
+            this._objViewSelection.hide();
+            return;
+        }
 
         // если получили интерфейс с токеном, который получили в url, то сохраним его (скорее всего это поставщик зашел по ссылке)
         if (urlParams.token) {
@@ -38,16 +45,20 @@ export default class Controller {
         const currentObjView = LocalStorageService.get('currentObjView');
 
         if (allowedObjectViews.length > 1) {
-            this._initOjViewSelection(allowedObjectViews);
+            this._objViewSelection.addObjectView(allowedObjectViews);
             // if we already use one of allowed object views
             if (allowedObjectViews.indexOf(currentObjView) !== -1) {
+                this._objViewSelection.render();
                 this._objViewSelection.hide();
                 this._updateMenu(currentObjView);
                 this._mainScreen.show();
             } else { // if we use object view that have been forbidden for us
                 LocalStorageService.delete('currentObjView');
+                this._objViewSelection.render();
+                this._objViewSelection.show();
             }
         } else if (allowedObjectViews.length === 1) {
+            this._objViewSelection.addObjectView(allowedObjectViews);
             if (currentObjView !== allowedObjectViews[0]) {
                 LocalStorageService.set('currentObjView', allowedObjectViews[0]);
             }
@@ -56,7 +67,6 @@ export default class Controller {
         }
 
         // если в url передали название объекта и предметной области, то подгрузим этот объект
-
         if (urlParams.object) {
             let page = this._mainScreen.showPage(`ref-${urlParams.object}`);
             //загружаем содержимое страницы с сервера
@@ -112,6 +122,7 @@ export default class Controller {
             objViews: objViews
         });
         this._objViewSelection.render();
+        this._objViewSelection.hide();
 
         this._objViewSelection.on('objViewSelected', async (event) => {
             let selectedObjView = event.detail.name;

@@ -58,7 +58,6 @@ export class Button extends Component {
             this.controlEl = button;
             this.box = button.closest('[data-component = "button"]');
         }
-        //debugger;
         this.addHandlers();
     }
 
