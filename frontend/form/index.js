@@ -268,7 +268,7 @@ export class Form extends Component {
                 if (value.length) {
                     value = value[0].id;
                 } else {
-                    value = '';
+                    value = null;
                 }
 
             }
