@@ -54,7 +54,7 @@ export class SimpleField extends Field {
 
     _applyDatepicker() {
         let config = {
-            format: 'dd/mm/yyyy',
+            format: 'yyyy/mm/dd',
             language: 'ru'
         };
         $(this.controlEl).datepicker(config);

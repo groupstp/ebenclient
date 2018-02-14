@@ -36,9 +36,9 @@ var w2utils = (function ($) {
         version: '1.5.RC1',
         settings: {
             "locale": "en-us",
-            "dateFormat": "m/d/yyyy",
+            "dateFormat": "yyyy/m/d",
             "timeFormat": "hh:mi pm",
-            "datetimeFormat": "m/d/yyyy|hh:mi pm",
+            "datetimeFormat": "yyyy/m/d|hh:mi pm",
             "currencyPrefix": "$",
             "currencySuffix": "",
             "currencyPrecision": 2,

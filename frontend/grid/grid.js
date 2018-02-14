@@ -1451,7 +1451,7 @@ class BasicGrid extends component.Component {
             'timestamp': function (record, index, column_index) {
                 let fData = '';
                 let ufData = record[this.columns[column_index].field];
-                fData = w2utils.formatDateTime(ufData, 'dd-mm-yyyy|h:m');
+                fData = w2utils.formatDateTime(ufData, 'yyyy-mm-dd|h:m');
                 return fData;
             },
             'boolean': function (record, index, column_index) {
@@ -1467,7 +1467,7 @@ class BasicGrid extends component.Component {
                 let columnName = this.columns[column_index].field;
                 let ufData = stpGrid.getCellValue(record, columnName);
                 ufData = stpGrid._preformatDate(ufData);
-                fData = w2utils.formatDate(ufData, 'dd-mm-yyyy');
+                fData = w2utils.formatDate(ufData, 'yyyy-mm-dd');
                 return fData;
             }
         };

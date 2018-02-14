@@ -27,6 +27,7 @@ export default class Controller {
         try {
             mainInterface = await this._getInterface(urlParams.token);
         } catch (err) {
+            console.log(err);
             alert('Ошибка при получении интерфейса!');
             this._objViewSelection.hide();
             return;
