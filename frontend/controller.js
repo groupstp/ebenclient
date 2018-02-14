@@ -197,10 +197,15 @@ export default class Controller {
     }
 
     async _getInterface(token) {
+        console.log("Trying create request");
         const request = twoBe.createRequest();
+        console.log("Trying getDefaultParams");
         const url = twoBe.getDefaultParams().url + '/getConfigInfo';
+        console.log("Trying add token to parameters");
         if (token) request.addParam('token', token);
+        console.log("Trying add url to request");
         request.addUrl(url);
+        console.log("Trying send request");
         return request.send().catch((err) => {
             if (err.code === 401) {
                 window.location.href = 'index.html';
