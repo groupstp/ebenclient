@@ -372,10 +372,13 @@ class Request {
     }
 
     _init() {
+        console.log("Get token");
         const token = new tools.TokenAuth(config.name).checkToken();
+        console.log("Storage toke");
         this.addParam('token', token);
+        console.log("Get current objectView");
         const currentObjView = LocalStorageService.get('currentObjView') || '';
-
+        console.log("Storage objectView");
         this.addParam('objView', currentObjView);
     }
 
