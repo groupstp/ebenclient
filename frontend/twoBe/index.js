@@ -48,6 +48,7 @@ export default class twoBe {
      * @returns {{url: string}} Объект с конфигами
      */
     static getDefaultParams() {
+        console.log(config);
         return {
             url: config.testUrl,
             name: config.name
@@ -331,6 +332,7 @@ class Request {
          * @member
          * @type {string}
          */
+        console.log("getDefaultParameters");
         this.url = twoBe.getDefaultParams().url || '';
         /**
          * Тело запроса
