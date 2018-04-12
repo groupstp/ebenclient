@@ -9,7 +9,7 @@
  */
 let config = {
     name: 'test',
-    caption: 'ИС Снабжение',
+    caption: '',
     defaultUrl: 'http://localhost:12345/login',
     version: '0.0.1',
     authGoogle: false,

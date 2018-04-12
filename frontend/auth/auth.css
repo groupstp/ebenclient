@@ -1,8 +1,8 @@
 body {  
     padding-bottom: 50px;
-    background-color: #eee;
-    background: url(background.svg) repeat;
-
+	background: #1f253d !important;
+    line-height: 1;
+    color: antiquewhite !important;
 }
 
 .form-signin {
@@ -10,8 +10,9 @@ body {
     min-height: 490px;
     text-align: center;
     padding: 59px 29px 29px;
-    margin: 10% auto 10%;
+    margin: 5% auto 5%;
     background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 5px;
 }
 .form-signin .form-signin-heading,
 .form-signin .checkbox {
@@ -28,7 +29,12 @@ body {
     box-sizing: border-box;
     padding: 10px;
     font-size: 16px;
+    border-radius: 5px !important;
 }
 .form-signin .form-control:focus {
     z-index: 2;
+}
+
+.input-group {
+    width: 100%;
 }

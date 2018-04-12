@@ -5,13 +5,9 @@
         <div class="col-lg-10 col-lg-offset-1  col-sm-12 col-xs-12 text-center">
             <form role="form" id="{{name}}{{_formPostfix}}">
                 <div class="input-group form-group">
-                        <span class="input-group-addon" style="background-color: #00a23f; color: white"><i
-                                class="fa fa-user" aria-hidden="true"></i></span>
                     <input type="text" class="form-control" placeholder="Логин" name="user" required autofocus>
                 </div>
                 <div class="input-group form-group">
-                        <span class="input-group-addon" style="background-color: #00a23f; color: white">
-                            <i class="fa fa-unlock-alt" aria-hidden="true" style="margin-right: 2px;"></i></span>
                     <input id='passwordInput' type="password" class="form-control" placeholder="Пароль" name="pswd"
                            required>
                 </div>
@@ -21,11 +17,16 @@
                     <h3 class="panel-title" id="mes_text"><b>Неверные авторизационные данные!</b></h3>
                 </div>
             </div>
-            <button id='authButton' class="btn btn-lg btn-success btn-block">
+            <button id='authButton' class="btn btn-lg btn-block btn-primary">
                 Войти
             </button>
+            <br>
+            <p>Еще не зарегистрировались?
+            <a href="#" id='registrationButton' class="btn btn-primary">
+                Регистрация
+            </a></p>
             {{#if authGoogle}}
-                <button class="btn btn-lg btn-success btn-block" id="googleAuth" ng-click="login()" disabled>
+                <button class="btn btn-lg btn-primary btn-block" id="googleAuth" ng-click="login()" disabled>
                     Войти c помощью <i class="fa fa-google" aria-hidden="true"></i>
                 </button>
             {{/if}}
